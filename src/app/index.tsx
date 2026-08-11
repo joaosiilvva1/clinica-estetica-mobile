@@ -4,6 +4,14 @@ export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [formData, setFormData] = useState({ name: '', whatsapp: '', treatment: '', preferredTime: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkWidth = () => setIsMobile(window.innerWidth < 720);
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   // Fotos reais da clínica, servidas de mobile/public/
   const photos = [
@@ -96,15 +104,18 @@ export default function LandingPage() {
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
               <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
-              <span style={styles.logoText}>Maria Yasmim Lopes</span>
+              <span style={{ ...styles.logoText, fontSize: isMobile ? '14px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
-            <nav style={styles.nav}>
-              <a href="#inicio" style={styles.navLink}>Início</a>
-              <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
-              <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
-            </nav>
-            <a href="#agendamento" style={styles.primaryButton}>
-              Agendar Avaliação
+            {!isMobile && (
+                <nav style={styles.nav}>
+                  <a href="#inicio" style={styles.navLink}>Início</a>
+                  <a href="#sobre" style={styles.navLink}>Sobre</a>
+                  <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
+                  <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
+                </nav>
+            )}
+            <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '8px 12px' : '10px 20px', fontSize: isMobile ? '12px' : '14px' }}>
+              {isMobile ? 'Agendar' : 'Agendar Avaliação'}
             </a>
           </div>
         </header>
