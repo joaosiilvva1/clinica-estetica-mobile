@@ -479,7 +479,7 @@ const styles = {
   aboutSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '50px', alignItems: 'center' },
   aboutPhotos: { flex: '1 1 380px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
-  aboutPhotoMain: { width: '100%', height: '320px', objectFit: 'cover' as const, borderRadius: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' },
+  aboutPhotoMain: { width: '100%', height: '520px', objectFit: 'cover' as const, borderRadius: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' },
   aboutText: { flex: '1 1 380px' },
   aboutTitle: { fontSize: '32px', fontWeight: 'bold', color: '#2D1537', marginBottom: '18px' },
   aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.7, marginBottom: '16px' },
