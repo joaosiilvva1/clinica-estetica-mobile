@@ -12,9 +12,6 @@ export default function LandingPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Grade fixa de horários exibidos no formulário. Precisa caber dentro do horário
-  // comercial configurado no backend (business.opening-hour / closing-hour, hoje 9–18,
-  // ver AppointmentService); 12:00 fica de fora de propósito (horário de almoço).
   const availableTimeSlots = [
     '09:00', '10:00', '11:00',
     '13:00', '14:00', '15:00', '16:00', '17:00'
@@ -22,7 +19,6 @@ export default function LandingPage() {
 
   const [professionalId, setProfessionalId] = useState<string | null>(null);
 
-  // Lista padrão de tratamentos para garantir que apareçam mesmo se a API falhar
   const defaultTreatments = [
     { id: '1', name: 'Limpeza de Pele Profunda', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 120, durationMinutes: 60 },
     { id: '2', name: 'Massagem Facial Relaxante', description: 'Estimula a circulação, alivia as tensões do rosto e promove um relaxamento profundo.', price: 90, durationMinutes: 45 },
@@ -33,9 +29,6 @@ export default function LandingPage() {
       { id: string; name: string; description: string; price: number; durationMinutes: number }[]
   >(defaultTreatments);
 
-  // Horários livres retornados pelo backend para a data/tratamento/profissional escolhidos,
-  // como timestamps ISO (Instant). Convertidos para epoch ms na hora de comparar com a grade
-  // fixa acima, pra não depender de formatação de string.
   const [freeSlots, setFreeSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
@@ -72,12 +65,8 @@ export default function LandingPage() {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
 
-  // Em produção, defina EXPO_PUBLIC_API_URL nas variáveis de ambiente do deploy (Vercel)
-  // apontando pro backend Spring Boot hospedado. Sem isso, o navegador da cliente tentaria
-  // acessar o localhost dela mesma, não o seu servidor.
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
 
-  // Catálogo de tratamentos e profissional (MVP: profissional única) — carregados uma vez.
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/treatments/public`)
         .then((res) => res.json())
@@ -86,7 +75,7 @@ export default function LandingPage() {
             setTreatments(data);
           }
         })
-        .catch(() => {}); // Mantém os tratamentos padrão caso a API falhe
+        .catch(() => {});
 
     fetch(`${API_BASE_URL}/api/professionals/public`)
         .then((res) => res.json())
@@ -95,9 +84,6 @@ export default function LandingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Horários livres de verdade, vindos do banco — só busca quando já dá pra formar a
-  // consulta completa (profissional + tratamento + data). Reexecuta em slotsRefreshKey
-  // pra forçar atualização depois de um 409 (horário ocupado por outra cliente na hora H).
   useEffect(() => {
     if (!formData.date || !formData.treatmentId || !professionalId) {
       setFreeSlots([]);
@@ -114,14 +100,11 @@ export default function LandingPage() {
         })
         .then((data: string[]) => setFreeSlots(data))
         .catch(() => {
-          // Fallback para liberar todos os horários da grade caso o endpoint de slots falhe
           setFreeSlots(availableTimeSlots.map(t => `${formData.date}T${t}:00-03:00`));
         })
         .finally(() => setSlotsLoading(false));
   }, [formData.date, formData.treatmentId, professionalId, slotsRefreshKey]);
 
-  // Converte a grade fixa (data + "HH:mm") pro mesmo instante que o backend usa, aplicando
-  // o offset fixo de America/Sao_Paulo (Brasil não usa mais horário de verão desde 2019).
   const slotToEpochMs = (dateStr: string, timeStr: string) =>
       new Date(`${dateStr}T${timeStr}:00-03:00`).getTime();
 
@@ -141,8 +124,6 @@ export default function LandingPage() {
 
     setSubmitting(true);
     try {
-      // Instante com offset explícito -03:00: independe do fuso do aparelho da cliente,
-      // e o backend (Jackson) faz o parse direto pra Instant.
       const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
 
       await fetch(`${API_BASE_URL}/api/appointments/public`, {
@@ -155,7 +136,7 @@ export default function LandingPage() {
           treatmentId: formData.treatmentId,
           scheduledAt
         }),
-      }).catch(() => {}); // Permite continuar o fluxo do WhatsApp mesmo se a API falhar
+      }).catch(() => {});
 
       const selectedTreatment = treatments.find((t) => t.id === formData.treatmentId);
       const message =
@@ -365,7 +346,6 @@ export default function LandingPage() {
                   ))}
                 </select>
 
-                {/* Seleção de Data */}
                 <div style={styles.fieldGroup}>
                   <label style={styles.fieldLabel}>Selecione a data:</label>
                   <input
@@ -378,7 +358,6 @@ export default function LandingPage() {
                   />
                 </div>
 
-                {/* Seleção de Horários (Grid de Slots) */}
                 {!formData.treatmentId && formData.date && (
                     <p style={styles.bookingErrorText}>Escolha o tratamento antes de ver os horários.</p>
                 )}
@@ -542,10 +521,12 @@ const styles = {
   heroTitle: { fontSize: '38px', fontWeight: 'bold', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2 },
   heroText: { fontSize: '16px', color: '#5A4A60', marginBottom: '25px', lineHeight: 1.5 },
 
-  carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#fff' },
-  carouselSlide: { position: 'relative' as const, width: '100%', height: '350px' },
-  carouselImage: { width: '100%', height: '100%', objectFit: 'cover' as const },
-  carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.75)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold' },
+  // Alterado objectFit de 'cover' para 'contain' e adicionado um fundo escuro/neutro para preencher as laterais se necessário
+  carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#1a1a1a' },
+  carouselSlide: { position: 'relative' as const, width: '100%', height: '350px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
+  carouselImage: { width: '100%', height: '100%', objectFit: 'contain' as const },
+
+  carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.75)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
   carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
