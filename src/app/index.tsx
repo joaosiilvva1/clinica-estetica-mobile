@@ -28,7 +28,6 @@ export default function LandingPage() {
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  // RESTAURADO PARA O PADRÃO ORIGINAL (.jpg.jpeg) DO CARROSSEL
   const photos = [
     { id: 1, title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
     { id: 2, title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
@@ -54,7 +53,6 @@ export default function LandingPage() {
 
   const API_BASE_URL = 'http://localhost:8080';
 
-  // Sempre que a data muda, busca no backend os horários ocupados para aquele dia
   useEffect(() => {
     if (formData.date) {
       fetch(`${API_BASE_URL}/api/bookings/busy-slots?date=${formData.date}`)
@@ -75,10 +73,8 @@ export default function LandingPage() {
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Bloqueia visualmente o horário na mesma hora para o usuário atual
     setBusySlots((prev) => [...prev, formData.time]);
 
-    // 2. Envia a reserva para o Spring Boot salvar no banco
     try {
       await fetch(`${API_BASE_URL}/api/bookings`, {
         method: 'POST',
@@ -95,7 +91,6 @@ export default function LandingPage() {
       console.error('Aviso: Falha ao salvar no banco, mas seguindo para o WhatsApp.', error);
     }
 
-    // 3. Monta a mensagem e manda para o WhatsApp
     const message =
         `Olá! Gostaria de agendar meu procedimento.\n\n` +
         `Nome: ${formData.name}\n` +
@@ -125,9 +120,7 @@ export default function LandingPage() {
     fetch(`${API_BASE_URL}/api/testimonials/public`)
         .then((res) => res.json())
         .then((data) => setTestimonials(data))
-        .catch(() => {
-          // Falha silenciosa caso o backend esteja fora do ar
-        });
+        .catch(() => {});
   }, []);
 
   const handleTestimonialSubmit = async (e: React.FormEvent) => {
@@ -146,7 +139,6 @@ export default function LandingPage() {
     }
   };
 
-  // Data mínima para o input date (não permite agendar no passado)
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
@@ -155,6 +147,7 @@ export default function LandingPage() {
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
+              {/* CORRIGIDO PARA logo.jpg */}
               <img src="/logo.jpg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
               <span style={{ ...styles.logoText, fontSize: isMobile ? '14px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
@@ -219,6 +212,7 @@ export default function LandingPage() {
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
+              {/* CORRIGIDO PARA fotosobre.jpg */}
               <img src="/fotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
@@ -368,7 +362,6 @@ export default function LandingPage() {
             <p style={styles.sectionSubtitle}>Histórias reais de transformação e cuidado personalizado.</p>
           </div>
 
-          {/* Cards de Depoimentos puxados do Banco */}
           {testimonials.length > 0 && (
               <div style={styles.grid}>
                 {testimonials.map((t) => (
@@ -390,7 +383,6 @@ export default function LandingPage() {
               </div>
           )}
 
-          {/* Formulário de Envio de Depoimento */}
           <div style={styles.testimonialFormWrapper}>
             {testimonialSubmitted ? (
                 <p style={styles.bookingSuccessText}>
