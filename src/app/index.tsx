@@ -4,6 +4,14 @@ export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [formData, setFormData] = useState({ name: '', whatsapp: '', treatment: '', preferredTime: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkWidth = () => setIsMobile(window.innerWidth < 720);
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   // Fotos reais da clínica, servidas de mobile/public/
   const photos = [
@@ -96,15 +104,18 @@ export default function LandingPage() {
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
               <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
-              <span style={styles.logoText}>Maria Yasmim Lopes</span>
+              <span style={{ ...styles.logoText, fontSize: isMobile ? '14px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
-            <nav style={styles.nav}>
-              <a href="#inicio" style={styles.navLink}>Início</a>
-              <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
-              <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
-            </nav>
-            <a href="#agendamento" style={styles.primaryButton}>
-              Agendar Avaliação
+            {!isMobile && (
+                <nav style={styles.nav}>
+                  <a href="#inicio" style={styles.navLink}>Início</a>
+                  <a href="#sobre" style={styles.navLink}>Sobre</a>
+                  <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
+                  <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
+                </nav>
+            )}
+            <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '8px 12px' : '10px 20px', fontSize: isMobile ? '12px' : '14px' }}>
+              {isMobile ? 'Agendar' : 'Agendar Avaliação'}
             </a>
           </div>
         </header>
@@ -121,7 +132,7 @@ export default function LandingPage() {
             {/* Carrossel de Fotos */}
             <div style={styles.carouselContainer}>
               <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
-              <div style={styles.carouselSlide}>
+              <div style={{ ...styles.carouselSlide, height: isMobile ? '320px' : '500px' }}>
                 <img src={photos[currentSlide].url} alt={photos[currentSlide].title} style={styles.carouselImage} />
                 <div style={styles.carouselCaption}>{photos[currentSlide].title}</div>
               </div>
@@ -148,6 +159,35 @@ export default function LandingPage() {
               <a href="https://www.instagram.com/yasmimlopes_estetica/" target="_blank" rel="noreferrer" style={styles.instagramButton}>
                 Instagram
               </a>
+            </div>
+          </div>
+        </section>
+
+        {/* About Section */}
+        <section id="sobre" style={styles.aboutSection}>
+          <div style={styles.aboutGrid}>
+            <div style={styles.aboutPhotos}>
+              <img src="/foto20.jpg.png" alt="Maria Yasmim atendendo cliente" style={styles.aboutPhotoMain} />
+              <div style={styles.aboutPhotosRow}>
+                <img src="/foto21.jpg.png" alt="Procedimento estético" style={styles.aboutPhotoSmall} />
+                <img src="/foto23.jpg.png" alt="Resultado de tratamento" style={styles.aboutPhotoSmall} />
+              </div>
+            </div>
+            <div style={styles.aboutText}>
+              <span style={styles.badge}>Sobre Mim</span>
+              <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
+              <p style={styles.aboutParagraph}>
+                Esteticista graduanda, apaixonada pela área da beleza e por contribuir para a elevação da autoestima de outras mulheres.
+              </p>
+              <p style={styles.aboutParagraph}>
+                Meu objetivo é realçar a beleza natural de cada cliente, promovendo não apenas resultados estéticos, mas também momentos de relaxamento, bem-estar e um atendimento único e acolhedor.
+              </p>
+              <p style={styles.aboutParagraph}>
+                Trabalho com limpeza de pele e massagem facial relaxante, oferecendo um cuidado completo para a sua pele 💜
+              </p>
+              <p style={styles.aboutQuote}>
+                Aqui, você encontra um atendimento pensado para oferecer uma experiência única e especial.
+              </p>
             </div>
           </div>
         </section>
@@ -329,10 +369,10 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: 'sans-serif', backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
-  header: { position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
-  headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
-  logoCircle: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
+  header: { position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 16px', boxSizing: 'border-box' as const },
+  headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' },
+  logoContainer: { display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' as const, minWidth: 0 },
+  logoCircle: { width: '36px', height: '36px', flexShrink: 0, borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
   logoText: { fontSize: '18px', fontWeight: 'bold', color: '#3D1A4C' },
   nav: { display: 'flex', gap: '30px' },
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
@@ -343,8 +383,8 @@ const styles = {
   heroTitle: { fontSize: '38px', fontWeight: 'bold', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2 },
   heroText: { fontSize: '16px', color: '#5A4A60', marginBottom: '25px', lineHeight: 1.5 },
 
-  carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#fff' },
-  carouselSlide: { position: 'relative' as const, width: '100%', height: '350px' },
+  carouselContainer: { position: 'relative' as const, maxWidth: '900px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#fff' },
+  carouselSlide: { position: 'relative' as const, width: '100%', height: '500px' },
   carouselImage: { width: '100%', height: '100%', objectFit: 'cover' as const },
   carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.75)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold' },
   carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
@@ -355,6 +395,17 @@ const styles = {
   whatsappButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '14px 28px', borderRadius: '30px', textDecoration: 'none', fontWeight: 'bold', fontSize: '16px', display: 'inline-block', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' },
   heroActions: { display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' as const },
   instagramButton: { backgroundColor: '#FFF', color: '#2D1537', padding: '14px 28px', borderRadius: '30px', textDecoration: 'none', fontWeight: 'bold', fontSize: '16px', display: 'inline-block', border: '2px solid #A259C4', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' },
+  aboutSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
+  aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '50px', alignItems: 'center' },
+  aboutPhotos: { flex: '1 1 380px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
+  aboutPhotoMain: { width: '100%', height: '320px', objectFit: 'cover' as const, borderRadius: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' },
+  aboutPhotosRow: { display: 'flex', gap: '14px' },
+  aboutPhotoSmall: { width: '50%', height: '150px', objectFit: 'cover' as const, borderRadius: '14px', boxShadow: '0 6px 14px rgba(0,0,0,0.10)' },
+  aboutText: { flex: '1 1 380px' },
+  aboutTitle: { fontSize: '32px', fontWeight: 'bold', color: '#2D1537', marginBottom: '18px' },
+  aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.7, marginBottom: '16px' },
+  aboutQuote: { fontSize: '16px', fontStyle: 'italic' as const, color: '#A259C4', lineHeight: 1.6, marginTop: '10px' },
+
   section: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   sectionHeader: { textAlign: 'center' as const, marginBottom: '50px' },
   sectionTitle: { fontSize: '32px', fontWeight: 'bold', color: '#2D1537', marginBottom: '10px' },
