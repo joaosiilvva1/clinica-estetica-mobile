@@ -12,6 +12,9 @@ export default function LandingPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Estado para controlar qual pergunta do FAQ está aberta
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   const availableTimeSlots = [
     '09:00', '10:00', '11:00',
     '13:00', '14:00', '15:00', '16:00', '17:00'
@@ -35,30 +38,26 @@ export default function LandingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
 
-  // Tudo resolvido via JavaScript (Injeta SEO, Fontes e Scroll Suave sem precisar do HTML)
+  // Injeta SEO Avançado, Fontes e Scroll Suave sem precisar do HTML
   useEffect(() => {
-    // 1. Título e SEO para o Google
-    document.title = 'Maria Yasmim Lopes | Limpeza de Pele em Taboão da Serra';
+    document.title = 'Maria Yasmim Lopes | Especialista em Limpeza de Pele em Taboão da Serra';
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
       metaDesc.setAttribute('name', 'description');
       document.head.appendChild(metaDesc);
     }
-    metaDesc.setAttribute('content', 'Procurando por limpeza de pele em Taboão da Serra? Conheça os tratamentos de estética avançada e cuidados faciais com Maria Yasmim Lopes.');
+    metaDesc.setAttribute('content', 'Clínica de estética especializada em limpeza de pele profunda, controle de acne, oleosidade e hidratação facial na região de Taboão da Serra.');
 
-    // 2. Fontes Sofisticadas
     const linkFont = document.createElement('link');
-    linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
+    linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
     linkFont.rel = 'stylesheet';
     document.head.appendChild(linkFont);
 
-    // 3. Estilo global para o "Scroll Suave" (rolagem elegante)
     const style = document.createElement('style');
     style.innerHTML = `html { scroll-behavior: smooth; }`;
     document.head.appendChild(style);
 
-    // 4. Checagem de Mobile
     const checkWidth = () => setIsMobile(window.innerWidth < 720);
     checkWidth();
     window.addEventListener('resize', checkWidth);
@@ -104,7 +103,6 @@ export default function LandingPage() {
         .then((res) => res.json())
         .then((data) => setProfessionalId(data?.[0]?.id ?? 'default-pro'))
         .catch(() => setProfessionalId('default-pro'));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -142,13 +140,10 @@ export default function LandingPage() {
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBookingError(null);
-
     const activeProfId = professionalId || 'default-pro';
-
     setSubmitting(true);
     try {
       const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
-
       await fetch(`${API_BASE_URL}/api/appointments/public`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -214,8 +209,25 @@ export default function LandingPage() {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index);
+  };
+
+  const faqData = [
+    { question: "A limpeza de pele profunda dói?", answer: "Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você." },
+    { question: "De quanto em quanto tempo devo fazer a limpeza de pele?", answer: "O ideal é realizar o procedimento a cada 30 ou 40 dias, acompanhando o ciclo natural de renovação celular da sua pele, mantendo-a sempre viçosa e saudável." },
+    { question: "Os produtos utilizados dão alergia?", answer: "Trabalhamos exclusivamente com dermocosméticos de alta qualidade e hipoalergênicos, garantindo segurança e eficácia em cada protocolo." },
+    { question: "Gestante pode fazer limpeza de pele?", answer: "Sim! Com as devidas adaptações de produtos, as gestantes podem e devem cuidar da pele, além de aproveitarem nossos protocolos de relaxamento facial." }
+  ];
+
   return (
       <div id="inicio" style={styles.container}>
+
+        {/* Botão Flutuante do WhatsApp */}
+        <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.floatingWhatsApp}>
+          <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        </a>
+
         {/* Header */}
         <header style={styles.header}>
           <div style={styles.headerContent}>
@@ -228,7 +240,7 @@ export default function LandingPage() {
                   <a href="#inicio" style={styles.navLink}>Início</a>
                   <a href="#sobre" style={styles.navLink}>Sobre</a>
                   <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
-                  <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
+                  <a href="#faq" style={styles.navLink}>Dúvidas</a>
                 </nav>
             )}
             <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '8px 12px' : '10px 20px', fontSize: isMobile ? '12px' : '14px' }}>
@@ -240,17 +252,16 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section style={styles.hero}>
           <div style={styles.heroContent}>
-            <span style={styles.badge}>Estética Avançada em Taboão da Serra</span>
+            <span style={styles.badge}>Clínica de Estética em Taboão da Serra</span>
             <h1 style={styles.heroTitle}>Especialista em Limpeza de Pele e Cuidados Faciais</h1>
             <p style={styles.heroText}>
-              Realce sua essência natural com tratamentos de <strong>limpeza de pele em Taboão da Serra</strong>, projetados para cuidar da sua pele e elevar a sua autoestima.
+              Realce sua essência natural com tratamentos de alta performance. Renove sua pele, recupere sua autoestima e desfrute de um momento único de cuidado e bem-estar.
             </p>
 
             {/* Carrossel de Fotos com Fundo Estético Suave */}
             <div style={styles.carouselContainer}>
               <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
               <div style={styles.carouselSlide}>
-                {/* Imagem de fundo desfocada para preencher as laterais harmoniosamente */}
                 <div
                     style={{
                       ...styles.carouselBgBlur,
@@ -276,40 +287,60 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Botões com ícones para WhatsApp e Instagram */}
             <div style={styles.heroActions}>
-              <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.socialIconButton}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                WhatsApp
-              </a>
-              <a href="https://www.instagram.com/yasmimlopes_estetica/" target="_blank" rel="noreferrer" style={styles.socialIconButtonSecondary}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                Instagram
+              <a href="#agendamento" style={styles.primaryActionButton}>
+                Ver Tratamentos e Agendar
               </a>
             </div>
           </div>
         </section>
 
-        {/* About Section */}
+        {/* NOVA SEÇÃO: Indicações / Dores do Cliente */}
+        <section style={styles.indicationsSection}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Nossos tratamentos são ideais para quem busca:</h2>
+          </div>
+          <div style={styles.indicationsGrid}>
+            <div style={styles.indicationCard}>
+              <div style={styles.indicationIcon}>✨</div>
+              <h4 style={styles.indicationTitle}>Remoção de Cravos e Acne</h4>
+              <p style={styles.indicationText}>Extração segura e profunda para desobstruir os poros e prevenir inflamações.</p>
+            </div>
+            <div style={styles.indicationCard}>
+              <div style={styles.indicationIcon}>💧</div>
+              <h4 style={styles.indicationTitle}>Controle de Oleosidade</h4>
+              <p style={styles.indicationText}>Equilíbrio perfeito da derme, acabando com o excesso de brilho e pele engordurada.</p>
+            </div>
+            <div style={styles.indicationCard}>
+              <div style={styles.indicationIcon}>🌸</div>
+              <h4 style={styles.indicationTitle}>Renovação Celular</h4>
+              <p style={styles.indicationText}>Remoção de células mortas, devolvendo a maciez e clareando levemente a pele.</p>
+            </div>
+            <div style={styles.indicationCard}>
+              <div style={styles.indicationIcon}>💆‍♀️</div>
+              <h4 style={styles.indicationTitle}>Hidratação e Viço (Glow)</h4>
+              <p style={styles.indicationText}>Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* About Section com Gatilhos de Autoridade */}
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              <img src="/fotosobre.jpg.jpeg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
+              <img src="/fotosobre.jpg.jpeg" alt="Maria Yasmim Lopes" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
-              <span style={styles.badge}>Sobre Mim</span>
+              <span style={styles.badge}>Sua Esteticista</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista formada especializada em <strong>limpeza de pele em Taboão da Serra</strong>, apaixonada pela área da beleza e por elevar a autoestima de cada cliente.
+                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.
               </p>
               <p style={styles.aboutParagraph}>
-                Meu objetivo é realçar a sua beleza natural, promovendo resultados estéticos duradouros, relaxamento profundo e um atendimento exclusivo em um ambiente acolhedor.
+                Trabalho focada na saúde da sua pele, utilizando protocolos modernos, <strong>dermocosméticos de alta tecnologia</strong> e seguindo as mais rigorosas normas de <strong>biossegurança</strong>.
               </p>
               <p style={styles.aboutParagraph}>
-                Trabalho com protocolos modernos para deixar sua pele renovada, limpa e com aquele glow especial 💜
-              </p>
-              <p style={styles.aboutQuote}>
-                Aqui, cada detalhe é pensado para oferecer uma experiência única de cuidado.
+                Meu objetivo é proporcionar a melhor experiência em estética na região do Taboão da Serra, unindo eficácia técnica a um ambiente acolhedor de relaxamento profundo 💜
               </p>
             </div>
           </div>
@@ -318,8 +349,8 @@ export default function LandingPage() {
         {/* Treatments Section */}
         <section id="tratamentos" style={styles.section}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Nossos Tratamentos</h2>
-            <p style={styles.sectionSubtitle}>Procedimentos de alta performance voltados para o cuidado completo da sua pele em Taboão da Serra.</p>
+            <h2 style={styles.sectionTitle}>Procedimentos Exclusivos</h2>
+            <p style={styles.sectionSubtitle}>Protocolos de alta performance voltados para as necessidades únicas do seu rosto.</p>
           </div>
           <div style={styles.grid}>
             {treatments.map((item) => (
@@ -334,9 +365,9 @@ export default function LandingPage() {
         {/* Booking Section */}
         <section id="agendamento" style={styles.bookingSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Agende seu Procedimento</h2>
+            <h2 style={styles.sectionTitle}>Agende seu Atendimento</h2>
             <p style={styles.sectionSubtitle}>
-              Escolha o dia e o horário disponível para o seu atendimento.
+              Garanta seu horário de forma rápida e prática.
             </p>
           </div>
 
@@ -373,7 +404,7 @@ export default function LandingPage() {
                     onChange={handleFormChange('treatmentId')}
                     style={styles.bookingInput}
                 >
-                  <option value="" disabled>Selecione o tratamento</option>
+                  <option value="" disabled>Selecione o tratamento desejado</option>
                   {treatments.map((t) => (
                       <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
@@ -437,7 +468,7 @@ export default function LandingPage() {
                       cursor: formData.time && !submitting ? 'pointer' : 'not-allowed'
                     }}
                 >
-                  {submitting ? 'Confirmando...' : 'Enviar pelo WhatsApp'}
+                  {submitting ? 'Confirmando...' : 'Agendar via WhatsApp'}
                 </button>
               </form>
           )}
@@ -446,8 +477,8 @@ export default function LandingPage() {
         {/* Testimonials Section */}
         <section id="depoimentos" style={styles.testimonialsSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>O Que Dizem Nossas Clientes</h2>
-            <p style={styles.sectionSubtitle}>Histórias reais de transformação e cuidado personalizado.</p>
+            <h2 style={styles.sectionTitle}>Depoimentos Reais</h2>
+            <p style={styles.sectionSubtitle}>Veja o que nossas clientes dizem sobre a experiência.</p>
           </div>
 
           {testimonials.length > 0 && (
@@ -470,45 +501,26 @@ export default function LandingPage() {
                 ))}
               </div>
           )}
+        </section>
 
-          <div style={styles.testimonialFormWrapper}>
-            {testimonialSubmitted ? (
-                <p style={styles.bookingSuccessText}>
-                  Obrigada pelo seu depoimento! Ele já foi publicado com sucesso.
-                </p>
-            ) : (
-                <form onSubmit={handleTestimonialSubmit} style={styles.bookingForm}>
-                  <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2D1537', marginBottom: '15px' }}>Deixe seu depoimento</h3>
-                  <input
-                      type="text"
-                      placeholder="Seu nome"
-                      required
-                      value={testimonialForm.clientName}
-                      onChange={(e) => setTestimonialForm((p) => ({ ...p, clientName: e.target.value }))}
-                      style={styles.bookingInput}
-                  />
-                  <div style={styles.starPicker}>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                        <span
-                            key={n}
-                            onClick={() => setTestimonialForm((p) => ({ ...p, rating: n }))}
-                            style={{ ...styles.starPickerStar, opacity: n <= testimonialForm.rating ? 1 : 0.35 }}
-                        >
-                        ★
-                      </span>
-                    ))}
+        {/* NOVA SEÇÃO: FAQ (Perguntas Frequentes) para Otimização de SEO */}
+        <section id="faq" style={styles.faqSection}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Perguntas Frequentes</h2>
+            <p style={styles.sectionSubtitle}>Tire suas principais dúvidas sobre os nossos tratamentos.</p>
+          </div>
+          <div style={styles.faqContainer}>
+            {faqData.map((faq, index) => (
+                <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
+                  <div style={styles.faqQuestionHeader}>
+                    <h4 style={styles.faqQuestionText}>{faq.question}</h4>
+                    <span style={styles.faqIcon}>{openFaq === index ? '−' : '+'}</span>
                   </div>
-                  <textarea
-                      placeholder="Conte como foi sua experiência"
-                      required
-                      value={testimonialForm.comment}
-                      onChange={(e) => setTestimonialForm((p) => ({ ...p, comment: e.target.value }))}
-                      style={{ ...styles.bookingInput, minHeight: '90px', fontFamily: 'inherit' }}
-                  />
-                  {testimonialError && <p style={{ color: 'red', fontSize: '13px' }}>{testimonialError}</p>}
-                  <button type="submit" style={styles.bookingSubmitButton}>Enviar depoimento</button>
-                </form>
-            )}
+                  {openFaq === index && (
+                      <p style={styles.faqAnswerText}>{faq.answer}</p>
+                  )}
+                </div>
+            ))}
           </div>
         </section>
 
@@ -517,13 +529,13 @@ export default function LandingPage() {
           <div style={styles.footerContent}>
             <div>
               <h3 style={styles.footerTitle}>Maria Yasmim Lopes</h3>
-              <p style={styles.footerTextDesc}>Excelência, técnica e amor em cada detalhe do cuidado estético e limpeza de pele em Taboão da Serra.</p>
+              <p style={styles.footerTextDesc}>Excelência, tecnologia e amor em cada detalhe do cuidado estético na região de Taboão da Serra.</p>
             </div>
             <div style={styles.footerContact}>
               <p style={{ fontWeight: 'bold', color: '#FFF' }}>Contato:</p>
               <p>(11) 91622-4612</p>
               <p>contato@mariayasmimestetica.com.br</p>
-              <p>
+              <p style={{ marginTop: '10px' }}>
                 <a href="https://www.instagram.com/yasmimlopes_estetica/" target="_blank" rel="noreferrer" style={styles.footerInstagramLink}>
                   @yasmimlopes_estetica
                 </a>
@@ -540,6 +552,10 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
+
+  // Botão Flutuante do WhatsApp (Sempre visível)
+  floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
+
   header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
@@ -548,98 +564,88 @@ const styles = {
   nav: { display: 'flex', gap: '30px' },
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '10px 20px', borderRadius: '25px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
-  hero: { padding: '150px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
-  heroContent: { maxWidth: '800px', margin: '0 auto' },
-  badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '15px', letterSpacing: '1px' },
-  heroTitle: { fontSize: '40px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
-  heroText: { fontSize: '16px', color: '#5A4A60', marginBottom: '30px', lineHeight: 1.6 },
 
-  carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#2D1537' },
+  hero: { padding: '160px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
+  heroContent: { maxWidth: '850px', margin: '0 auto' },
+  badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
+  heroTitle: { fontSize: '42px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
+  heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '35px', lineHeight: 1.6 },
+
+  primaryActionButton: { display: 'inline-block', backgroundColor: '#2D1537', color: '#FFF', padding: '15px 35px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', transition: 'transform 0.2s' },
+  heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
+
+  carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 40px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '380px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
-  carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.6)', transform: 'scale(1.1)', zIndex: 1 },
+  carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.5)', transform: 'scale(1.1)', zIndex: 1 },
   carouselImage: { position: 'relative' as const, height: '100%', maxWidth: '100%', objectFit: 'contain' as const, zIndex: 2 },
-
   carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
   carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
 
-  heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
-  socialIconButton: { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#25D366', color: '#FFF', padding: '12px 24px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '15px', boxShadow: '0 4px 10px rgba(37,211,102,0.3)', transition: 'transform 0.2s' },
-  socialIconButtonSecondary: { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFF', color: '#C13584', padding: '12px 24px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '15px', border: '2px solid #C13584', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', transition: 'transform 0.2s' },
+  // Nova Seção de Indicações (Dores)
+  indicationsSection: { padding: '40px 20px 80px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' as const },
+  indicationsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '25px', marginTop: '40px' },
+  indicationCard: { backgroundColor: '#FFF', padding: '30px 20px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', border: '1px solid #F0E4F5' },
+  indicationIcon: { fontSize: '32px', marginBottom: '15px' },
+  indicationTitle: { fontSize: '18px', fontWeight: '700', color: '#2D1537', marginBottom: '10px', fontFamily: "'Playfair Display', serif" },
+  indicationText: { fontSize: '14px', color: '#6D5D75', lineHeight: 1.5 },
 
   aboutSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
-  aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '50px', alignItems: 'center' },
-  aboutPhotos: { flex: '1 1 380px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
-  aboutPhotoMain: { width: '100%', height: '520px', objectFit: 'cover' as const, borderRadius: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' },
-  aboutText: { flex: '1 1 380px' },
-  aboutTitle: { fontSize: '34px', fontWeight: '700', color: '#2D1537', marginBottom: '18px', fontFamily: "'Playfair Display', serif" },
-  aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.7, marginBottom: '16px' },
-  aboutQuote: { fontSize: '16px', fontStyle: 'italic' as const, color: '#A259C4', lineHeight: 1.6, marginTop: '10px', fontFamily: "'Playfair Display', serif" },
+  aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '60px', alignItems: 'center' },
+  aboutPhotos: { flex: '1 1 400px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
+  aboutPhotoMain: { width: '100%', height: '550px', objectFit: 'cover' as const, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,0.1)' },
+  aboutText: { flex: '1 1 400px' },
+  aboutTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '20px', fontFamily: "'Playfair Display', serif" },
+  aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.8, marginBottom: '16px' },
 
   section: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   sectionHeader: { textAlign: 'center' as const, marginBottom: '50px' },
-  sectionTitle: { fontSize: '34px', fontWeight: '700', color: '#2D1537', marginBottom: '10px', fontFamily: "'Playfair Display', serif" },
+  sectionTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   sectionSubtitle: { fontSize: '16px', color: '#6D5D75' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '30px' },
-  card: { backgroundColor: '#FFF', padding: '30px', borderRadius: '16px', border: '1px solid #F0E4F5', boxShadow: '0 2px 5px rgba(0,0,0,0.03)', textAlign: 'left' as const },
-  cardTitle: { fontSize: '20px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
-  cardText: { fontSize: '14px', color: '#6D5D75', lineHeight: 1.5 },
-  testimonialsSection: { padding: '80px 20px', backgroundColor: '#F8F2FB' },
-  testimonialFormWrapper: { maxWidth: '480px', margin: '50px auto 0 auto', backgroundColor: '#FFF', borderRadius: '16px', padding: '30px', border: '1px solid #E8D7F1' },
-  starPicker: { display: 'flex', gap: '6px', fontSize: '26px' },
-  starPickerStar: { color: '#A259C4', cursor: 'pointer', transition: 'opacity 0.2s' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px' },
+  card: { backgroundColor: '#FFF', padding: '35px', borderRadius: '20px', border: '1px solid #E8D7F1', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', textAlign: 'left' as const, transition: 'transform 0.3s' },
+  cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
+  cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6 },
 
-  bookingSection: { padding: '80px 20px', maxWidth: '600px', margin: '0 auto' },
-  bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '14px' },
-  bookingInput: { padding: '14px 16px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FFF', width: '100%', boxSizing: 'border-box' as const },
-
-  fieldGroup: { display: 'flex', flexDirection: 'column' as const, gap: '6px', textAlign: 'left' as const },
-  fieldLabel: { fontSize: '14px', fontWeight: 'bold', color: '#2D1537' },
-  timeSlotsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px', marginTop: '5px' },
-  slotButton: {
-    padding: '10px',
-    borderRadius: '8px',
-    border: '1px solid #A259C4',
-    backgroundColor: '#FFF',
-    color: '#A259C4',
-    fontWeight: 'bold' as const,
-    fontSize: '13px',
-    cursor: 'pointer',
-    transition: 'all 0.2s'
-  },
-  slotBusy: {
-    backgroundColor: '#E0E0E0',
-    borderColor: '#CCCCCC',
-    color: '#888888',
-    cursor: 'not-allowed',
-    textDecoration: 'line-through'
-  },
-  slotSelected: {
-    backgroundColor: '#A259C4',
-    color: '#FFF'
-  },
-
-  bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '14px 28px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '8px' },
+  bookingSection: { padding: '80px 20px', maxWidth: '650px', margin: '0 auto' },
+  bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '16px', backgroundColor: '#FFF', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
+  bookingInput: { padding: '15px 18px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FAF9F6', width: '100%', boxSizing: 'border-box' as const, transition: 'border-color 0.2s' },
+  fieldGroup: { display: 'flex', flexDirection: 'column' as const, gap: '8px', textAlign: 'left' as const },
+  fieldLabel: { fontSize: '14px', fontWeight: '600', color: '#2D1537' },
+  timeSlotsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', marginTop: '5px' },
+  slotButton: { padding: '12px', borderRadius: '8px', border: '1px solid #A259C4', backgroundColor: '#FFF', color: '#A259C4', fontWeight: 'bold' as const, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' },
+  slotBusy: { backgroundColor: '#F0F0F0', borderColor: '#DDD', color: '#A0A0A0', cursor: 'not-allowed', textDecoration: 'line-through' },
+  slotSelected: { backgroundColor: '#A259C4', color: '#FFF' },
+  bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '16px 30px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 12px rgba(45,21,55,0.2)' },
   bookingSuccess: { textAlign: 'center' as const, backgroundColor: '#F3E6F8', borderRadius: '16px', padding: '30px' },
-  bookingSuccessText: { fontSize: '15px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
+  bookingSuccessText: { fontSize: '16px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
   bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
   bookingResetLink: { background: 'none', border: 'none', color: '#A259C4', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' },
 
-  footerInstagramLink: { color: '#D4A5E0', textDecoration: 'none' },
-
-  googleReviewCard: { backgroundColor: '#FFF', padding: '25px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' as const, textAlign: 'left' as const },
+  testimonialsSection: { padding: '80px 20px', backgroundColor: '#F8F2FB' },
+  googleReviewCard: { backgroundColor: '#FFF', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' as const, textAlign: 'left' as const },
   reviewHeader: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' },
-  avatar: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px' },
-  clientNameGoogle: { fontWeight: 'bold', color: '#2D1537', fontSize: '16px', margin: '0 0 5px 0' },
-  starsContainer: { fontSize: '14px' },
-  googleReviewText: { fontSize: '15px', color: '#4A4A4A', lineHeight: 1.6, margin: 0 },
+  avatar: { width: '45px', height: '45px', borderRadius: '50%', backgroundColor: '#A259C4', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '20px' },
+  clientNameGoogle: { fontWeight: 'bold', color: '#2D1537', fontSize: '17px', margin: '0 0 5px 0' },
+  starsContainer: { fontSize: '15px' },
+  googleReviewText: { fontSize: '15px', color: '#4A4A4A', lineHeight: 1.7, margin: 0 },
 
-  footer: { backgroundColor: '#2D1537', color: '#FAF9F6', padding: '60px 20px 20px 20px', textAlign: 'left' as const },
-  footerContent: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px', borderBottom: '1px solid #4A155E', paddingBottom: '40px' },
-  footerTitle: { fontSize: '22px', fontWeight: 'bold', color: '#E3C2F0', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
-  footerTextDesc: { fontSize: '14px', color: '#D4A5E0', lineHeight: 1.5 },
-  footerContact: { fontSize: '14px', color: '#D4A5E0', lineHeight: 1.6 },
-  footerBottom: { maxWidth: '1200px', margin: '30px auto 0 auto', textAlign: 'center' as const, fontSize: '12px', color: '#A259C4' }
+  // Nova Seção de FAQ
+  faqSection: { padding: '80px 20px', maxWidth: '800px', margin: '0 auto' },
+  faqContainer: { display: 'flex', flexDirection: 'column' as const, gap: '15px' },
+  faqItem: { backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #E8D7F1', padding: '20px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
+  faqQuestionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  faqQuestionText: { fontSize: '16px', fontWeight: '600', color: '#2D1537', margin: 0 },
+  faqIcon: { fontSize: '24px', color: '#A259C4', fontWeight: 'bold' },
+  faqAnswerText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, margin: '15px 0 0 0', paddingTop: '15px', borderTop: '1px solid #F0E4F5' },
+
+  footer: { backgroundColor: '#2D1537', color: '#FAF9F6', padding: '70px 20px 30px 20px', textAlign: 'left' as const },
+  footerContent: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '50px', borderBottom: '1px solid #4A155E', paddingBottom: '40px' },
+  footerTitle: { fontSize: '24px', fontWeight: 'bold', color: '#E3C2F0', marginBottom: '15px', fontFamily: "'Playfair Display', serif" },
+  footerTextDesc: { fontSize: '15px', color: '#D4A5E0', lineHeight: 1.6 },
+  footerContact: { fontSize: '15px', color: '#D4A5E0', lineHeight: 1.7 },
+  footerInstagramLink: { color: '#FFF', textDecoration: 'none', fontWeight: 'bold' },
+  footerBottom: { maxWidth: '1200px', margin: '30px auto 0 auto', textAlign: 'center' as const, fontSize: '13px', color: '#A259C4' }
 };
