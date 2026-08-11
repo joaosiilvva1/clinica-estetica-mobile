@@ -35,12 +35,10 @@ export default function LandingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
 
+  // Tudo resolvido via JavaScript (Injeta SEO, Fontes e Scroll Suave sem precisar do HTML)
   useEffect(() => {
-    const linkFont = document.createElement('link');
-    linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
-    linkFont.rel = 'stylesheet';
-    document.head.appendChild(linkFont);
-
+    // 1. Título e SEO para o Google
+    document.title = 'Maria Yasmim Lopes | Limpeza de Pele em Taboão da Serra';
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -49,6 +47,18 @@ export default function LandingPage() {
     }
     metaDesc.setAttribute('content', 'Procurando por limpeza de pele em Taboão da Serra? Conheça os tratamentos de estética avançada e cuidados faciais com Maria Yasmim Lopes.');
 
+    // 2. Fontes Sofisticadas
+    const linkFont = document.createElement('link');
+    linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
+    linkFont.rel = 'stylesheet';
+    document.head.appendChild(linkFont);
+
+    // 3. Estilo global para o "Scroll Suave" (rolagem elegante)
+    const style = document.createElement('style');
+    style.innerHTML = `html { scroll-behavior: smooth; }`;
+    document.head.appendChild(style);
+
+    // 4. Checagem de Mobile
     const checkWidth = () => setIsMobile(window.innerWidth < 720);
     checkWidth();
     window.addEventListener('resize', checkWidth);
@@ -544,7 +554,6 @@ const styles = {
   heroTitle: { fontSize: '40px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
   heroText: { fontSize: '16px', color: '#5A4A60', marginBottom: '30px', lineHeight: 1.6 },
 
-  // Carrossel com fundo desfocado elegante para eliminar as tarjas pretas laterais
   carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#2D1537' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '380px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.6)', transform: 'scale(1.1)', zIndex: 1 },
