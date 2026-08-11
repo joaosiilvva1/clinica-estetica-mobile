@@ -369,7 +369,8 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: 'sans-serif', backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
-  header: { position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
+  // 👇 OLHA A CORREÇÃO AQUI NESSE BLOCO DO HEADER 👇
+  header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
   logoCircle: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
