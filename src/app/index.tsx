@@ -36,6 +36,21 @@ export default function LandingPage() {
   const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
 
   useEffect(() => {
+    // Injeta fontes sofisticadas (Playfair Display + Montserrat) e metatags de SEO no header da página
+    const linkFont = document.createElement('link');
+    linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
+    linkFont.rel = 'stylesheet';
+    document.head.appendChild(linkFont);
+
+    // Adiciona meta description para SEO com a palavra-chave de Taboão da Serra
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', 'Procurando por limpeza de pele em Taboão da Serra? Conheça os tratamentos de estética avançada e cuidados faciais com Maria Yasmim Lopes.');
+
     const checkWidth = () => setIsMobile(window.innerWidth < 720);
     checkWidth();
     window.addEventListener('resize', checkWidth);
@@ -217,10 +232,10 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section style={styles.hero}>
           <div style={styles.heroContent}>
-            <span style={styles.badge}>Estética Avançada e Personalizada</span>
-            <h1 style={styles.heroTitle}>A Sua Jornada de Beleza Começa Aqui</h1>
+            <span style={styles.badge}>Estética Avançada em Taboão da Serra</span>
+            <h1 style={styles.heroTitle}>Especialista em Limpeza de Pele e Cuidados Faciais</h1>
             <p style={styles.heroText}>
-              Realce sua essência natural com tratamentos estéticos exclusivos projetados para cuidar da sua pele e elevar a sua autoestima.
+              Realce sua essência natural com tratamentos de <strong>limpeza de pele em Taboão da Serra</strong>, projetados para cuidar da sua pele e elevar a sua autoestima.
             </p>
 
             {/* Carrossel de Fotos */}
@@ -246,11 +261,14 @@ export default function LandingPage() {
               </div>
             </div>
 
+            {/* Novos Botões Minimalistas com Símbolos (WhatsApp & Instagram) */}
             <div style={styles.heroActions}>
-              <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.whatsappButton}>
-                Falar no WhatsApp
+              <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.socialIconButton}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                WhatsApp
               </a>
-              <a href="https://www.instagram.com/yasmimlopes_estetica/" target="_blank" rel="noreferrer" style={styles.instagramButton}>
+              <a href="https://www.instagram.com/yasmimlopes_estetica/" target="_blank" rel="noreferrer" style={styles.socialIconButtonSecondary}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                 Instagram
               </a>
             </div>
@@ -267,16 +285,16 @@ export default function LandingPage() {
               <span style={styles.badge}>Sobre Mim</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista formada, apaixonada pela área da beleza e por contribuir para a elevação da autoestima de outras mulheres.
+                Esteticista formada especializada em <strong>limpeza de pele em Taboão da Serra</strong>, apaixonada pela área da beleza e por elevar a autoestima de cada cliente.
               </p>
               <p style={styles.aboutParagraph}>
-                Meu objetivo é realçar a beleza natural de cada cliente, promovendo não apenas resultados estéticos, mas também momentos de relaxamento, bem-estar e um atendimento único e acolhedor.
+                Meu objetivo é realçar a sua beleza natural, promovendo resultados estéticos duradouros, relaxamento profundo e um atendimento exclusivo em um ambiente acolhedor.
               </p>
               <p style={styles.aboutParagraph}>
-                Trabalho com limpeza de pele e massagem facial relaxante, oferecendo um cuidado completo para a sua pele 💜
+                Trabalho com protocolos modernos para deixar sua pele renovada, limpa e com aquele glow especial 💜
               </p>
               <p style={styles.aboutQuote}>
-                Aqui, você encontra um atendimento pensado para oferecer uma experiência única e especial.
+                Aqui, cada detalhe é pensado para oferecer uma experiência única de cuidado.
               </p>
             </div>
           </div>
@@ -286,7 +304,7 @@ export default function LandingPage() {
         <section id="tratamentos" style={styles.section}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Nossos Tratamentos</h2>
-            <p style={styles.sectionSubtitle}>Procedimentos de alta performance voltados para o cuidado completo da sua pele.</p>
+            <p style={styles.sectionSubtitle}>Procedimentos de alta performance voltados para o cuidado completo da sua pele em Taboão da Serra.</p>
           </div>
           <div style={styles.grid}>
             {treatments.map((item) => (
@@ -484,7 +502,7 @@ export default function LandingPage() {
           <div style={styles.footerContent}>
             <div>
               <h3 style={styles.footerTitle}>Maria Yasmim Lopes</h3>
-              <p style={styles.footerTextDesc}>Excelência, técnica e amor em cada detalhe do cuidado estético.</p>
+              <p style={styles.footerTextDesc}>Excelência, técnica e amor em cada detalhe do cuidado estético e limpeza de pele em Taboão da Serra.</p>
             </div>
             <div style={styles.footerContact}>
               <p style={{ fontWeight: 'bold', color: '#FFF' }}>Contato:</p>
@@ -506,22 +524,23 @@ export default function LandingPage() {
 }
 
 const styles = {
-  container: { fontFamily: 'sans-serif', backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
+  container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
   header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
   logoCircle: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
-  logoText: { fontSize: '18px', fontWeight: 'bold', color: '#3D1A4C' },
+  logoText: { fontSize: '18px', fontWeight: 'bold', color: '#3D1A4C', fontFamily: "'Playfair Display', serif" },
   nav: { display: 'flex', gap: '30px' },
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '10px 20px', borderRadius: '25px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
   hero: { padding: '150px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
   heroContent: { maxWidth: '800px', margin: '0 auto' },
-  badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '15px' },
-  heroTitle: { fontSize: '38px', fontWeight: 'bold', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2 },
-  heroText: { fontSize: '16px', color: '#5A4A60', marginBottom: '25px', lineHeight: 1.5 },
+  badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '15px', letterSpacing: '1px' },
 
-  // Alterado objectFit de 'cover' para 'contain' e adicionado um fundo escuro/neutro para preencher as laterais se necessário
+  // Fonte sofisticada Playfair Display nos títulos principais
+  heroTitle: { fontSize: '40px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
+  heroText: { fontSize: '16px', color: '#5A4A60', marginBottom: '30px', lineHeight: 1.6 },
+
   carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 30px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', backgroundColor: '#1a1a1a' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '350px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   carouselImage: { width: '100%', height: '100%', objectFit: 'contain' as const },
@@ -532,25 +551,28 @@ const styles = {
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
 
-  whatsappButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '14px 28px', borderRadius: '30px', textDecoration: 'none', fontWeight: 'bold', fontSize: '16px', display: 'inline-block', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' },
-  heroActions: { display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' as const },
-  instagramButton: { backgroundColor: '#FFF', color: '#2D1537', padding: '14px 28px', borderRadius: '30px', textDecoration: 'none', fontWeight: 'bold', fontSize: '16px', display: 'inline-block', border: '2px solid #A259C4', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' },
+  heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
+
+  // Estilo dos novos botões com ícones para WhatsApp e Instagram
+  socialIconButton: { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#25D366', color: '#FFF', padding: '12px 24px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '15px', boxShadow: '0 4px 10px rgba(37,211,102,0.3)', transition: 'transform 0.2s' },
+  socialIconButtonSecondary: { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFF', color: '#C13584', padding: '12px 24px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '15px', border: '2px solid #C13584', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', transition: 'transform 0.2s' },
+
   aboutSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '50px', alignItems: 'center' },
   aboutPhotos: { flex: '1 1 380px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
   aboutPhotoMain: { width: '100%', height: '520px', objectFit: 'cover' as const, borderRadius: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' },
   aboutText: { flex: '1 1 380px' },
-  aboutTitle: { fontSize: '32px', fontWeight: 'bold', color: '#2D1537', marginBottom: '18px' },
+  aboutTitle: { fontSize: '34px', fontWeight: '700', color: '#2D1537', marginBottom: '18px', fontFamily: "'Playfair Display', serif" },
   aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.7, marginBottom: '16px' },
-  aboutQuote: { fontSize: '16px', fontStyle: 'italic' as const, color: '#A259C4', lineHeight: 1.6, marginTop: '10px' },
+  aboutQuote: { fontSize: '16px', fontStyle: 'italic' as const, color: '#A259C4', lineHeight: 1.6, marginTop: '10px', fontFamily: "'Playfair Display', serif" },
 
   section: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   sectionHeader: { textAlign: 'center' as const, marginBottom: '50px' },
-  sectionTitle: { fontSize: '32px', fontWeight: 'bold', color: '#2D1537', marginBottom: '10px' },
+  sectionTitle: { fontSize: '34px', fontWeight: '700', color: '#2D1537', marginBottom: '10px', fontFamily: "'Playfair Display', serif" },
   sectionSubtitle: { fontSize: '16px', color: '#6D5D75' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '30px' },
   card: { backgroundColor: '#FFF', padding: '30px', borderRadius: '16px', border: '1px solid #F0E4F5', boxShadow: '0 2px 5px rgba(0,0,0,0.03)', textAlign: 'left' as const },
-  cardTitle: { fontSize: '20px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px' },
+  cardTitle: { fontSize: '20px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   cardText: { fontSize: '14px', color: '#6D5D75', lineHeight: 1.5 },
   testimonialsSection: { padding: '80px 20px', backgroundColor: '#F8F2FB' },
   testimonialFormWrapper: { maxWidth: '480px', margin: '50px auto 0 auto', backgroundColor: '#FFF', borderRadius: '16px', padding: '30px', border: '1px solid #E8D7F1' },
@@ -604,7 +626,7 @@ const styles = {
 
   footer: { backgroundColor: '#2D1537', color: '#FAF9F6', padding: '60px 20px 20px 20px', textAlign: 'left' as const },
   footerContent: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px', borderBottom: '1px solid #4A155E', paddingBottom: '40px' },
-  footerTitle: { fontSize: '22px', fontWeight: 'bold', color: '#E3C2F0', marginBottom: '12px' },
+  footerTitle: { fontSize: '22px', fontWeight: 'bold', color: '#E3C2F0', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   footerTextDesc: { fontSize: '14px', color: '#D4A5E0', lineHeight: 1.5 },
   footerContact: { fontSize: '14px', color: '#D4A5E0', lineHeight: 1.6 },
   footerBottom: { maxWidth: '1200px', margin: '30px auto 0 auto', textAlign: 'center' as const, fontSize: '12px', color: '#A259C4' }
