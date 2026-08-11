@@ -147,8 +147,7 @@ export default function LandingPage() {
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
-              {/* CORRIGIDO PARA logo.jpg */}
-              <img src="/logo.jpg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
+              <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
               <span style={{ ...styles.logoText, fontSize: isMobile ? '14px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
             {!isMobile && (
@@ -212,8 +211,7 @@ export default function LandingPage() {
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              {/* CORRIGIDO PARA fotosobre.jpg */}
-              <img src="/fotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
+              <img src="/fotosobre.jpg.jpeg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
               <span style={styles.badge}>Sobre Mim</span>
