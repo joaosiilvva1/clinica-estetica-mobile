@@ -2,9 +2,24 @@ import React, { useState, useEffect } from 'react';
 
 export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [formData, setFormData] = useState({ name: '', whatsapp: '', treatment: '', preferredTime: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    whatsapp: '',
+    treatment: '',
+    date: '',
+    time: ''
+  });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Lista de horários de atendimento da clínica
+  const availableTimeSlots = [
+    '08:00', '09:00', '10:00', '11:00',
+    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
+  ];
+
+  // Simulação/Estado dos horários ocupados retornados do banco de dados (Spring Boot)
+  const [busySlots, setBusySlots] = useState<string[]>([]);
 
   useEffect(() => {
     const checkWidth = () => setIsMobile(window.innerWidth < 720);
@@ -37,6 +52,21 @@ export default function LandingPage() {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
 
+  const API_BASE_URL = 'http://localhost:8080';
+
+  // Sempre que a data muda, busca no backend os horários ocupados para aquele dia
+  useEffect(() => {
+    if (formData.date) {
+      fetch(`${API_BASE_URL}/api/bookings/busy-slots?date=${formData.date}`)
+          .then((res) => res.json())
+          .then((data) => setBusySlots(data))
+          .catch(() => {
+            // Fallback de demonstração caso o backend não esteja conectado
+            setBusySlots(['10:00', '14:00']);
+          });
+    }
+  }, [formData.date]);
+
   const handleFormChange = (field: keyof typeof formData) => (
       e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -50,7 +80,8 @@ export default function LandingPage() {
         `Nome: ${formData.name}\n` +
         `WhatsApp: ${formData.whatsapp}\n` +
         `Tratamento de interesse: ${formData.treatment}\n` +
-        `Horário preferido: ${formData.preferredTime}`;
+        `Data: ${formData.date}\n` +
+        `Horário: ${formData.time}`;
 
     const url = `https://wa.me/5511916224612?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -69,9 +100,6 @@ export default function LandingPage() {
   const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
   const [testimonialError, setTestimonialError] = useState<string | null>(null);
 
-  const API_BASE_URL = 'http://localhost:8080';
-
-  // Busca os depoimentos do banco de dados (Spring Boot + PostgreSQL)
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/testimonials/public`)
         .then((res) => res.json())
@@ -96,6 +124,9 @@ export default function LandingPage() {
       setTestimonialError('Não foi possível enviar agora. Tente novamente em instantes.');
     }
   };
+
+  // Data mínima para o input date (não permite agendar no passado)
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
       <div id="inicio" style={styles.container}>
@@ -163,21 +194,18 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* About Section */}
+        {/* About Section - AGORA COM A FOTO ESCRITA */}
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              <img src="/foto20.jpg.png" alt="Maria Yasmim atendendo cliente" style={styles.aboutPhotoMain} />
-              <div style={styles.aboutPhotosRow}>
-                <img src="/foto21.jpg.png" alt="Procedimento estético" style={styles.aboutPhotoSmall} />
-                <img src="/foto23.jpg.png" alt="Resultado de tratamento" style={styles.aboutPhotoSmall} />
-              </div>
+              {/* Aqui está a nova foto que você pediu */}
+              <img src="/escritafotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
               <span style={styles.badge}>Sobre Mim</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista graduanda, apaixonada pela área da beleza e por contribuir para a elevação da autoestima de outras mulheres.
+                Esteticista formada, apaixonada pela área da beleza e por contribuir para a elevação da autoestima de outras mulheres.
               </p>
               <p style={styles.aboutParagraph}>
                 Meu objetivo é realçar a beleza natural de cada cliente, promovendo não apenas resultados estéticos, mas também momentos de relaxamento, bem-estar e um atendimento único e acolhedor.
@@ -213,7 +241,7 @@ export default function LandingPage() {
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Agende sua Avaliação</h2>
             <p style={styles.sectionSubtitle}>
-              Preencha seus dados — vamos abrir o WhatsApp com tudo pronto, só confirmar o envio.
+              Escolha o dia e o horário disponível para o seu atendimento.
             </p>
           </div>
 
@@ -255,22 +283,65 @@ export default function LandingPage() {
                       <option key={t.id} value={t.title}>{t.title}</option>
                   ))}
                 </select>
-                <input
-                    type="text"
-                    placeholder="Dia e horário preferidos (ex: terça à tarde)"
-                    required
-                    value={formData.preferredTime}
-                    onChange={handleFormChange('preferredTime')}
-                    style={styles.bookingInput}
-                />
-                <button type="submit" style={styles.bookingSubmitButton}>
+
+                {/* Seleção de Data */}
+                <div style={styles.fieldGroup}>
+                  <label style={styles.fieldLabel}>Selecione a data:</label>
+                  <input
+                      type="date"
+                      required
+                      min={todayStr}
+                      value={formData.date}
+                      onChange={handleFormChange('date')}
+                      style={styles.bookingInput}
+                  />
+                </div>
+
+                {/* Seleção de Horários (Grid de Slots) */}
+                {formData.date && (
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.fieldLabel}>Selecione o horário disponível:</label>
+                      <div style={styles.timeSlotsGrid}>
+                        {availableTimeSlots.map((slot) => {
+                          const isBusy = busySlots.includes(slot);
+                          const isSelected = formData.time === slot;
+
+                          return (
+                              <button
+                                  key={slot}
+                                  type="button"
+                                  disabled={isBusy}
+                                  onClick={() => setFormData((p) => ({ ...p, time: slot }))}
+                                  style={{
+                                    ...styles.slotButton,
+                                    ...(isBusy ? styles.slotBusy : {}),
+                                    ...(isSelected ? styles.slotSelected : {})
+                                  }}
+                              >
+                                {slot} {isBusy ? '(Ocupado)' : ''}
+                              </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    disabled={!formData.time}
+                    style={{
+                      ...styles.bookingSubmitButton,
+                      opacity: formData.time ? 1 : 0.6,
+                      cursor: formData.time ? 'pointer' : 'not-allowed'
+                    }}
+                >
                   Enviar pelo WhatsApp
                 </button>
               </form>
           )}
         </section>
 
-        {/* Testimonials Section (Visual Google) */}
+        {/* Testimonials Section */}
         <section id="depoimentos" style={styles.testimonialsSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>O Que Dizem Nossas Clientes</h2>
@@ -369,7 +440,6 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: 'sans-serif', backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
-  // 👇 OLHA A CORREÇÃO AQUI NESSE BLOCO DO HEADER 👇
   header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
@@ -400,8 +470,6 @@ const styles = {
   aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '50px', alignItems: 'center' },
   aboutPhotos: { flex: '1 1 380px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
   aboutPhotoMain: { width: '100%', height: '320px', objectFit: 'cover' as const, borderRadius: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' },
-  aboutPhotosRow: { display: 'flex', gap: '14px' },
-  aboutPhotoSmall: { width: '50%', height: '150px', objectFit: 'cover' as const, borderRadius: '14px', boxShadow: '0 6px 14px rgba(0,0,0,0.10)' },
   aboutText: { flex: '1 1 380px' },
   aboutTitle: { fontSize: '32px', fontWeight: 'bold', color: '#2D1537', marginBottom: '18px' },
   aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.7, marginBottom: '16px' },
@@ -422,7 +490,34 @@ const styles = {
 
   bookingSection: { padding: '80px 20px', maxWidth: '600px', margin: '0 auto' },
   bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '14px' },
-  bookingInput: { padding: '14px 16px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FFF' },
+  bookingInput: { padding: '14px 16px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FFF', width: '100%', boxSizing: 'border-box' as const },
+
+  fieldGroup: { display: 'flex', flexDirection: 'column' as const, gap: '6px', textAlign: 'left' as const },
+  fieldLabel: { fontSize: '14px', fontWeight: 'bold', color: '#2D1537' },
+  timeSlotsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px', marginTop: '5px' },
+  slotButton: {
+    padding: '10px',
+    borderRadius: '8px',
+    border: '1px solid #A259C4',
+    backgroundColor: '#FFF',
+    color: '#A259C4',
+    fontWeight: 'bold' as const,
+    fontSize: '13px',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  slotBusy: {
+    backgroundColor: '#E0E0E0',
+    borderColor: '#CCCCCC',
+    color: '#888888',
+    cursor: 'not-allowed',
+    textDecoration: 'line-through'
+  },
+  slotSelected: {
+    backgroundColor: '#A259C4',
+    color: '#FFF'
+  },
+
   bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '14px 28px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '8px' },
   bookingSuccess: { textAlign: 'center' as const, backgroundColor: '#F3E6F8', borderRadius: '16px', padding: '30px' },
   bookingSuccessText: { fontSize: '15px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
