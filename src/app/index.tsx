@@ -28,18 +28,18 @@ export default function LandingPage() {
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  // Fotos reais da clínica, servidas de mobile/public/
+  // CORREÇÃO: Nomes exatos conforme a sua pasta public
   const photos = [
-    { id: 1, title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
-    { id: 2, title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
-    { id: 3, title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
-    { id: 4, title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
-    { id: 5, title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
-    { id: 6, title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
-    { id: 7, title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
-    { id: 8, title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
-    { id: 9, title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
-    { id: 10, title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
+    { id: 1, title: 'Cuidado e Confiança', url: '/foto1.jpg' },
+    { id: 2, title: 'Beleza Natural', url: '/foto2.jpg' },
+    { id: 3, title: 'Limpeza de Pele Profunda', url: '/foto3.jpg' },
+    { id: 4, title: 'Rejuvenescimento Facial', url: '/foto4.jpg' },
+    { id: 5, title: 'Hidratação e Glow', url: '/foto5.jpg' },
+    { id: 6, title: 'Tratamento Especializado', url: '/foto6.jpg' },
+    { id: 7, title: 'Cuidado Personalizado', url: '/foto7.jpg' },
+    { id: 8, title: 'Resultados Reais', url: '/foto8.jpg' },
+    { id: 9, title: 'Técnica Refinada', url: '/foto9.jpg' },
+    { id: 10, title: 'Transformação e Autoestima', url: '/foto10.jpg' }
   ];
 
   useEffect(() => {
@@ -61,8 +61,9 @@ export default function LandingPage() {
           .then((res) => res.json())
           .then((data) => setBusySlots(data))
           .catch(() => {
-            // Fallback de demonstração caso o backend não esteja conectado
-            setBusySlots(['10:00', '14:00']);
+            // Mantendo um fallback vazio caso a API falhe,
+            // assim não quebra a tela da usuária
+            console.error("Não foi possível carregar horários do banco.");
           });
     }
   }, [formData.date]);
@@ -73,8 +74,30 @@ export default function LandingPage() {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Bloqueia visualmente o horário na mesma hora para o usuário atual
+    setBusySlots((prev) => [...prev, formData.time]);
+
+    // 2. Envia a reserva para o Spring Boot salvar no banco
+    try {
+      await fetch(`${API_BASE_URL}/api/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          whatsapp: formData.whatsapp,
+          treatment: formData.treatment,
+          date: formData.date,
+          time: formData.time
+        }),
+      });
+    } catch (error) {
+      console.error('Aviso: Falha ao salvar no banco, mas seguindo para o WhatsApp.', error);
+    }
+
+    // 3. Monta a mensagem e manda para o WhatsApp
     const message =
         `Olá! Gostaria de agendar meu procedimento.\n\n` +
         `Nome: ${formData.name}\n` +
@@ -134,7 +157,8 @@ export default function LandingPage() {
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
-              <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
+              {/* CORREÇÃO: logo.jpg conforme pasta */}
+              <img src="/logo.jpg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
               <span style={{ ...styles.logoText, fontSize: isMobile ? '14px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
             {!isMobile && (
@@ -198,7 +222,8 @@ export default function LandingPage() {
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              <img src="/escritafotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
+              {/* CORREÇÃO: fotosobre.jpg conforme sua pasta */}
+              <img src="/fotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
               <span style={styles.badge}>Sobre Mim</span>
