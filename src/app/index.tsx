@@ -28,18 +28,18 @@ export default function LandingPage() {
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  // CORREÇÃO: Nomes exatos conforme a sua pasta public
+  // RESTAURADO PARA O PADRÃO ORIGINAL (.jpg.jpeg) DO CARROSSEL
   const photos = [
-    { id: 1, title: 'Cuidado e Confiança', url: '/foto1.jpg' },
-    { id: 2, title: 'Beleza Natural', url: '/foto2.jpg' },
-    { id: 3, title: 'Limpeza de Pele Profunda', url: '/foto3.jpg' },
-    { id: 4, title: 'Rejuvenescimento Facial', url: '/foto4.jpg' },
-    { id: 5, title: 'Hidratação e Glow', url: '/foto5.jpg' },
-    { id: 6, title: 'Tratamento Especializado', url: '/foto6.jpg' },
-    { id: 7, title: 'Cuidado Personalizado', url: '/foto7.jpg' },
-    { id: 8, title: 'Resultados Reais', url: '/foto8.jpg' },
-    { id: 9, title: 'Técnica Refinada', url: '/foto9.jpg' },
-    { id: 10, title: 'Transformação e Autoestima', url: '/foto10.jpg' }
+    { id: 1, title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
+    { id: 2, title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
+    { id: 3, title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
+    { id: 4, title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
+    { id: 5, title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
+    { id: 6, title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
+    { id: 7, title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
+    { id: 8, title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
+    { id: 9, title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
+    { id: 10, title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
   ];
 
   useEffect(() => {
@@ -61,8 +61,6 @@ export default function LandingPage() {
           .then((res) => res.json())
           .then((data) => setBusySlots(data))
           .catch(() => {
-            // Mantendo um fallback vazio caso a API falhe,
-            // assim não quebra a tela da usuária
             console.error("Não foi possível carregar horários do banco.");
           });
     }
@@ -157,7 +155,6 @@ export default function LandingPage() {
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
-              {/* CORREÇÃO: logo.jpg conforme pasta */}
               <img src="/logo.jpg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
               <span style={{ ...styles.logoText, fontSize: isMobile ? '14px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
@@ -222,7 +219,6 @@ export default function LandingPage() {
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              {/* CORREÇÃO: fotosobre.jpg conforme sua pasta */}
               <img src="/fotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
