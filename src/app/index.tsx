@@ -76,7 +76,7 @@ export default function LandingPage() {
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const message =
-        `Olá! Gostaria de agendar uma avaliação.\n\n` +
+        `Olá! Gostaria de agendar meu procedimento.\n\n` +
         `Nome: ${formData.name}\n` +
         `WhatsApp: ${formData.whatsapp}\n` +
         `Tratamento de interesse: ${formData.treatment}\n` +
@@ -146,7 +146,7 @@ export default function LandingPage() {
                 </nav>
             )}
             <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '8px 12px' : '10px 20px', fontSize: isMobile ? '12px' : '14px' }}>
-              {isMobile ? 'Agendar' : 'Agendar Avaliação'}
+              {isMobile ? 'Agendar' : 'Agendar Procedimento'}
             </a>
           </div>
         </header>
@@ -194,11 +194,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* About Section - AGORA COM A FOTO ESCRITA */}
+        {/* About Section */}
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              {/* Aqui está a nova foto que você pediu */}
               <img src="/escritafotosobre.jpg" alt="Maria Yasmim" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
@@ -239,7 +238,7 @@ export default function LandingPage() {
         {/* Booking Section */}
         <section id="agendamento" style={styles.bookingSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Agende sua Avaliação</h2>
+            <h2 style={styles.sectionTitle}>Agende seu Procedimento</h2>
             <p style={styles.sectionSubtitle}>
               Escolha o dia e o horário disponível para o seu atendimento.
             </p>
