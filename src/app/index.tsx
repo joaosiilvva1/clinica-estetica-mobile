@@ -5,21 +5,33 @@ export default function LandingPage() {
   const [formData, setFormData] = useState({
     name: '',
     whatsapp: '',
-    treatment: '',
+    treatmentId: '',
     date: '',
     time: ''
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Lista de horários de atendimento da clínica
+  // Grade fixa de horários exibidos no formulário. Precisa caber dentro do horário
+  // comercial configurado no backend (business.opening-hour / closing-hour, hoje 9–18,
+  // ver AppointmentService); 12:00 fica de fora de propósito (horário de almoço).
   const availableTimeSlots = [
-    '08:00', '09:00', '10:00', '11:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
+    '09:00', '10:00', '11:00',
+    '13:00', '14:00', '15:00', '16:00', '17:00'
   ];
 
-  // Simulação/Estado dos horários ocupados retornados do banco de dados (Spring Boot)
-  const [busySlots, setBusySlots] = useState<string[]>([]);
+  const [professionalId, setProfessionalId] = useState<string | null>(null);
+  const [treatments, setTreatments] = useState<
+      { id: string; name: string; description: string; price: number; durationMinutes: number }[]
+  >([]);
+  // Horários livres retornados pelo backend para a data/tratamento/profissional escolhidos,
+  // como timestamps ISO (Instant). Convertidos para epoch ms na hora de comparar com a grade
+  // fixa acima, pra não depender de formatação de string.
+  const [freeSlots, setFreeSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
 
   useEffect(() => {
     const checkWidth = () => setIsMobile(window.innerWidth < 720);
@@ -51,18 +63,56 @@ export default function LandingPage() {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
 
-  const API_BASE_URL = 'http://localhost:8080';
+  // Em produção, defina EXPO_PUBLIC_API_URL nas variáveis de ambiente do deploy (Vercel)
+  // apontando pro backend Spring Boot hospedado. Sem isso, o navegador da cliente tentaria
+  // acessar o localhost dela mesma, não o seu servidor.
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
 
+  // Catálogo de tratamentos e profissional (MVP: profissional única) — carregados uma vez.
   useEffect(() => {
-    if (formData.date) {
-      fetch(`${API_BASE_URL}/api/bookings/busy-slots?date=${formData.date}`)
-          .then((res) => res.json())
-          .then((data) => setBusySlots(data))
-          .catch(() => {
-            console.error("Não foi possível carregar horários do banco.");
-          });
+    fetch(`${API_BASE_URL}/api/treatments/public`)
+        .then((res) => res.json())
+        .then((data) => setTreatments(data))
+        .catch(() => setTreatments([]));
+
+    fetch(`${API_BASE_URL}/api/professionals/public`)
+        .then((res) => res.json())
+        .then((data) => setProfessionalId(data?.[0]?.id ?? null))
+        .catch(() => setProfessionalId(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Horários livres de verdade, vindos do banco — só busca quando já dá pra formar a
+  // consulta completa (profissional + tratamento + data). Reexecuta em slotsRefreshKey
+  // pra forçar atualização depois de um 409 (horário ocupado por outra cliente na hora H).
+  useEffect(() => {
+    if (!formData.date || !formData.treatmentId || !professionalId) {
+      setFreeSlots([]);
+      return;
     }
-  }, [formData.date]);
+    setSlotsLoading(true);
+    setBookingError(null);
+    fetch(
+        `${API_BASE_URL}/api/appointments/public/available-slots?professionalId=${professionalId}&treatmentId=${formData.treatmentId}&date=${formData.date}`
+    )
+        .then((res) => {
+          if (!res.ok) throw new Error();
+          return res.json();
+        })
+        .then((data: string[]) => setFreeSlots(data))
+        .catch(() => {
+          setFreeSlots([]);
+          setBookingError('Não foi possível carregar os horários agora. Tente novamente em instantes.');
+        })
+        .finally(() => setSlotsLoading(false));
+  }, [formData.date, formData.treatmentId, professionalId, slotsRefreshKey]);
+
+  // Converte a grade fixa (data + "HH:mm") pro mesmo instante que o backend usa, aplicando
+  // o offset fixo de America/Sao_Paulo (Brasil não usa mais horário de verão desde 2019).
+  const slotToEpochMs = (dateStr: string, timeStr: string) =>
+      new Date(`${dateStr}T${timeStr}:00-03:00`).getTime();
+
+  const freeSlotsMs = new Set(freeSlots.map((iso) => new Date(iso).getTime()));
 
   const handleFormChange = (field: keyof typeof formData) => (
       e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -72,42 +122,59 @@ export default function LandingPage() {
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBookingError(null);
 
-    setBusySlots((prev) => [...prev, formData.time]);
+    if (!professionalId) {
+      setBookingError('Não foi possível carregar os dados da profissional. Recarregue a página e tente de novo.');
+      return;
+    }
 
+    setSubmitting(true);
     try {
-      await fetch(`${API_BASE_URL}/api/bookings`, {
+      // Instante com offset explícito -03:00: independe do fuso do aparelho da cliente,
+      // e o backend (Jackson) faz o parse direto pra Instant.
+      const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
+
+      const res = await fetch(`${API_BASE_URL}/api/appointments/public`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          whatsapp: formData.whatsapp,
-          treatment: formData.treatment,
-          date: formData.date,
-          time: formData.time
+          clientName: formData.name,
+          clientWhatsapp: formData.whatsapp.replace(/\D/g, ''),
+          professionalId,
+          treatmentId: formData.treatmentId,
+          scheduledAt
         }),
       });
-    } catch (error) {
-      console.error('Aviso: Falha ao salvar no banco, mas seguindo para o WhatsApp.', error);
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        // 409 = alguém confirmou esse horário entre a consulta e o envio do formulário.
+        throw new Error(err?.message || 'Não foi possível confirmar esse horário. Ele pode ter acabado de ser ocupado.');
+      }
+
+      const selectedTreatment = treatments.find((t) => t.id === formData.treatmentId);
+      const message =
+          `Olá! Gostaria de confirmar meu agendamento.\n\n` +
+          `Nome: ${formData.name}\n` +
+          `WhatsApp: ${formData.whatsapp}\n` +
+          `Tratamento: ${selectedTreatment?.name ?? ''}\n` +
+          `Data: ${formData.date}\n` +
+          `Horário: ${formData.time}`;
+
+      const url = `https://wa.me/5511916224612?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+      setFormSubmitted(true);
+    } catch (error: any) {
+      setBookingError(error.message || 'Não foi possível agendar agora. Tente novamente.');
+      // Força reconsulta dos horários livres (o que acabou de dar 409 já entra como ocupado)
+      // e limpa o horário selecionado pra cliente escolher outro.
+      setFormData((p) => ({ ...p, time: '' }));
+      setSlotsRefreshKey((k) => k + 1);
+    } finally {
+      setSubmitting(false);
     }
-
-    const message =
-        `Olá! Gostaria de agendar meu procedimento.\n\n` +
-        `Nome: ${formData.name}\n` +
-        `WhatsApp: ${formData.whatsapp}\n` +
-        `Tratamento de interesse: ${formData.treatment}\n` +
-        `Data: ${formData.date}\n` +
-        `Horário: ${formData.time}`;
-
-    const url = `https://wa.me/5511916224612?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-    setFormSubmitted(true);
   };
-
-  const treatments = [
-    { id: 1, title: 'Limpeza de Pele', description: 'Renovação celular profunda com extração e hidratação.' },
-    { id: 2, title: 'Hidratação Facial', description: 'Devolve o viço, maciez e luminosidade natural da derme.' }
-  ];
 
   const [testimonials, setTestimonials] = useState<
       { id: string; clientName: string; rating: number; comment: string }[]
@@ -241,7 +308,7 @@ export default function LandingPage() {
           <div style={styles.grid}>
             {treatments.map((item) => (
                 <div key={item.id} style={styles.card}>
-                  <h3 style={styles.cardTitle}>{item.title}</h3>
+                  <h3 style={styles.cardTitle}>{item.name}</h3>
                   <p style={styles.cardText}>{item.description}</p>
                 </div>
             ))}
@@ -286,13 +353,13 @@ export default function LandingPage() {
                 />
                 <select
                     required
-                    value={formData.treatment}
-                    onChange={handleFormChange('treatment')}
+                    value={formData.treatmentId}
+                    onChange={handleFormChange('treatmentId')}
                     style={styles.bookingInput}
                 >
                   <option value="" disabled>Selecione o tratamento</option>
                   {treatments.map((t) => (
-                      <option key={t.id} value={t.title}>{t.title}</option>
+                      <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
                 </select>
 
@@ -310,44 +377,53 @@ export default function LandingPage() {
                 </div>
 
                 {/* Seleção de Horários (Grid de Slots) */}
-                {formData.date && (
+                {!formData.treatmentId && formData.date && (
+                    <p style={styles.bookingErrorText}>Escolha o tratamento antes de ver os horários.</p>
+                )}
+                {formData.date && formData.treatmentId && (
                     <div style={styles.fieldGroup}>
                       <label style={styles.fieldLabel}>Selecione o horário disponível:</label>
-                      <div style={styles.timeSlotsGrid}>
-                        {availableTimeSlots.map((slot) => {
-                          const isBusy = busySlots.includes(slot);
-                          const isSelected = formData.time === slot;
+                      {slotsLoading ? (
+                          <p style={styles.sectionSubtitle}>Carregando horários...</p>
+                      ) : (
+                          <div style={styles.timeSlotsGrid}>
+                            {availableTimeSlots.map((slot) => {
+                              const isBusy = !freeSlotsMs.has(slotToEpochMs(formData.date, slot));
+                              const isSelected = formData.time === slot;
 
-                          return (
-                              <button
-                                  key={slot}
-                                  type="button"
-                                  disabled={isBusy}
-                                  onClick={() => setFormData((p) => ({ ...p, time: slot }))}
-                                  style={{
-                                    ...styles.slotButton,
-                                    ...(isBusy ? styles.slotBusy : {}),
-                                    ...(isSelected ? styles.slotSelected : {})
-                                  }}
-                              >
-                                {slot} {isBusy ? '(Ocupado)' : ''}
-                              </button>
-                          );
-                        })}
-                      </div>
+                              return (
+                                  <button
+                                      key={slot}
+                                      type="button"
+                                      disabled={isBusy}
+                                      onClick={() => setFormData((p) => ({ ...p, time: slot }))}
+                                      style={{
+                                        ...styles.slotButton,
+                                        ...(isBusy ? styles.slotBusy : {}),
+                                        ...(isSelected ? styles.slotSelected : {})
+                                      }}
+                                  >
+                                    {slot} {isBusy ? '(Ocupado)' : ''}
+                                  </button>
+                              );
+                            })}
+                          </div>
+                      )}
                     </div>
                 )}
 
+                {bookingError && <p style={styles.bookingErrorText}>{bookingError}</p>}
+
                 <button
                     type="submit"
-                    disabled={!formData.time}
+                    disabled={!formData.time || submitting}
                     style={{
                       ...styles.bookingSubmitButton,
-                      opacity: formData.time ? 1 : 0.6,
-                      cursor: formData.time ? 'pointer' : 'not-allowed'
+                      opacity: formData.time && !submitting ? 1 : 0.6,
+                      cursor: formData.time && !submitting ? 'pointer' : 'not-allowed'
                     }}
                 >
-                  Enviar pelo WhatsApp
+                  {submitting ? 'Confirmando...' : 'Enviar pelo WhatsApp'}
                 </button>
               </form>
           )}
@@ -531,6 +607,7 @@ const styles = {
   bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '14px 28px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '8px' },
   bookingSuccess: { textAlign: 'center' as const, backgroundColor: '#F3E6F8', borderRadius: '16px', padding: '30px' },
   bookingSuccessText: { fontSize: '15px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
+  bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
   bookingResetLink: { background: 'none', border: 'none', color: '#A259C4', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' },
 
   footerInstagramLink: { color: '#D4A5E0', textDecoration: 'none' },
