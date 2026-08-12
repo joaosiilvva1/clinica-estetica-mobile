@@ -19,7 +19,7 @@ export default function LandingPage() {
   ];
 
   const [professionalId, setProfessionalId] = useState<string | null>(null);
-
+  
   const defaultTreatments = [
     { id: '1', name: 'Limpeza de Pele Profunda', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 120, durationMinutes: 60 },
     { id: '2', name: 'Massagem Facial Relaxante', description: 'Estimula a circulação, alivia as tensões do rosto e promove um relaxamento profundo.', price: 90, durationMinutes: 45 },
@@ -177,7 +177,7 @@ export default function LandingPage() {
   const [testimonials, setTestimonials] = useState<
       { id: string; clientName: string; rating: number; comment: string }[]
   >([]);
-
+  
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/testimonials/public`)
         .then((res) => res.json())
@@ -240,12 +240,6 @@ export default function LandingPage() {
             <div style={styles.carouselContainer}>
               <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
               <div style={styles.carouselSlide}>
-                <div
-                    style={{
-                      ...styles.carouselBgBlur,
-                      backgroundImage: `url(${photos[currentSlide].url})`
-                    }}
-                />
                 <img src={photos[currentSlide].url} alt={photos[currentSlide].title} style={styles.carouselImage} />
                 <div style={styles.carouselCaption}>{photos[currentSlide].title}</div>
               </div>
@@ -334,7 +328,7 @@ export default function LandingPage() {
               <span style={styles.badge}>Sua Esteticista</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.
+                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais. 
               </p>
               <p style={styles.aboutParagraph}>
                 Trabalho focada na saúde da sua pele, utilizando protocolos modernos, <strong>dermocosméticos de alta tecnologia</strong> e seguindo as mais rigorosas normas de <strong>biossegurança</strong>.
@@ -357,9 +351,9 @@ export default function LandingPage() {
                 <div key={item.id} style={styles.card}>
                   <h3 style={styles.cardTitle}>{item.name}</h3>
                   <p style={styles.cardText}>{item.description}</p>
-                  <button
-                      onClick={() => handleSelectTreatmentAndBook(item.id)}
-                      style={styles.cardSelectButton}
+                  <button 
+                    onClick={() => handleSelectTreatmentAndBook(item.id)}
+                    style={styles.cardSelectButton}
                   >
                     Quero este tratamento &rarr;
                   </button>
@@ -393,14 +387,14 @@ export default function LandingPage() {
             </div>
             <div style={styles.locationMapWrapper}>
               <iframe
-                  title="Mapa de Localização"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.7029671607525!2d-46.77740262451388!3d-23.57500587879109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce55a90d96a60d%3A0x6a05e26716c526d1!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20S%C3%A3o%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1723427300000"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen={false}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+                title="Mapa de Localização"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.7029671607525!2d-46.77740262451388!3d-23.57500587879109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce55a90d96a60d%3A0x6a05e26716c526d1!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20S%C3%A3o%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1723427300000"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
               ></iframe>
             </div>
           </div>
@@ -427,7 +421,7 @@ export default function LandingPage() {
               </div>
           ) : (
               <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
-
+                
                 <div style={styles.scarcityAlert}>
                   ✨ <strong>Atenção:</strong> Realizamos um número limitado de atendimentos diários para garantir excelência e exclusividade.
                 </div>
@@ -561,15 +555,15 @@ export default function LandingPage() {
           </div>
           <div style={styles.faqContainer}>
             {faqData.map((faq, index) => (
-                <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
-                  <div style={styles.faqQuestionHeader}>
-                    <h4 style={styles.faqQuestionText}>{faq.question}</h4>
-                    <span style={styles.faqIcon}>{openFaq === index ? '−' : '+'}</span>
-                  </div>
-                  {openFaq === index && (
-                      <p style={styles.faqAnswerText}>{faq.answer}</p>
-                  )}
+              <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
+                <div style={styles.faqQuestionHeader}>
+                  <h4 style={styles.faqQuestionText}>{faq.question}</h4>
+                  <span style={styles.faqIcon}>{openFaq === index ? '−' : '+'}</span>
                 </div>
+                {openFaq === index && (
+                  <p style={styles.faqAnswerText}>{faq.answer}</p>
+                )}
+              </div>
             ))}
           </div>
         </section>
@@ -620,8 +614,7 @@ const styles = {
   heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
   carouselContainer: { position: 'relative' as const, maxWidth: '850px', margin: '0 auto 30px auto', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '420px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
-  carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.5)', transform: 'scale(1.1)', zIndex: 1 },
-  carouselImage: { position: 'relative' as const, height: '100%', maxWidth: '100%', objectFit: 'contain' as const, zIndex: 2 },
+  carouselImage: { position: 'relative' as const, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center' as const, zIndex: 2 },
   carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
   carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
