@@ -19,7 +19,8 @@ export default function LandingPage() {
   ];
 
   const [professionalId, setProfessionalId] = useState<string | null>(null);
-  
+  const [professionalLoadFailed, setProfessionalLoadFailed] = useState(false);
+
   const defaultTreatments = [
     { id: '1', name: 'Limpeza de Pele Profunda', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 120, durationMinutes: 60 },
     { id: '2', name: 'Massagem Facial Relaxante', description: 'Estimula a circulação, alivia as tensões do rosto e promove um relaxamento profundo.', price: 90, durationMinutes: 45 },
@@ -96,10 +97,33 @@ export default function LandingPage() {
         })
         .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/professionals/public`)
-        .then((res) => res.json())
-        .then((data) => setProfessionalId(data?.[0]?.id ?? 'default-pro'))
-        .catch(() => setProfessionalId('default-pro'));
+    // A instância free do Render "dorme" com inatividade: a primeira requisição depois
+    // disso pode levar até ~50s ou falhar por timeout enquanto o serviço acorda. Por isso
+    // tentamos algumas vezes com espera crescente antes de desistir — nunca inventamos um
+    // id de profissional falso, porque isso só adia o erro real pra hora de agendar.
+    const loadProfessional = (attempt = 1) => {
+      fetch(`${API_BASE_URL}/api/professionals/public`)
+          .then((res) => res.json())
+          .then((data) => {
+            const id = data?.[0]?.id;
+            if (id) {
+              setProfessionalId(id);
+              setProfessionalLoadFailed(false);
+            } else if (attempt < 4) {
+              setTimeout(() => loadProfessional(attempt + 1), attempt * 4000);
+            } else {
+              setProfessionalLoadFailed(true);
+            }
+          })
+          .catch(() => {
+            if (attempt < 4) {
+              setTimeout(() => loadProfessional(attempt + 1), attempt * 4000);
+            } else {
+              setProfessionalLoadFailed(true);
+            }
+          });
+    };
+    loadProfessional();
   }, []);
 
   useEffect(() => {
@@ -147,7 +171,7 @@ export default function LandingPage() {
 
     const [year, month, day] = selectedDate.split('-');
     const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-    const dayOfWeek = dateObj.getDay(); 
+    const dayOfWeek = dateObj.getDay();
 
     if (dayOfWeek !== 0 && dayOfWeek !== 1) {
       setDateError('Atendimentos apenas aos Domingos e Segundas. Por favor, escolha outra data.');
@@ -167,9 +191,17 @@ export default function LandingPage() {
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBookingError(null);
-    const activeProfId = professionalId || 'default-pro';
+
+    if (!professionalId) {
+      alert(
+          'Ainda estamos carregando os dados da clínica (o servidor pode estar ' +
+          'acordando após um período parado). Aguarde alguns segundos e tente novamente.'
+      );
+      return;
+    }
+
     setSubmitting(true);
-    
+
     try {
       const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
       const response = await fetch(`${API_BASE_URL}/api/appointments/public`, {
@@ -178,7 +210,7 @@ export default function LandingPage() {
         body: JSON.stringify({
           clientName: formData.name,
           clientWhatsapp: formData.whatsapp.replace(/\D/g, ''),
-          professionalId: activeProfId,
+          professionalId: professionalId,
           treatmentId: formData.treatmentId,
           scheduledAt
         }),
@@ -192,8 +224,8 @@ export default function LandingPage() {
       setFormSubmitted(true);
     } catch (error: any) {
       console.error("Erro no agendamento:", error);
-      const msg = error.message === 'Failed to fetch' 
-          ? 'Erro de conexão ou CORS bloqueado no backend.' 
+      const msg = error.message === 'Failed to fetch'
+          ? 'Erro de conexão ou CORS bloqueado no backend.'
           : error.message;
       setBookingError(msg);
       alert(`Ops! Algo deu errado ao tentar agendar:\n\n${msg}\n\nVerifique as configurações de CORS no seu Spring Boot.`);
@@ -206,7 +238,7 @@ export default function LandingPage() {
   const [testimonials, setTestimonials] = useState<
       { id: string; clientName: string; rating: number; comment: string }[]
   >([]);
-  
+
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/testimonials/public`)
         .then((res) => res.json())
@@ -357,7 +389,7 @@ export default function LandingPage() {
               <span style={styles.badge}>Sua Esteticista</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais. 
+                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.
               </p>
               <p style={styles.aboutParagraph}>
                 Trabalho focada na saúde da sua pele, utilizando protocolos modernos, <strong>dermocosméticos de alta tecnologia</strong> e seguindo as mais rigorosas normas de <strong>biossegurança</strong>.
@@ -380,9 +412,9 @@ export default function LandingPage() {
                 <div key={item.id} style={styles.card}>
                   <h3 style={styles.cardTitle}>{item.name}</h3>
                   <p style={styles.cardText}>{item.description}</p>
-                  <button 
-                    onClick={() => handleSelectTreatmentAndBook(item.id)}
-                    style={styles.cardSelectButton}
+                  <button
+                      onClick={() => handleSelectTreatmentAndBook(item.id)}
+                      style={styles.cardSelectButton}
                   >
                     Quero este tratamento &rarr;
                   </button>
@@ -416,14 +448,14 @@ export default function LandingPage() {
             </div>
             <div style={styles.locationMapWrapper}>
               <iframe
-                title="Mapa de Localização"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.7029671607525!2d-46.77740262451388!3d-23.57500587879109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce55a90d96a60d%3A0x6a05e26716c526d1!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20S%C3%A3o%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1723427300000"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen={false}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
+                  title="Mapa de Localização"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.7029671607525!2d-46.77740262451388!3d-23.57500587879109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce55a90d96a60d%3A0x6a05e26716c526d1!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20S%C3%A3o%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1723427300000"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
               ></iframe>
             </div>
           </div>
@@ -450,10 +482,18 @@ export default function LandingPage() {
               </div>
           ) : (
               <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
-                
+
                 <div style={styles.scarcityAlert}>
                   ✨ <strong>Atenção:</strong> Atendimentos exclusivos aos Domingos e Segundas. Vagas limitadas.
                 </div>
+
+                {professionalLoadFailed && (
+                    <div style={styles.scarcityAlert}>
+                      ⚠️ Não conseguimos carregar os dados da clínica agora. Recarregue a
+                      página em alguns instantes — o servidor pode estar iniciando após um
+                      período sem uso.
+                    </div>
+                )}
 
                 <input
                     type="text"
@@ -490,7 +530,7 @@ export default function LandingPage() {
                       required
                       min={todayStr}
                       value={formData.date}
-                      onChange={handleDateChange} 
+                      onChange={handleDateChange}
                       style={styles.bookingInput}
                   />
                   {/* Se a data for inválida (terça a sábado), mostra o texto em vermelho e desabilita o resto */}
@@ -500,7 +540,7 @@ export default function LandingPage() {
                 {!formData.treatmentId && formData.date && !dateError && (
                     <p style={styles.bookingErrorText}>Escolha o tratamento antes de ver os horários.</p>
                 )}
-                
+
                 {formData.date && formData.treatmentId && !dateError && (
                     <div style={styles.fieldGroup}>
                       <label style={styles.fieldLabel}>Selecione o horário disponível:</label>
@@ -593,15 +633,15 @@ export default function LandingPage() {
           </div>
           <div style={styles.faqContainer}>
             {faqData.map((faq, index) => (
-              <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
-                <div style={styles.faqQuestionHeader}>
-                  <h4 style={styles.faqQuestionText}>{faq.question}</h4>
-                  <span style={styles.faqIcon}>{openFaq === index ? '−' : '+'}</span>
+                <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
+                  <div style={styles.faqQuestionHeader}>
+                    <h4 style={styles.faqQuestionText}>{faq.question}</h4>
+                    <span style={styles.faqIcon}>{openFaq === index ? '−' : '+'}</span>
+                  </div>
+                  {openFaq === index && (
+                      <p style={styles.faqAnswerText}>{faq.answer}</p>
+                  )}
                 </div>
-                {openFaq === index && (
-                  <p style={styles.faqAnswerText}>{faq.answer}</p>
-                )}
-              </div>
             ))}
           </div>
         </section>
