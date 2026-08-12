@@ -11,8 +11,6 @@ export default function LandingPage() {
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
-  // Estado para controlar qual pergunta do FAQ está aberta
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const availableTimeSlots = [
@@ -38,7 +36,6 @@ export default function LandingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
 
-  // Injeta SEO Avançado, Fontes e Scroll Suave sem precisar do HTML
   useEffect(() => {
     document.title = 'Maria Yasmim Lopes | Especialista em Limpeza de Pele em Taboão da Serra';
     let metaDesc = document.querySelector('meta[name="description"]');
@@ -240,6 +237,7 @@ export default function LandingPage() {
                   <a href="#inicio" style={styles.navLink}>Início</a>
                   <a href="#sobre" style={styles.navLink}>Sobre</a>
                   <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
+                  <a href="#localizacao" style={styles.navLink}>Local</a>
                   <a href="#faq" style={styles.navLink}>Dúvidas</a>
                 </nav>
             )}
@@ -258,7 +256,6 @@ export default function LandingPage() {
               Realce sua essência natural com tratamentos de alta performance. Renove sua pele, recupere sua autoestima e desfrute de um momento único de cuidado e bem-estar.
             </p>
 
-            {/* Carrossel de Fotos com Fundo Estético Suave */}
             <div style={styles.carouselContainer}>
               <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
               <div style={styles.carouselSlide}>
@@ -295,7 +292,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* NOVA SEÇÃO: Indicações / Dores do Cliente */}
+        {/* Indicações / Dores do Cliente */}
         <section style={styles.indicationsSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Nossos tratamentos são ideais para quem busca:</h2>
@@ -362,7 +359,45 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Booking Section */}
+        {/* NOVA SEÇÃO: Localização para SEO Local */}
+        <section id="localizacao" style={styles.locationSection}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Onde Estamos</h2>
+            <p style={styles.sectionSubtitle}>Sua clínica de estética bem pertinho de você em Taboão da Serra.</p>
+          </div>
+          <div style={styles.locationGrid}>
+            <div style={styles.locationInfo}>
+              <h3 style={{...styles.cardTitle, marginBottom: '20px'}}>Nosso Espaço</h3>
+              <p style={styles.locationAddressText}>
+                <strong>Endereço:</strong><br/>
+                Taboão da Serra, SP <br/>
+                <span style={{fontSize: '13px', color: '#888'}}>(Atualize com o endereço completo, ex: Rua Exemplo, 123 - Bairro)</span>
+              </p>
+              <p style={styles.locationAddressText}>
+                <strong>Atendimento:</strong><br/>
+                Com hora marcada para garantir sua exclusividade.
+              </p>
+              <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, marginTop: '15px', padding: '12px 25px', fontSize: '14px'}}>
+                Enviar Mensagem
+              </a>
+            </div>
+            <div style={styles.locationMapWrapper}>
+              {/* Mapa genérico de Taboão da Serra. Você pode gerar um iframe específico no Google Maps com o endereço dela depois */}
+              <iframe
+                  title="Mapa de Localização"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58485.49574187255!2d-46.82845187640243!3d-23.628860299999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce54238e4df5e5%3A0xc39f28d8b1e4c700!2sTabo%C3%A3o%20da%20Serra%2C%20SP!5e0!3m2!1spt-BR!2sbr!4v1699999999999!5m2!1spt-BR!2sbr"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+          </div>
+        </section>
+
+        {/* Booking Section com Gatilho de Escassez */}
         <section id="agendamento" style={styles.bookingSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Agende seu Atendimento</h2>
@@ -382,6 +417,12 @@ export default function LandingPage() {
               </div>
           ) : (
               <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
+
+                {/* GATILHO DE ESCASSEZ */}
+                <div style={styles.scarcityAlert}>
+                  ✨ <strong>Atenção:</strong> Realizamos um número limitado de atendimentos diários para garantir excelência e exclusividade. Garanta seu horário com antecedência.
+                </div>
+
                 <input
                     type="text"
                     placeholder="Seu nome"
@@ -503,7 +544,7 @@ export default function LandingPage() {
           )}
         </section>
 
-        {/* NOVA SEÇÃO: FAQ (Perguntas Frequentes) para Otimização de SEO */}
+        {/* FAQ (Perguntas Frequentes) para Otimização de SEO */}
         <section id="faq" style={styles.faqSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Perguntas Frequentes</h2>
@@ -552,10 +593,7 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
-
-  // Botão Flutuante do WhatsApp (Sempre visível)
   floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
-
   header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
@@ -584,7 +622,6 @@ const styles = {
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
 
-  // Nova Seção de Indicações (Dores)
   indicationsSection: { padding: '40px 20px 80px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' as const },
   indicationsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '25px', marginTop: '40px' },
   indicationCard: { backgroundColor: '#FFF', padding: '30px 20px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', border: '1px solid #F0E4F5' },
@@ -609,8 +646,19 @@ const styles = {
   cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6 },
 
+  // Nova Seção de Localização
+  locationSection: { padding: '80px 20px', maxWidth: '1000px', margin: '0 auto' },
+  locationGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '30px', backgroundColor: '#FFF', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
+  locationInfo: { flex: '1 1 300px', padding: '40px' },
+  locationAddressText: { fontSize: '15px', color: '#5A4A60', lineHeight: 1.6, marginBottom: '20px' },
+  locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
+
   bookingSection: { padding: '80px 20px', maxWidth: '650px', margin: '0 auto' },
   bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '16px', backgroundColor: '#FFF', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
+
+  // Gatilho de Escassez
+  scarcityAlert: { backgroundColor: '#FFF3E0', color: '#E65100', padding: '15px', borderRadius: '10px', fontSize: '14px', lineHeight: 1.5, borderLeft: '4px solid #FF9800', marginBottom: '10px' },
+
   bookingInput: { padding: '15px 18px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FAF9F6', width: '100%', boxSizing: 'border-box' as const, transition: 'border-color 0.2s' },
   fieldGroup: { display: 'flex', flexDirection: 'column' as const, gap: '8px', textAlign: 'left' as const },
   fieldLabel: { fontSize: '14px', fontWeight: '600', color: '#2D1537' },
@@ -632,7 +680,6 @@ const styles = {
   starsContainer: { fontSize: '15px' },
   googleReviewText: { fontSize: '15px', color: '#4A4A4A', lineHeight: 1.7, margin: 0 },
 
-  // Nova Seção de FAQ
   faqSection: { padding: '80px 20px', maxWidth: '800px', margin: '0 auto' },
   faqContainer: { display: 'flex', flexDirection: 'column' as const, gap: '15px' },
   faqItem: { backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #E8D7F1', padding: '20px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
