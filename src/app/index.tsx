@@ -84,7 +84,7 @@ export default function LandingPage() {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://clinica-estetica-backend.onrender.com';
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/treatments/public`)
