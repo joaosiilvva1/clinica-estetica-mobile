@@ -12,8 +12,8 @@ export default function LandingPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null); // Novo estado para o erro da data
 
-  // 1. HORÁRIOS ATUALIZADOS
   const availableTimeSlots = [
     '09:00', '11:00', '14:00', '16:00', '18:00'
   ];
@@ -134,11 +134,11 @@ export default function LandingPage() {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  // 2. NOVA FUNÇÃO PARA LIMITAR DOMINGO (0) E SEGUNDA (1)
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = e.target.value;
     if (!selectedDate) {
       setFormData((prev) => ({ ...prev, date: '', time: '' }));
+      setDateError(null);
       return;
     }
 
@@ -147,9 +147,11 @@ export default function LandingPage() {
     const dayOfWeek = dateObj.getDay(); 
 
     if (dayOfWeek !== 0 && dayOfWeek !== 1) {
-      alert('A Dra. Maria Yasmim atende apenas aos Domingos e Segundas-feiras. Por favor, escolha outra data.');
+      // Removemos o alert e ativamos a mensagem de erro suave na tela
+      setDateError('A Dra. Maria Yasmim atende apenas aos Domingos e Segundas-feiras. Por favor, escolha outra data.');
       setFormData((prev) => ({ ...prev, date: '', time: '' }));
     } else {
+      setDateError(null);
       setFormData((prev) => ({ ...prev, date: selectedDate, time: '' }));
     }
   };
@@ -162,7 +164,6 @@ export default function LandingPage() {
     }
   };
 
-  // 3. CAPTURANDO ERROS EXATOS DO SERVIDOR SE ALGO FALHAR
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBookingError(null);
@@ -356,7 +357,7 @@ export default function LandingPage() {
               <span style={styles.badge}>Sua Esteticista</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista formada e apaixonada por elevating a autoestima de cada cliente através de cuidados personalizados e resultados reais. 
+                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais. 
               </p>
               <p style={styles.aboutParagraph}>
                 Trabalho focada na saúde da sua pele, utilizando protocolos modernos, <strong>dermocosméticos de alta tecnologia</strong> e seguindo as mais rigorosas normas de <strong>biossegurança</strong>.
@@ -492,13 +493,15 @@ export default function LandingPage() {
                       onChange={handleDateChange} 
                       style={styles.bookingInput}
                   />
+                  {/* Mensagem de erro sutil caso a pessoa escolha o dia errado */}
+                  {dateError && <p style={styles.bookingErrorText}>{dateError}</p>}
                 </div>
 
-                {!formData.treatmentId && formData.date && (
+                {!formData.treatmentId && formData.date && !dateError && (
                     <p style={styles.bookingErrorText}>Escolha o tratamento antes de ver os horários.</p>
                 )}
                 
-                {formData.date && formData.treatmentId && (
+                {formData.date && formData.treatmentId && !dateError && (
                     <div style={styles.fieldGroup}>
                       <label style={styles.fieldLabel}>Selecione o horário disponível:</label>
                       {slotsLoading ? (
@@ -532,7 +535,6 @@ export default function LandingPage() {
 
                 {bookingError && <p style={styles.bookingErrorText}>{bookingError}</p>}
 
-                {/* BOTÃO ATUALIZADO PARA EVITAR FICAR TRAVADO */}
                 <button
                     type="submit"
                     onClick={(e) => {
