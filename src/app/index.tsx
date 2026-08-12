@@ -134,6 +134,15 @@ export default function LandingPage() {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  // Função para selecionar o tratamento clicado e rolar a tela direto para o formulário
+  const handleSelectTreatmentAndBook = (treatmentId: string) => {
+    setFormData((prev) => ({ ...prev, treatmentId }));
+    const bookingSection = document.getElementById('agendamento');
+    if (bookingSection) {
+      bookingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBookingError(null);
@@ -220,6 +229,11 @@ export default function LandingPage() {
   return (
       <div id="inicio" style={styles.container}>
 
+        {/* Barra de Aviso de Vagas no Topo */}
+        <div style={styles.topBarNotice}>
+          ✨ <strong>Agenda de Agosto aberta em Taboão da Serra</strong> — Garanta seu horário com antecedência!
+        </div>
+
         {/* Botão Flutuante do WhatsApp */}
         <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.floatingWhatsApp}>
           <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
@@ -292,6 +306,13 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Faixa de Benefícios Rápidos / Selos de Segurança */}
+        <section style={styles.benefitsBar}>
+          <div style={styles.benefitItem}>⭐ <strong>Atendimento Exclusivo</strong> e Personalizado</div>
+          <div style={styles.benefitItem}>🛡️ <strong>Dermocosméticos</strong> de Alta Qualidade</div>
+          <div style={styles.benefitItem}>💬 <strong>Agendamento Prático</strong> via WhatsApp</div>
+        </section>
+
         {/* Indicações / Dores do Cliente */}
         <section style={styles.indicationsSection}>
           <div style={styles.sectionHeader}>
@@ -343,7 +364,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Treatments Section */}
+        {/* Treatments Section com Botão Direto para Agendar */}
         <section id="tratamentos" style={styles.section}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Procedimentos Exclusivos</h2>
@@ -354,12 +375,18 @@ export default function LandingPage() {
                 <div key={item.id} style={styles.card}>
                   <h3 style={styles.cardTitle}>{item.name}</h3>
                   <p style={styles.cardText}>{item.description}</p>
+                  <button
+                      onClick={() => handleSelectTreatmentAndBook(item.id)}
+                      style={styles.cardSelectButton}
+                  >
+                    Quero este tratamento &rarr;
+                  </button>
                 </div>
             ))}
           </div>
         </section>
 
-        {/* NOVA SEÇÃO: Localização para SEO Local */}
+        {/* Localização para SEO Local */}
         <section id="localizacao" style={styles.locationSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Onde Estamos</h2>
@@ -382,7 +409,6 @@ export default function LandingPage() {
               </a>
             </div>
             <div style={styles.locationMapWrapper}>
-              {/* Mapa genérico de Taboão da Serra. Você pode gerar um iframe específico no Google Maps com o endereço dela depois */}
               <iframe
                   title="Mapa de Localização"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58485.49574187255!2d-46.82845187640243!3d-23.628860299999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce54238e4df5e5%3A0xc39f28d8b1e4c700!2sTabo%C3%A3o%20da%20Serra%2C%20SP!5e0!3m2!1spt-BR!2sbr!4v1699999999999!5m2!1spt-BR!2sbr"
@@ -418,7 +444,6 @@ export default function LandingPage() {
           ) : (
               <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
 
-                {/* GATILHO DE ESCASSEZ */}
                 <div style={styles.scarcityAlert}>
                   ✨ <strong>Atenção:</strong> Realizamos um número limitado de atendimentos diários para garantir excelência e exclusividade. Garanta seu horário com antecedência.
                 </div>
@@ -544,7 +569,7 @@ export default function LandingPage() {
           )}
         </section>
 
-        {/* FAQ (Perguntas Frequentes) para Otimização de SEO */}
+        {/* FAQ (Perguntas Frequentes) */}
         <section id="faq" style={styles.faqSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Perguntas Frequentes</h2>
@@ -593,8 +618,13 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
+
+  // Barra de Aviso no Topo
+  topBarNotice: { backgroundColor: '#3D1A4C', color: '#FAF9F6', padding: '10px 20px', textAlign: 'center' as const, fontSize: '13px', fontWeight: '500', position: 'relative' as const, zIndex: 1001 },
+
   floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
-  header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
+
+  header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: '37px', left: 0, width: '100%', backgroundColor: 'rgba(250, 249, 246, 0.95)', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 30px' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' as const },
   logoCircle: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
@@ -612,6 +642,10 @@ const styles = {
   primaryActionButton: { display: 'inline-block', backgroundColor: '#2D1537', color: '#FFF', padding: '15px 35px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', transition: 'transform 0.2s' },
   heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
 
+  // Faixa de Benefícios Rápidos
+  benefitsBar: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' as const, backgroundColor: '#2D1537', color: '#FAF9F6', padding: '20px', fontSize: '14px', textAlign: 'center' as const },
+  benefitItem: { display: 'flex', alignItems: 'center', gap: '8px' },
+
   carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 40px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '380px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.5)', transform: 'scale(1.1)', zIndex: 1 },
@@ -622,7 +656,7 @@ const styles = {
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
 
-  indicationsSection: { padding: '40px 20px 80px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' as const },
+  indicationsSection: { padding: '60px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' as const },
   indicationsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '25px', marginTop: '40px' },
   indicationCard: { backgroundColor: '#FFF', padding: '30px 20px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', border: '1px solid #F0E4F5' },
   indicationIcon: { fontSize: '32px', marginBottom: '15px' },
@@ -642,11 +676,14 @@ const styles = {
   sectionTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   sectionSubtitle: { fontSize: '16px', color: '#6D5D75' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px' },
-  card: { backgroundColor: '#FFF', padding: '35px', borderRadius: '20px', border: '1px solid #E8D7F1', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', textAlign: 'left' as const, transition: 'transform 0.3s' },
-  cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
-  cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6 },
 
-  // Nova Seção de Localização
+  card: { backgroundColor: '#FFF', padding: '35px', borderRadius: '20px', border: '1px solid #E8D7F1', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between' },
+  cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
+  cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, marginBottom: '20px' },
+
+  // Botão direto nos cards de tratamentos
+  cardSelectButton: { backgroundColor: '#F3E6F8', color: '#4A155E', border: 'none', padding: '10px 18px', borderRadius: '20px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', alignSelf: 'flex-start', transition: 'background-color 0.2s' },
+
   locationSection: { padding: '80px 20px', maxWidth: '1000px', margin: '0 auto' },
   locationGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '30px', backgroundColor: '#FFF', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
   locationInfo: { flex: '1 1 300px', padding: '40px' },
@@ -656,7 +693,6 @@ const styles = {
   bookingSection: { padding: '80px 20px', maxWidth: '650px', margin: '0 auto' },
   bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '16px', backgroundColor: '#FFF', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
 
-  // Gatilho de Escassez
   scarcityAlert: { backgroundColor: '#FFF3E0', color: '#E65100', padding: '15px', borderRadius: '10px', fontSize: '14px', lineHeight: 1.5, borderLeft: '4px solid #FF9800', marginBottom: '10px' },
 
   bookingInput: { padding: '15px 18px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FAF9F6', width: '100%', boxSizing: 'border-box' as const, transition: 'border-color 0.2s' },
