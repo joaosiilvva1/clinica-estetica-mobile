@@ -149,7 +149,7 @@ export default function LandingPage() {
     setSubmitting(true);
     try {
       const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
-      await fetch(`${API_BASE_URL}/api/appointments/public`, {
+      const response = await fetch(`${API_BASE_URL}/api/appointments/public`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -159,23 +159,15 @@ export default function LandingPage() {
           treatmentId: formData.treatmentId,
           scheduledAt
         }),
-      }).catch(() => {});
+      });
 
-      const selectedTreatment = treatments.find((t) => t.id === formData.treatmentId);
-      const message =
-          `Olá! Gostaria de confirmar meu agendamento.\n\n` +
-          `Nome: ${formData.name}\n` +
-          `WhatsApp: ${formData.whatsapp}\n` +
-          `Tratamento: ${selectedTreatment?.name ?? ''}\n` +
-          `Data: ${formData.date}\n` +
-          `Horário: ${formData.time}`;
+      if (!response.ok) {
+        throw new Error('Não foi possível concluir o agendamento no servidor.');
+      }
 
-      const url = `https://wa.me/5511916224612?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
       setFormSubmitted(true);
     } catch (error: any) {
-      setBookingError(error.message || 'Não foi possível agendar agora. Tente novamente.');
-      setFormData((p) => ({ ...p, time: '' }));
+      setBookingError(error.message || 'Erro ao conectar com o servidor. Tente novamente.');
       setSlotsRefreshKey((k) => k + 1);
     } finally {
       setSubmitting(false);
@@ -185,9 +177,6 @@ export default function LandingPage() {
   const [testimonials, setTestimonials] = useState<
       { id: string; clientName: string; rating: number; comment: string }[]
   >([]);
-  const [testimonialForm, setTestimonialForm] = useState({ clientName: '', rating: 5, comment: '' });
-  const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
-  const [testimonialError, setTestimonialError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/testimonials/public`)
@@ -195,22 +184,6 @@ export default function LandingPage() {
         .then((data) => setTestimonials(data))
         .catch(() => {});
   }, []);
-
-  const handleTestimonialSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTestimonialError(null);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/testimonials/public`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testimonialForm),
-      });
-      if (!res.ok) throw new Error('Falha ao enviar depoimento');
-      setTestimonialSubmitted(true);
-    } catch {
-      setTestimonialError('Não foi possível enviar agora. Tente novamente em instantes.');
-    }
-  };
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -233,7 +206,7 @@ export default function LandingPage() {
           <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
         </a>
 
-        {/* Header Limpo e Fixo Sem Encarroscar */}
+        {/* Header Fixo e Limpo */}
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
@@ -264,7 +237,6 @@ export default function LandingPage() {
               Realce sua essência natural com tratamentos de alta performance. Renove sua pele, recupere sua autoestima e desfrute de um momento único de cuidado e bem-estar.
             </p>
 
-            {/* Carrossel Mais Largo e Imponente */}
             <div style={styles.carouselContainer}>
               <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
               <div style={styles.carouselSlide}>
@@ -293,7 +265,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Mini-Cards de Pilares Reais */}
             <div style={styles.statsGrid}>
               <div style={styles.statCard}>
                 <span style={styles.statNumber}>💜</span>
@@ -317,14 +288,14 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Faixa de Benefícios Rápidos / Selos de Segurança */}
+        {/* Faixa de Benefícios */}
         <section style={styles.benefitsBar}>
           <div style={styles.benefitItem}>⭐ <strong>Atendimento Exclusivo</strong> e Personalizado</div>
           <div style={styles.benefitItem}>🛡️ <strong>Dermocosméticos</strong> de Alta Qualidade</div>
-          <div style={styles.benefitItem}>💬 <strong>Agendamento Prático</strong> via WhatsApp</div>
+          <div style={styles.benefitItem}>💬 <strong>Agendamento Direto</strong> com Confirmação Automática</div>
         </section>
 
-        {/* Indicações / Dores do Cliente */}
+        {/* Indicações */}
         <section style={styles.indicationsSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Nossos tratamentos são ideais para quem busca:</h2>
@@ -353,7 +324,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* About Section com Gatilhos de Autoridade */}
+        {/* About Section */}
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
@@ -375,7 +346,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Treatments Section com Botão Direto para Agendar */}
+        {/* Treatments Section */}
         <section id="tratamentos" style={styles.section}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Procedimentos Exclusivos</h2>
@@ -397,7 +368,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Localização para SEO Local */}
+        {/* Localização Atualizada */}
         <section id="localizacao" style={styles.locationSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Onde Estamos</h2>
@@ -408,8 +379,9 @@ export default function LandingPage() {
               <h3 style={{...styles.cardTitle, marginBottom: '20px'}}>Nosso Espaço</h3>
               <p style={styles.locationAddressText}>
                 <strong>Endereço:</strong><br/>
-                Taboão da Serra, SP <br/>
-                <span style={{fontSize: '13px', color: '#888'}}>(Atualize com o endereço completo, ex: Rua Exemplo, 123 - Bairro)</span>
+                R. Izaura da Silva Camargo, 27 <br/>
+                Jardim Sao Paulo, Taboão da Serra - SP <br/>
+                CEP: 06767-310
               </p>
               <p style={styles.locationAddressText}>
                 <strong>Atendimento:</strong><br/>
@@ -422,7 +394,7 @@ export default function LandingPage() {
             <div style={styles.locationMapWrapper}>
               <iframe
                   title="Mapa de Localização"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58485.49574187255!2d-46.82845187640243!3d-23.628860299999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce54238e4df5e5%3A0xc39f28d8b1e4c700!2sTabo%C3%A3o%20da%20Serra%2C%20SP!5e0!3m2!1spt-BR!2sbr!4v1699999999999!5m2!1spt-BR!2sbr"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.7029671607525!2d-46.77740262451388!3d-23.57500587879109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce55a90d96a60d%3A0x6a05e26716c526d1!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20S%C3%A3o%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1723427300000"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -434,29 +406,30 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Booking Section com Gatilho de Escassez */}
+        {/* Booking Section */}
         <section id="agendamento" style={styles.bookingSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Agende seu Atendimento</h2>
             <p style={styles.sectionSubtitle}>
-              Garanta seu horário de forma rápida e prática.
+              Preencha seus dados para registrar o horário diretamente na clínica.
             </p>
           </div>
 
           {formSubmitted ? (
               <div style={styles.bookingSuccess}>
+                <h3 style={{ color: '#3D1A4C', fontFamily: "'Playfair Display', serif", marginBottom: '10px' }}>Agendamento Realizado com Sucesso! 💜</h3>
                 <p style={styles.bookingSuccessText}>
-                  Prontinho! Abrimos o WhatsApp com sua solicitação — é só tocar em <strong>enviar</strong> lá pra confirmar com a Maria Yasmim.
+                  Seus dados foram salvos e enviados para a nossa equipe. Entraremos em contato em breve para confirmar os detalhes.
                 </p>
                 <button onClick={() => setFormSubmitted(false)} style={styles.bookingResetLink}>
-                  Preencher novo agendamento
+                  Fazer novo agendamento
                 </button>
               </div>
           ) : (
               <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
 
                 <div style={styles.scarcityAlert}>
-                  ✨ <strong>Atenção:</strong> Realizamos um número limitado de atendimentos diários para garantir excelência e exclusividade. Garanta seu horário com antecedência.
+                  ✨ <strong>Atenção:</strong> Realizamos um número limitado de atendimentos diários para garantir excelência e exclusividade.
                 </div>
 
                 <input
@@ -545,7 +518,7 @@ export default function LandingPage() {
                       cursor: formData.time && !submitting ? 'pointer' : 'not-allowed'
                     }}
                 >
-                  {submitting ? 'Confirmando...' : 'Agendar via WhatsApp'}
+                  {submitting ? 'Salvando agendamento...' : 'Confirmar Agendamento'}
                 </button>
               </form>
           )}
@@ -580,7 +553,7 @@ export default function LandingPage() {
           )}
         </section>
 
-        {/* FAQ (Perguntas Frequentes) */}
+        {/* FAQ */}
         <section id="faq" style={styles.faqSection}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Perguntas Frequentes</h2>
@@ -629,10 +602,7 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
-
   floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
-
-  // Header limpo, fixo e sem sobreposição
   header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: '#FAF9F6', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '12px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' as const },
@@ -641,16 +611,13 @@ const styles = {
   nav: { display: 'flex', gap: '30px' },
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '8px 16px', borderRadius: '25px', textDecoration: 'none', fontWeight: '600', fontSize: '13px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' as const },
-
-  hero: { padding: '130px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
+  hero: { padding: '110px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
   heroContent: { maxWidth: '950px', margin: '0 auto' },
   badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
   heroTitle: { fontSize: '42px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
   heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '35px', lineHeight: 1.6, maxWidth: '800px', margin: '0 auto 35px auto' },
-
   primaryActionButton: { display: 'inline-block', backgroundColor: '#2D1537', color: '#FFF', padding: '15px 35px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', transition: 'transform 0.2s' },
   heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
-
   carouselContainer: { position: 'relative' as const, maxWidth: '850px', margin: '0 auto 30px auto', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '420px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.5)', transform: 'scale(1.1)', zIndex: 1 },
@@ -660,22 +627,18 @@ const styles = {
   carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
-
   statsGrid: { display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' as const, maxWidth: '850px', margin: '0 auto' },
   statCard: { backgroundColor: '#FFF', border: '1px solid #E8D7F1', padding: '15px 30px', borderRadius: '14px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.03)', flex: '1 1 200px' },
   statNumber: { fontSize: '24px', marginBottom: '4px' },
   statLabel: { fontSize: '13px', color: '#6D5D75', fontWeight: '600' },
-
   benefitsBar: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' as const, backgroundColor: '#2D1537', color: '#FAF9F6', padding: '20px', fontSize: '14px', textAlign: 'center' as const },
   benefitItem: { display: 'flex', alignItems: 'center', gap: '8px' },
-
   indicationsSection: { padding: '60px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' as const },
   indicationsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '25px', marginTop: '40px' },
   indicationCard: { backgroundColor: '#FFF', padding: '30px 20px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', border: '1px solid #F0E4F5' },
   indicationIcon: { fontSize: '32px', marginBottom: '15px' },
   indicationTitle: { fontSize: '18px', fontWeight: '700', color: '#2D1537', marginBottom: '10px', fontFamily: "'Playfair Display', serif" },
   indicationText: { fontSize: '14px', color: '#6D5D75', lineHeight: 1.5 },
-
   aboutSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '60px', alignItems: 'center' },
   aboutPhotos: { flex: '1 1 400px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
@@ -683,30 +646,23 @@ const styles = {
   aboutText: { flex: '1 1 400px' },
   aboutTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '20px', fontFamily: "'Playfair Display', serif" },
   aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.8, marginBottom: '16px' },
-
   section: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
   sectionHeader: { textAlign: 'center' as const, marginBottom: '50px' },
   sectionTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   sectionSubtitle: { fontSize: '16px', color: '#6D5D75' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px' },
-
   card: { backgroundColor: '#FFF', padding: '35px', borderRadius: '20px', border: '1px solid #E8D7F1', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between' },
   cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, marginBottom: '20px' },
-
   cardSelectButton: { backgroundColor: '#F3E6F8', color: '#4A155E', border: 'none', padding: '10px 18px', borderRadius: '20px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', alignSelf: 'flex-start', transition: 'background-color 0.2s' },
-
   locationSection: { padding: '80px 20px', maxWidth: '1000px', margin: '0 auto' },
   locationGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '30px', backgroundColor: '#FFF', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
   locationInfo: { flex: '1 1 300px', padding: '40px' },
   locationAddressText: { fontSize: '15px', color: '#5A4A60', lineHeight: 1.6, marginBottom: '20px' },
   locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
-
   bookingSection: { padding: '80px 20px', maxWidth: '650px', margin: '0 auto' },
   bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '16px', backgroundColor: '#FFF', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
-
   scarcityAlert: { backgroundColor: '#FFF3E0', color: '#E65100', padding: '15px', borderRadius: '10px', fontSize: '14px', lineHeight: 1.5, borderLeft: '4px solid #FF9800', marginBottom: '10px' },
-
   bookingInput: { padding: '15px 18px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FAF9F6', width: '100%', boxSizing: 'border-box' as const, transition: 'border-color 0.2s' },
   fieldGroup: { display: 'flex', flexDirection: 'column' as const, gap: '8px', textAlign: 'left' as const },
   fieldLabel: { fontSize: '14px', fontWeight: '600', color: '#2D1537' },
@@ -719,7 +675,6 @@ const styles = {
   bookingSuccessText: { fontSize: '16px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
   bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
   bookingResetLink: { background: 'none', border: 'none', color: '#A259C4', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' },
-
   testimonialsSection: { padding: '80px 20px', backgroundColor: '#F8F2FB' },
   googleReviewCard: { backgroundColor: '#FFF', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' as const, textAlign: 'left' as const },
   reviewHeader: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' },
@@ -727,7 +682,6 @@ const styles = {
   clientNameGoogle: { fontWeight: 'bold', color: '#2D1537', fontSize: '17px', margin: '0 0 5px 0' },
   starsContainer: { fontSize: '15px' },
   googleReviewText: { fontSize: '15px', color: '#4A4A4A', lineHeight: 1.7, margin: 0 },
-
   faqSection: { padding: '80px 20px', maxWidth: '800px', margin: '0 auto' },
   faqContainer: { display: 'flex', flexDirection: 'column' as const, gap: '15px' },
   faqItem: { backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #E8D7F1', padding: '20px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
@@ -735,7 +689,6 @@ const styles = {
   faqQuestionText: { fontSize: '16px', fontWeight: '600', color: '#2D1537', margin: 0 },
   faqIcon: { fontSize: '24px', color: '#A259C4', fontWeight: 'bold' },
   faqAnswerText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, margin: '15px 0 0 0', paddingTop: '15px', borderTop: '1px solid #F0E4F5' },
-
   footer: { backgroundColor: '#2D1537', color: '#FAF9F6', padding: '70px 20px 30px 20px', textAlign: 'left' as const },
   footerContent: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '50px', borderBottom: '1px solid #4A155E', paddingBottom: '40px' },
   footerTitle: { fontSize: '24px', fontWeight: 'bold', color: '#E3C2F0', marginBottom: '15px', fontFamily: "'Playfair Display', serif" },
