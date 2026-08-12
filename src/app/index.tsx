@@ -134,7 +134,6 @@ export default function LandingPage() {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  // Função para selecionar o tratamento clicado e rolar a tela direto para o formulário
   const handleSelectTreatmentAndBook = (treatmentId: string) => {
     setFormData((prev) => ({ ...prev, treatmentId }));
     const bookingSection = document.getElementById('agendamento');
@@ -270,6 +269,7 @@ export default function LandingPage() {
               Realce sua essência natural com tratamentos de alta performance. Renove sua pele, recupere sua autoestima e desfrute de um momento único de cuidado e bem-estar.
             </p>
 
+            {/* Carrossel Mais Largo e Imponente */}
             <div style={styles.carouselContainer}>
               <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
               <div style={styles.carouselSlide}>
@@ -298,7 +298,23 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div style={styles.heroActions}>
+            {/* Mini-Cards de Estatísticas / Autoridade para Preencher o Espaço */}
+            <div style={styles.statsGrid}>
+              <div style={styles.statCard}>
+                <span style={styles.statNumber}>+500</span>
+                <span style={styles.statLabel}>Peles Renovadas</span>
+              </div>
+              <div style={styles.statCard}>
+                <span style={styles.statNumber}>100%</span>
+                <span style={styles.statLabel}>Personalizado</span>
+              </div>
+              <div style={styles.statCard}>
+                <span style={styles.statNumber}>⭐ 5.0</span>
+                <span style={styles.statLabel}>Avaliação das Clientes</span>
+              </div>
+            </div>
+
+            <div style={{ ...styles.heroActions, marginTop: '30px' }}>
               <a href="#agendamento" style={styles.primaryActionButton}>
                 Ver Tratamentos e Agendar
               </a>
@@ -619,7 +635,6 @@ export default function LandingPage() {
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
 
-  // Barra de Aviso no Topo
   topBarNotice: { backgroundColor: '#3D1A4C', color: '#FAF9F6', padding: '10px 20px', textAlign: 'center' as const, fontSize: '13px', fontWeight: '500', position: 'relative' as const, zIndex: 1001 },
 
   floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
@@ -634,27 +649,33 @@ const styles = {
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '10px 20px', borderRadius: '25px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
 
   hero: { padding: '160px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
-  heroContent: { maxWidth: '850px', margin: '0 auto' },
+  heroContent: { maxWidth: '950px', margin: '0 auto' }, // Aumentado para dar mais largura geral
   badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
   heroTitle: { fontSize: '42px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
-  heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '35px', lineHeight: 1.6 },
+  heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '35px', lineHeight: 1.6, maxWidth: '800px', margin: '0 auto 35px auto' },
 
   primaryActionButton: { display: 'inline-block', backgroundColor: '#2D1537', color: '#FFF', padding: '15px 35px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', transition: 'transform 0.2s' },
   heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
 
-  // Faixa de Benefícios Rápidos
-  benefitsBar: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' as const, backgroundColor: '#2D1537', color: '#FAF9F6', padding: '20px', fontSize: '14px', textAlign: 'center' as const },
-  benefitItem: { display: 'flex', alignItems: 'center', gap: '8px' },
-
-  carouselContainer: { position: 'relative' as const, maxWidth: '650px', margin: '0 auto 40px auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
-  carouselSlide: { position: 'relative' as const, width: '100%', height: '380px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  // Carrossel Mais Largo e Imponente
+  carouselContainer: { position: 'relative' as const, maxWidth: '850px', margin: '0 auto 30px auto', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
+  carouselSlide: { position: 'relative' as const, width: '100%', height: '420px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.5)', transform: 'scale(1.1)', zIndex: 1 },
   carouselImage: { position: 'relative' as const, height: '100%', maxWidth: '100%', objectFit: 'contain' as const, zIndex: 2 },
   carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
-  carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
-  carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
+  carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
+  carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
+
+  // Mini-Cards de Estatísticas (Preenchem o espaço perfeitamente)
+  statsGrid: { display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' as const, maxWidth: '850px', margin: '0 auto' },
+  statCard: { backgroundColor: '#FFF', border: '1px solid #E8D7F1', padding: '15px 30px', borderRadius: '14px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.03)', flex: '1 1 200px' },
+  statNumber: { fontSize: '22px', fontWeight: '700', color: '#A259C4', fontFamily: "'Playfair Display', serif", marginBottom: '4px' },
+  statLabel: { fontSize: '13px', color: '#6D5D75', fontWeight: '500' },
+
+  benefitsBar: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' as const, backgroundColor: '#2D1537', color: '#FAF9F6', padding: '20px', fontSize: '14px', textAlign: 'center' as const },
+  benefitItem: { display: 'flex', alignItems: 'center', gap: '8px' },
 
   indicationsSection: { padding: '60px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' as const },
   indicationsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '25px', marginTop: '40px' },
@@ -681,7 +702,6 @@ const styles = {
   cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, marginBottom: '20px' },
 
-  // Botão direto nos cards de tratamentos
   cardSelectButton: { backgroundColor: '#F3E6F8', color: '#4A155E', border: 'none', padding: '10px 18px', borderRadius: '20px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', alignSelf: 'flex-start', transition: 'background-color 0.2s' },
 
   locationSection: { padding: '80px 20px', maxWidth: '1000px', margin: '0 auto' },
