@@ -12,7 +12,7 @@ export default function LandingPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [dateError, setDateError] = useState<string | null>(null); // Novo estado para o erro da data
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const availableTimeSlots = [
     '09:00', '11:00', '14:00', '16:00', '18:00'
@@ -103,7 +103,7 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    if (!formData.date || !formData.treatmentId || !professionalId) {
+    if (!formData.date || !formData.treatmentId || !professionalId || dateError) {
       setFreeSlots([]);
       return;
     }
@@ -121,7 +121,7 @@ export default function LandingPage() {
           setFreeSlots(availableTimeSlots.map(t => `${formData.date}T${t}:00-03:00`));
         })
         .finally(() => setSlotsLoading(false));
-  }, [formData.date, formData.treatmentId, professionalId, slotsRefreshKey]);
+  }, [formData.date, formData.treatmentId, professionalId, slotsRefreshKey, dateError]);
 
   const slotToEpochMs = (dateStr: string, timeStr: string) =>
       new Date(`${dateStr}T${timeStr}:00-03:00`).getTime();
@@ -142,17 +142,17 @@ export default function LandingPage() {
       return;
     }
 
+    // Salva a data independentemente do dia, para não bugar o celular
+    setFormData((prev) => ({ ...prev, date: selectedDate, time: '' }));
+
     const [year, month, day] = selectedDate.split('-');
     const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
     const dayOfWeek = dateObj.getDay(); 
 
     if (dayOfWeek !== 0 && dayOfWeek !== 1) {
-      // Removemos o alert e ativamos a mensagem de erro suave na tela
-      setDateError('A Dra. Maria Yasmim atende apenas aos Domingos e Segundas-feiras. Por favor, escolha outra data.');
-      setFormData((prev) => ({ ...prev, date: '', time: '' }));
+      setDateError('Atendimentos apenas aos Domingos e Segundas. Por favor, escolha outra data.');
     } else {
       setDateError(null);
-      setFormData((prev) => ({ ...prev, date: selectedDate, time: '' }));
     }
   };
 
@@ -196,7 +196,7 @@ export default function LandingPage() {
           ? 'Erro de conexão ou CORS bloqueado no backend.' 
           : error.message;
       setBookingError(msg);
-      alert(`Ops! Algo deu errado ao tentar agendar:\n\n${msg}`);
+      alert(`Ops! Algo deu errado ao tentar agendar:\n\n${msg}\n\nVerifique as configurações de CORS no seu Spring Boot.`);
       setSlotsRefreshKey((k) => k + 1);
     } finally {
       setSubmitting(false);
@@ -493,7 +493,7 @@ export default function LandingPage() {
                       onChange={handleDateChange} 
                       style={styles.bookingInput}
                   />
-                  {/* Mensagem de erro sutil caso a pessoa escolha o dia errado */}
+                  {/* Se a data for inválida (terça a sábado), mostra o texto em vermelho e desabilita o resto */}
                   {dateError && <p style={styles.bookingErrorText}>{dateError}</p>}
                 </div>
 
@@ -543,11 +543,11 @@ export default function LandingPage() {
                         alert('Por favor, clique em um dos horários disponíveis antes de confirmar o agendamento.');
                       }
                     }}
-                    disabled={submitting}
+                    disabled={submitting || !!dateError}
                     style={{
                       ...styles.bookingSubmitButton,
-                      opacity: submitting ? 0.6 : 1,
-                      cursor: submitting ? 'not-allowed' : 'pointer'
+                      opacity: (submitting || !!dateError) ? 0.6 : 1,
+                      cursor: (submitting || !!dateError) ? 'not-allowed' : 'pointer'
                     }}
                 >
                   {submitting ? 'Enviando agendamento...' : 'Confirmar Agendamento'}
