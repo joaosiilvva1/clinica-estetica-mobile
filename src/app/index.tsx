@@ -228,22 +228,17 @@ export default function LandingPage() {
   return (
       <div id="inicio" style={styles.container}>
 
-        {/* Barra de Aviso de Vagas no Topo */}
-        <div style={styles.topBarNotice}>
-          ✨ <strong>Agenda de Agosto aberta em Taboão da Serra</strong> — Garanta seu horário com antecedência!
-        </div>
-
         {/* Botão Flutuante do WhatsApp */}
         <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.floatingWhatsApp}>
           <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
         </a>
 
-        {/* Header - AGORA FIXO DE VERDADE E COM FUNDO SÓLIDO */}
+        {/* Header Limpo e Fixo Sem Encarroscar */}
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
               <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
-              <span style={{ ...styles.logoText, fontSize: isMobile ? '13px' : '18px' }}>Maria Yasmim Lopes</span>
+              <span style={{ ...styles.logoText, fontSize: isMobile ? '12px' : '18px' }}>Maria Yasmim Lopes</span>
             </a>
             {!isMobile && (
                 <nav style={styles.nav}>
@@ -254,8 +249,8 @@ export default function LandingPage() {
                   <a href="#faq" style={styles.navLink}>Dúvidas</a>
                 </nav>
             )}
-            <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '10px 20px', fontSize: isMobile ? '11px' : '14px' }}>
-              {isMobile ? 'Agendar' : 'Agendar Procedimento'}
+            <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '6px 12px' : '10px 20px', fontSize: isMobile ? '11px' : '14px' }}>
+              Agendar
             </a>
           </div>
         </header>
@@ -635,23 +630,19 @@ export default function LandingPage() {
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
 
-  // Barra de aviso no topo agora fixa e opaca para evitar sobreposição
-  topBarNotice: { backgroundColor: '#3D1A4C', color: '#FAF9F6', padding: '8px 15px', textAlign: 'center' as const, fontSize: '12px', fontWeight: '500', position: 'fixed' as const, top: 0, left: 0, width: '100%', zIndex: 1002, boxSizing: 'border-box' as const },
-
   floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
 
-  // Header com fundo totalmente opaco e posicionado corretamente logo abaixo da barra de topo
-  header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: '33px', left: 0, width: '100%', backgroundColor: '#FAF9F6', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '10px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+  // Header limpo, fixo e sem sobreposição
+  header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: '#FAF9F6', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '12px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' as const },
   logoCircle: { width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
   logoText: { fontSize: '16px', fontWeight: 'bold', color: '#3D1A4C', fontFamily: "'Playfair Display', serif" },
   nav: { display: 'flex', gap: '30px' },
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
-  primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '10px 20px', borderRadius: '25px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
+  primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '8px 16px', borderRadius: '25px', textDecoration: 'none', fontWeight: '600', fontSize: '13px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' as const },
 
-  // Hero com padding-top maior para o conteúdo nunca ficar escondido sob o menu fixo
-  hero: { padding: '150px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
+  hero: { padding: '130px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
   heroContent: { maxWidth: '950px', margin: '0 auto' },
   badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
   heroTitle: { fontSize: '42px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
