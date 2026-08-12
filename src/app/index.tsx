@@ -298,19 +298,19 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Mini-Cards de Estatísticas / Autoridade para Preencher o Espaço */}
+            {/* Mini-Cards de Pilares Reais (Sem números fictícios) */}
             <div style={styles.statsGrid}>
               <div style={styles.statCard}>
-                <span style={styles.statNumber}>+500</span>
-                <span style={styles.statLabel}>Peles Renovadas</span>
+                <span style={styles.statNumber}>💜</span>
+                <span style={styles.statLabel}>Cuidado Humanizado</span>
               </div>
               <div style={styles.statCard}>
-                <span style={styles.statNumber}>100%</span>
-                <span style={styles.statLabel}>Personalizado</span>
+                <span style={styles.statNumber}>🔬</span>
+                <span style={styles.statLabel}>Protocolos Modernos</span>
               </div>
               <div style={styles.statCard}>
-                <span style={styles.statNumber}>⭐ 5.0</span>
-                <span style={styles.statLabel}>Avaliação das Clientes</span>
+                <span style={styles.statNumber}>✨</span>
+                <span style={styles.statLabel}>Resultados Reais</span>
               </div>
             </div>
 
@@ -649,7 +649,7 @@ const styles = {
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '10px 20px', borderRadius: '25px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
 
   hero: { padding: '160px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
-  heroContent: { maxWidth: '950px', margin: '0 auto' }, // Aumentado para dar mais largura geral
+  heroContent: { maxWidth: '950px', margin: '0 auto' },
   badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
   heroTitle: { fontSize: '42px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
   heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '35px', lineHeight: 1.6, maxWidth: '800px', margin: '0 auto 35px auto' },
@@ -657,7 +657,6 @@ const styles = {
   primaryActionButton: { display: 'inline-block', backgroundColor: '#2D1537', color: '#FFF', padding: '15px 35px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', transition: 'transform 0.2s' },
   heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
 
-  // Carrossel Mais Largo e Imponente
   carouselContainer: { position: 'relative' as const, maxWidth: '850px', margin: '0 auto 30px auto', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
   carouselSlide: { position: 'relative' as const, width: '100%', height: '420px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselBgBlur: { position: 'absolute' as const, top: 0, left: 0, width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(15px) brightness(0.5)', transform: 'scale(1.1)', zIndex: 1 },
@@ -668,11 +667,11 @@ const styles = {
   dotsContainer: { display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#FAF9F6' },
   dot: { width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background-color 0.3s' },
 
-  // Mini-Cards de Estatísticas (Preenchem o espaço perfeitamente)
+  // Mini-Cards com Pilares Reais (Substituíram os números falsos)
   statsGrid: { display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' as const, maxWidth: '850px', margin: '0 auto' },
   statCard: { backgroundColor: '#FFF', border: '1px solid #E8D7F1', padding: '15px 30px', borderRadius: '14px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.03)', flex: '1 1 200px' },
-  statNumber: { fontSize: '22px', fontWeight: '700', color: '#A259C4', fontFamily: "'Playfair Display', serif", marginBottom: '4px' },
-  statLabel: { fontSize: '13px', color: '#6D5D75', fontWeight: '500' },
+  statNumber: { fontSize: '24px', marginBottom: '4px' },
+  statLabel: { fontSize: '13px', color: '#6D5D75', fontWeight: '600' },
 
   benefitsBar: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' as const, backgroundColor: '#2D1537', color: '#FAF9F6', padding: '20px', fontSize: '14px', textAlign: 'center' as const },
   benefitItem: { display: 'flex', alignItems: 'center', gap: '8px' },
