@@ -13,9 +13,9 @@ export default function LandingPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // 1. HORÁRIOS ATUALIZADOS
   const availableTimeSlots = [
-    '09:00', '10:00', '11:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00'
+    '09:00', '11:00', '14:00', '16:00', '18:00'
   ];
 
   const [professionalId, setProfessionalId] = useState<string | null>(null);
@@ -134,6 +134,26 @@ export default function LandingPage() {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  // 2. NOVA FUNÇÃO PARA LIMITAR DOMINGO (0) E SEGUNDA (1)
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = e.target.value;
+    if (!selectedDate) {
+      setFormData((prev) => ({ ...prev, date: '', time: '' }));
+      return;
+    }
+
+    const [year, month, day] = selectedDate.split('-');
+    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+    const dayOfWeek = dateObj.getDay(); 
+
+    if (dayOfWeek !== 0 && dayOfWeek !== 1) {
+      alert('A Dra. Maria Yasmim atende apenas aos Domingos e Segundas-feiras. Por favor, escolha outra data.');
+      setFormData((prev) => ({ ...prev, date: '', time: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, date: selectedDate, time: '' }));
+    }
+  };
+
   const handleSelectTreatmentAndBook = (treatmentId: string) => {
     setFormData((prev) => ({ ...prev, treatmentId }));
     const bookingSection = document.getElementById('agendamento');
@@ -142,11 +162,13 @@ export default function LandingPage() {
     }
   };
 
+  // 3. CAPTURANDO ERROS EXATOS DO SERVIDOR SE ALGO FALHAR
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBookingError(null);
     const activeProfId = professionalId || 'default-pro';
     setSubmitting(true);
+    
     try {
       const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
       const response = await fetch(`${API_BASE_URL}/api/appointments/public`, {
@@ -162,12 +184,18 @@ export default function LandingPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Não foi possível concluir o agendamento no servidor.');
+        const errText = await response.text();
+        throw new Error(errText || 'Não foi possível concluir o agendamento no servidor.');
       }
 
       setFormSubmitted(true);
     } catch (error: any) {
-      setBookingError(error.message || 'Erro ao conectar com o servidor. Tente novamente.');
+      console.error("Erro no agendamento:", error);
+      const msg = error.message === 'Failed to fetch' 
+          ? 'Erro de conexão ou CORS bloqueado no backend.' 
+          : error.message;
+      setBookingError(msg);
+      alert(`Ops! Algo deu errado ao tentar agendar:\n\n${msg}`);
       setSlotsRefreshKey((k) => k + 1);
     } finally {
       setSubmitting(false);
@@ -328,7 +356,7 @@ export default function LandingPage() {
               <span style={styles.badge}>Sua Esteticista</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               <p style={styles.aboutParagraph}>
-                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais. 
+                Esteticista formada e apaixonada por elevating a autoestima de cada cliente através de cuidados personalizados e resultados reais. 
               </p>
               <p style={styles.aboutParagraph}>
                 Trabalho focada na saúde da sua pele, utilizando protocolos modernos, <strong>dermocosméticos de alta tecnologia</strong> e seguindo as mais rigorosas normas de <strong>biossegurança</strong>.
@@ -379,7 +407,7 @@ export default function LandingPage() {
               </p>
               <p style={styles.locationAddressText}>
                 <strong>Atendimento:</strong><br/>
-                Com hora marcada para garantir sua exclusividade.
+                Domingos e Segundas com hora marcada para garantir sua exclusividade.
               </p>
               <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, marginTop: '15px', padding: '12px 25px', fontSize: '14px'}}>
                 Enviar Mensagem
@@ -423,7 +451,7 @@ export default function LandingPage() {
               <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
                 
                 <div style={styles.scarcityAlert}>
-                  ✨ <strong>Atenção:</strong> Realizamos um número limitado de atendimentos diários para garantir excelência e exclusividade.
+                  ✨ <strong>Atenção:</strong> Atendimentos exclusivos aos Domingos e Segundas. Vagas limitadas.
                 </div>
 
                 <input
@@ -461,7 +489,7 @@ export default function LandingPage() {
                       required
                       min={todayStr}
                       value={formData.date}
-                      onChange={handleFormChange('date')}
+                      onChange={handleDateChange} 
                       style={styles.bookingInput}
                   />
                 </div>
@@ -469,6 +497,7 @@ export default function LandingPage() {
                 {!formData.treatmentId && formData.date && (
                     <p style={styles.bookingErrorText}>Escolha o tratamento antes de ver os horários.</p>
                 )}
+                
                 {formData.date && formData.treatmentId && (
                     <div style={styles.fieldGroup}>
                       <label style={styles.fieldLabel}>Selecione o horário disponível:</label>
@@ -503,16 +532,23 @@ export default function LandingPage() {
 
                 {bookingError && <p style={styles.bookingErrorText}>{bookingError}</p>}
 
+                {/* BOTÃO ATUALIZADO PARA EVITAR FICAR TRAVADO */}
                 <button
                     type="submit"
-                    disabled={!formData.time || submitting}
+                    onClick={(e) => {
+                      if (!formData.time) {
+                        e.preventDefault();
+                        alert('Por favor, clique em um dos horários disponíveis antes de confirmar o agendamento.');
+                      }
+                    }}
+                    disabled={submitting}
                     style={{
                       ...styles.bookingSubmitButton,
-                      opacity: formData.time && !submitting ? 1 : 0.6,
-                      cursor: formData.time && !submitting ? 'pointer' : 'not-allowed'
+                      opacity: submitting ? 0.6 : 1,
+                      cursor: submitting ? 'not-allowed' : 'pointer'
                     }}
                 >
-                  {submitting ? 'Salvando agendamento...' : 'Confirmar Agendamento'}
+                  {submitting ? 'Enviando agendamento...' : 'Confirmar Agendamento'}
                 </button>
               </form>
           )}
@@ -663,7 +699,7 @@ const styles = {
   slotButton: { padding: '12px', borderRadius: '8px', border: '1px solid #A259C4', backgroundColor: '#FFF', color: '#A259C4', fontWeight: 'bold' as const, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' },
   slotBusy: { backgroundColor: '#F0F0F0', borderColor: '#DDD', color: '#A0A0A0', cursor: 'not-allowed', textDecoration: 'line-through' },
   slotSelected: { backgroundColor: '#A259C4', color: '#FFF' },
-  bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '16px 30px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 12px rgba(45,21,55,0.2)' },
+  bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '16px 30px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', marginTop: '10px', boxShadow: '0 4px 12px rgba(45,21,55,0.2)' },
   bookingSuccess: { textAlign: 'center' as const, backgroundColor: '#F3E6F8', borderRadius: '16px', padding: '30px' },
   bookingSuccessText: { fontSize: '16px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
   bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
