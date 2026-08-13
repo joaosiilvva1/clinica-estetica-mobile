@@ -10,6 +10,8 @@ export default function LandingPage() {
     time: ''
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [lastWhatsappLink, setLastWhatsappLink] = useState<string | null>(null);
+  const [whatsappBlocked, setWhatsappBlocked] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
@@ -222,6 +224,26 @@ export default function LandingPage() {
       }
 
       setFormSubmitted(true);
+
+      // Avisa a Maria no WhatsApp com os dados do agendamento. Como isso roda depois de um
+      // await, alguns navegadores bloqueiam a abertura automática (não é mais um clique
+      // "direto"); por isso guardamos o link e também deixamos um botão manual na tela de
+      // sucesso como fallback garantido.
+      const treatmentName = treatments.find(t => t.id === formData.treatmentId)?.name ?? 'Tratamento';
+      const [year, month, day] = formData.date.split('-');
+      const whatsappMessage =
+          `Novo agendamento recebido!\n\n` +
+          `Cliente: ${formData.name}\n` +
+          `WhatsApp: ${formData.whatsapp}\n` +
+          `Tratamento: ${treatmentName}\n` +
+          `Data: ${day}/${month}/${year} às ${formData.time}`;
+      const link = `https://wa.me/5511916224612?text=${encodeURIComponent(whatsappMessage)}`;
+      setLastWhatsappLink(link);
+
+      const popup = window.open(link, '_blank');
+      if (!popup) {
+        setWhatsappBlocked(true);
+      }
     } catch (error: any) {
       console.error("Erro no agendamento:", error);
       const msg = error.message === 'Failed to fetch'
@@ -476,6 +498,19 @@ export default function LandingPage() {
                 <p style={styles.bookingSuccessText}>
                   Seus dados foram salvos e enviados para a nossa equipe. Entraremos em contato em breve para confirmar os detalhes.
                 </p>
+
+                {lastWhatsappLink && (
+                    <a
+                        href={lastWhatsappLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ ...styles.primaryButton, display: 'inline-block', marginBottom: '14px' }}
+                    >
+                      {whatsappBlocked ? 'Avisar Maria no WhatsApp' : 'Reenviar aviso no WhatsApp'}
+                    </a>
+                )}
+
+                <br />
                 <button onClick={() => setFormSubmitted(false)} style={styles.bookingResetLink}>
                   Fazer novo agendamento
                 </button>
