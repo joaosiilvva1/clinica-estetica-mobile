@@ -268,6 +268,32 @@ export default function LandingPage() {
         .catch(() => {});
   }, []);
 
+  const [testimonialForm, setTestimonialForm] = useState({ clientName: '', rating: 5, comment: '' });
+  const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
+  const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
+  const [testimonialError, setTestimonialError] = useState<string | null>(null);
+
+  const handleTestimonialSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testimonialForm.clientName.trim() || !testimonialForm.comment.trim()) return;
+    setTestimonialSubmitting(true);
+    setTestimonialError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/testimonials/public`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testimonialForm),
+      });
+      if (!res.ok) throw new Error();
+      setTestimonialSubmitted(true);
+      setTestimonialForm({ clientName: '', rating: 5, comment: '' });
+    } catch {
+      setTestimonialError('Não foi possível enviar seu depoimento agora. Tente novamente em instantes.');
+    } finally {
+      setTestimonialSubmitting(false);
+    }
+  };
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   const toggleFaq = (index: number) => {
@@ -658,6 +684,75 @@ export default function LandingPage() {
                 ))}
               </div>
           )}
+
+          <div style={styles.testimonialFormWrapper}>
+            {testimonialSubmitted ? (
+                <div style={styles.bookingSuccess}>
+                  <p style={styles.bookingSuccessText}>
+                    Obrigada pelo seu depoimento! Ele foi enviado e vai aparecer aqui assim que for revisado. 💜
+                  </p>
+                  <button
+                      style={styles.bookingResetLink}
+                      onClick={() => setTestimonialSubmitted(false)}
+                  >
+                    Enviar outro depoimento
+                  </button>
+                </div>
+            ) : (
+                <form onSubmit={handleTestimonialSubmit} style={styles.bookingForm}>
+                  <h3 style={styles.cardTitle}>Deixe seu depoimento</h3>
+                  <p style={styles.cardText}>
+                    Conte como foi sua experiência. Seu depoimento passa por uma breve revisão antes de aparecer no site.
+                  </p>
+
+                  <div style={styles.fieldGroup}>
+                    <label style={styles.fieldLabel}>Seu nome</label>
+                    <input
+                        style={styles.bookingInput}
+                        type="text"
+                        value={testimonialForm.clientName}
+                        onChange={(e) => setTestimonialForm({ ...testimonialForm, clientName: e.target.value })}
+                        required
+                    />
+                  </div>
+
+                  <div style={styles.fieldGroup}>
+                    <label style={styles.fieldLabel}>Sua nota</label>
+                    <div style={styles.timeSlotsGrid}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                              key={star}
+                              type="button"
+                              onClick={() => setTestimonialForm({ ...testimonialForm, rating: star })}
+                              style={{
+                                ...styles.slotButton,
+                                ...(testimonialForm.rating === star ? styles.slotSelected : {}),
+                              }}
+                          >
+                            {'⭐'.repeat(star)}
+                          </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={styles.fieldGroup}>
+                    <label style={styles.fieldLabel}>Seu depoimento</label>
+                    <textarea
+                        style={{ ...styles.bookingInput, minHeight: '110px', fontFamily: 'inherit', resize: 'vertical' as const }}
+                        value={testimonialForm.comment}
+                        onChange={(e) => setTestimonialForm({ ...testimonialForm, comment: e.target.value })}
+                        required
+                    />
+                  </div>
+
+                  {testimonialError && <p style={styles.bookingErrorText}>{testimonialError}</p>}
+
+                  <button type="submit" style={styles.bookingSubmitButton} disabled={testimonialSubmitting}>
+                    {testimonialSubmitting ? 'Enviando...' : 'Enviar depoimento'}
+                  </button>
+                </form>
+            )}
+          </div>
         </section>
 
         {/* FAQ */}
@@ -782,6 +877,7 @@ const styles = {
   bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
   bookingResetLink: { background: 'none', border: 'none', color: '#A259C4', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' },
   testimonialsSection: { padding: '80px 20px', backgroundColor: '#F8F2FB' },
+  testimonialFormWrapper: { maxWidth: '650px', margin: '50px auto 0 auto' },
   googleReviewCard: { backgroundColor: '#FFF', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' as const, textAlign: 'left' as const },
   reviewHeader: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' },
   avatar: { width: '45px', height: '45px', borderRadius: '50%', backgroundColor: '#A259C4', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '20px' },
