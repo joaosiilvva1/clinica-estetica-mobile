@@ -162,18 +162,33 @@ export default function LandingPage() {
     setChatMessages(prev => [...prev, { role: 'user', text: message }]);
     setChatInput('');
     setChatLoading(true);
+
+    // O backend gratuito (Render) "dorme" com inatividade: a primeira mensagem depois
+    // disso pode demorar bastante para acordar o servidor. Damos um tempo generoso antes
+    // de desistir, para não travar o "Digitando..." pra sempre nem desistir cedo demais.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat/public`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ message }),
+        signal: controller.signal
       });
       if (!response.ok) throw new Error('Erro no chatbot');
       const data = await response.json();
       setChatMessages(prev => [...prev, { role: 'assistant', text: data.reply || 'Não consegui responder agora.' }]);
-    } catch {
-      setChatMessages(prev => [...prev, { role: 'assistant', text: 'Desculpe, não consegui me conectar agora. Tente novamente em alguns instantes.' }]);
+    } catch (err: any) {
+      const timedOut = err?.name === 'AbortError';
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        text: timedOut
+            ? 'O assistente está demorando para responder (o servidor pode estar iniciando). Tente novamente em alguns segundos.'
+            : 'Desculpe, não consegui me conectar agora. Tente novamente em alguns instantes.'
+      }]);
     } finally {
+      clearTimeout(timeoutId);
       setChatLoading(false);
     }
   };
@@ -349,73 +364,81 @@ export default function LandingPage() {
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
               <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
-              <span style={{ ...styles.logoText, fontSize: isMobile ? '12px' : '18px' }}>Maria Yasmim Lopes</span>
+              <span style={styles.logoTextBlock}>
+                <span style={{ ...styles.logoText, fontSize: isMobile ? '13px' : '18px' }}>Maria Yasmim Lopes</span>
+                <span style={styles.logoSubtext}>Estética</span>
+              </span>
             </a>
             {!isMobile && (
                 <nav style={styles.nav}>
                   <a href="#inicio" style={styles.navLink}>Início</a>
                   <a href="#sobre" style={styles.navLink}>Sobre</a>
                   <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
-                  <a href="#localizacao" style={styles.navLink}>Local</a>
-                  <a href="#faq" style={styles.navLink}>Dúvidas</a>
+                  <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
+                  <a href="#contato" style={styles.navLink}>Contato</a>
                 </nav>
             )}
-            <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '6px 12px' : '10px 20px', fontSize: isMobile ? '11px' : '14px' }}>
-              Agendar
+            <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
+              {isMobile ? 'Agendar' : '📱 Agendar Avaliação'}
             </a>
           </div>
         </header>
 
         {/* Hero Section */}
         <section style={styles.hero}>
-          <div style={styles.heroContent}>
-            <span style={styles.badge}>Clínica de Estética em Taboão da Serra</span>
-            <h1 style={styles.heroTitle}>Especialista em Limpeza de Pele e Cuidados Faciais</h1>
-            <p style={styles.heroText}>
-              Realce sua essência natural com tratamentos de alta performance. Renove sua pele, recupere sua autoestima e desfrute de um momento único de cuidado e bem-estar.
-            </p>
+          <div style={styles.heroGrid}>
+            <div style={styles.heroTextCol}>
+              <span style={styles.eyebrow}>Realce sua beleza natural</span>
+              <h1 style={styles.heroTitle}>Sua melhor versão começa aqui</h1>
+              <p style={styles.heroText}>
+                Tratamentos faciais personalizados para realçar sua beleza natural com segurança, acolhimento e resultados reais.
+              </p>
 
-            <div style={styles.carouselContainer}>
-              <button onClick={prevSlide} style={styles.carouselBtnLeft}>&#10094;</button>
-              <div style={styles.carouselSlide}>
-                <img src={photos[currentSlide].url} alt={photos[currentSlide].title} style={styles.carouselImage} />
-                <div style={styles.carouselCaption}>{photos[currentSlide].title}</div>
+              <div style={styles.heroActions}>
+                <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.primaryActionButton}>
+                  Agendar via WhatsApp
+                </a>
+                <a href="#tratamentos" style={styles.secondaryActionButton}>
+                  Ver Tratamentos
+                </a>
               </div>
-              <button onClick={nextSlide} style={styles.carouselBtnRight}>&#10095;</button>
 
-              <div style={styles.dotsContainer}>
-                {photos.map((_, index) => (
-                    <span
-                        key={index}
-                        style={{
-                          ...styles.dot,
-                          backgroundColor: currentSlide === index ? '#A259C4' : '#D4A5E0'
-                        }}
-                        onClick={() => setCurrentSlide(index)}
-                    />
-                ))}
+              <div style={styles.trustRow}>
+                <div style={styles.trustItem}>
+                  <span style={styles.trustIcon}>🛡️</span>
+                  <span>Procedimentos seguros</span>
+                </div>
+                <div style={styles.trustItem}>
+                  <span style={styles.trustIcon}>🤝</span>
+                  <span>Atendimento personalizado</span>
+                </div>
+                <div style={styles.trustItem}>
+                  <span style={styles.trustIcon}>⭐</span>
+                  <span>Resultados comprovados</span>
+                </div>
               </div>
             </div>
 
-            <div style={styles.statsGrid}>
-              <div style={styles.statCard}>
-                <span style={styles.statNumber}>💜</span>
-                <span style={styles.statLabel}>Cuidado Humanizado</span>
+            <div style={styles.heroPhotoCol}>
+              <div style={styles.carouselContainer}>
+                <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
+                <div style={styles.carouselSlide}>
+                  <img src={photos[currentSlide].url} alt={photos[currentSlide].title} style={styles.carouselImage} />
+                </div>
+                <button onClick={nextSlide} style={styles.carouselBtnRight} aria-label="Próxima foto">&#10095;</button>
+                <div style={styles.dotsContainer}>
+                  {photos.map((_, index) => (
+                      <span
+                          key={index}
+                          style={{
+                            ...styles.dot,
+                            backgroundColor: currentSlide === index ? '#A259C4' : '#D4A5E0'
+                          }}
+                          onClick={() => setCurrentSlide(index)}
+                      />
+                  ))}
+                </div>
               </div>
-              <div style={styles.statCard}>
-                <span style={styles.statNumber}>🔬</span>
-                <span style={styles.statLabel}>Protocolos Modernos</span>
-              </div>
-              <div style={styles.statCard}>
-                <span style={styles.statNumber}>✨</span>
-                <span style={styles.statLabel}>Resultados Reais</span>
-              </div>
-            </div>
-
-            <div style={{ ...styles.heroActions, marginTop: '30px' }}>
-              <a href="#agendamento" style={styles.primaryActionButton}>
-                Ver Tratamentos e Agendar
-              </a>
             </div>
           </div>
         </section>
@@ -481,19 +504,21 @@ export default function LandingPage() {
         {/* Treatments Section */}
         <section id="tratamentos" style={styles.section}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Procedimentos Exclusivos</h2>
-            <p style={styles.sectionSubtitle}>Protocolos de alta performance voltados para as necessidades únicas do seu rosto.</p>
+            <span style={styles.eyebrowCentered}>Nossos tratamentos</span>
+            <h2 style={styles.sectionTitle}>Cuidados para realçar sua beleza</h2>
+            <p style={styles.sectionSubtitle}>Procedimentos faciais personalizados para suas necessidades</p>
           </div>
           <div style={styles.grid}>
-            {treatments.map((item) => (
+            {treatments.map((item, index) => (
                 <div key={item.id} style={styles.card}>
+                  <div style={styles.cardIconCircle}>{['🧖‍♀️', '💧', '✨'][index % 3]}</div>
                   <h3 style={styles.cardTitle}>{item.name}</h3>
                   <p style={styles.cardText}>{item.description}</p>
                   <button
                       onClick={() => handleSelectTreatmentAndBook(item.id)}
                       style={styles.cardSelectButton}
                   >
-                    Quero este tratamento &rarr;
+                    Saiba mais
                   </button>
                 </div>
             ))}
@@ -851,8 +876,8 @@ export default function LandingPage() {
 
 const styles = {
   container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
-  chatButton: { position: 'fixed' as const, bottom: '30px', right: '110px', width: '58px', height: '58px', borderRadius: '50%', border: 'none', backgroundColor: '#A259C4', color: '#FFF', fontSize: '24px', cursor: 'pointer', zIndex: 9999, boxShadow: '0 6px 16px rgba(0,0,0,0.2)' },
-  chatPanel: { position: 'fixed' as const, bottom: '100px', right: '30px', width: '350px', maxWidth: 'calc(100vw - 30px)', height: '480px', backgroundColor: '#FFF', borderRadius: '18px', boxShadow: '0 10px 35px rgba(0,0,0,0.22)', zIndex: 10000, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', border: '1px solid #E8D7F1' },
+  chatButton: { position: 'fixed' as const, bottom: '30px', left: '30px', width: '58px', height: '58px', borderRadius: '50%', border: 'none', backgroundColor: '#A259C4', color: '#FFF', fontSize: '24px', cursor: 'pointer', zIndex: 9999, boxShadow: '0 6px 16px rgba(0,0,0,0.2)' },
+  chatPanel: { position: 'fixed' as const, bottom: '100px', left: '30px', width: '350px', maxWidth: 'calc(100vw - 30px)', height: '480px', backgroundColor: '#FFF', borderRadius: '18px', boxShadow: '0 10px 35px rgba(0,0,0,0.22)', zIndex: 10000, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', border: '1px solid #E8D7F1' },
   chatHeader: { backgroundColor: '#A259C4', color: '#FFF', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   chatClose: { background: 'transparent', border: 'none', color: '#FFF', fontSize: '26px', cursor: 'pointer' },
   chatMessages: { flex: 1, overflowY: 'auto' as const, padding: '14px', display: 'flex', flexDirection: 'column' as const, gap: '10px', backgroundColor: '#FAF9F6' },
@@ -865,20 +890,30 @@ const styles = {
   header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: '#FAF9F6', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '12px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
   headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' as const },
-  logoCircle: { width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
-  logoText: { fontSize: '16px', fontWeight: 'bold', color: '#3D1A4C', fontFamily: "'Playfair Display', serif" },
+  logoCircle: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
+  logoTextBlock: { display: 'flex', flexDirection: 'column' as const, lineHeight: 1.2 },
+  logoText: { fontWeight: 'bold', color: '#3D1A4C', fontFamily: "'Playfair Display', serif" },
+  logoSubtext: { fontSize: '10px', fontWeight: '600', color: '#A259C4', letterSpacing: '2px', textTransform: 'uppercase' as const },
   nav: { display: 'flex', gap: '30px' },
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '8px 16px', borderRadius: '25px', textDecoration: 'none', fontWeight: '600', fontSize: '13px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' as const },
-  hero: { padding: '110px 20px 80px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)', textAlign: 'center' as const },
-  heroContent: { maxWidth: '950px', margin: '0 auto' },
+  hero: { padding: '130px 20px 70px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)' },
+  heroGrid: { maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap-reverse' as const, gap: '50px', alignItems: 'center' },
+  heroTextCol: { flex: '1 1 440px', textAlign: 'left' as const },
+  heroPhotoCol: { flex: '1 1 440px' },
+  eyebrow: { color: '#A259C4', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '2px', display: 'inline-block', marginBottom: '16px' },
+  eyebrowCentered: { color: '#A259C4', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '2px', display: 'inline-block', marginBottom: '10px' },
   badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
-  heroTitle: { fontSize: '42px', fontWeight: '700', color: '#2D1537', marginBottom: '15px', lineHeight: 1.2, fontFamily: "'Playfair Display', serif" },
-  heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '35px', lineHeight: 1.6, maxWidth: '800px', margin: '0 auto 35px auto' },
-  primaryActionButton: { display: 'inline-block', backgroundColor: '#2D1537', color: '#FFF', padding: '15px 35px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', transition: 'transform 0.2s' },
-  heroActions: { display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' },
-  carouselContainer: { position: 'relative' as const, maxWidth: '850px', margin: '0 auto 30px auto', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', backgroundColor: '#2D1537' },
-  carouselSlide: { position: 'relative' as const, width: '100%', height: '420px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  heroTitle: { fontSize: '46px', fontWeight: '700', color: '#2D1537', marginBottom: '18px', lineHeight: 1.15, fontFamily: "'Playfair Display', serif" },
+  heroText: { fontSize: '17px', color: '#5A4A60', marginBottom: '30px', lineHeight: 1.6, maxWidth: '520px' },
+  primaryActionButton: { display: 'inline-block', backgroundColor: '#A259C4', color: '#FFF', padding: '15px 30px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '15px', boxShadow: '0 4px 10px rgba(162,89,196,0.35)', transition: 'transform 0.2s', whiteSpace: 'nowrap' as const },
+  secondaryActionButton: { display: 'inline-block', backgroundColor: 'transparent', color: '#2D1537', padding: '15px 30px', borderRadius: '30px', textDecoration: 'none', fontWeight: '600', fontSize: '15px', border: '1.5px solid #2D1537', whiteSpace: 'nowrap' as const },
+  heroActions: { display: 'flex', gap: '15px', flexWrap: 'wrap' as const, alignItems: 'center', marginBottom: '35px' },
+  trustRow: { display: 'flex', gap: '28px', flexWrap: 'wrap' as const },
+  trustItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#4A3B50' },
+  trustIcon: { fontSize: '16px' },
+  carouselContainer: { position: 'relative' as const, margin: '0 auto', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(45,21,55,0.2)', backgroundColor: '#2D1537' },
+  carouselSlide: { position: 'relative' as const, width: '100%', height: '480px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselImage: { position: 'relative' as const, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center' as const, zIndex: 2 },
   carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
   carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
@@ -910,6 +945,7 @@ const styles = {
   sectionSubtitle: { fontSize: '16px', color: '#6D5D75' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px' },
   card: { backgroundColor: '#FFF', padding: '35px', borderRadius: '20px', border: '1px solid #E8D7F1', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between' },
+  cardIconCircle: { width: '54px', height: '54px', borderRadius: '50%', backgroundColor: '#F3E6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', marginBottom: '18px' },
   cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
   cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, marginBottom: '20px' },
   cardSelectButton: { backgroundColor: '#F3E6F8', color: '#4A155E', border: 'none', padding: '10px 18px', borderRadius: '20px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', alignSelf: 'flex-start', transition: 'background-color 0.2s' },
