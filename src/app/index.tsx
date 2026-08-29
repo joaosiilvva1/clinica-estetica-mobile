@@ -379,7 +379,7 @@ export default function LandingPage() {
                 </nav>
             )}
             <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
-              {isMobile ? 'Agendar' : '📱 Agendar Atendimento'}
+              {isMobile ? 'Agendar' : '📱 Agendar Avaliação'}
             </a>
           </div>
         </header>
@@ -898,9 +898,9 @@ const styles = {
   navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
   primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '8px 16px', borderRadius: '25px', textDecoration: 'none', fontWeight: '600', fontSize: '13px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' as const },
   hero: { padding: '130px 20px 70px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)' },
-  heroGrid: { maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap-reverse' as const, gap: '50px', alignItems: 'stretch' },
-  heroTextCol: { flex: '1 1 440px', minWidth: 0, textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, justifyContent: 'center' },
-  heroPhotoCol: { flex: '1 1 440px', minWidth: 0, display: 'flex' },
+  heroGrid: { maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap-reverse' as const, gap: '50px', alignItems: 'center' },
+  heroTextCol: { flex: '1 1 440px', textAlign: 'left' as const },
+  heroPhotoCol: { flex: '1 1 440px' },
   eyebrow: { color: '#A259C4', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '2px', display: 'inline-block', marginBottom: '16px' },
   eyebrowCentered: { color: '#A259C4', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '2px', display: 'inline-block', marginBottom: '10px' },
   badge: { backgroundColor: '#E3C2F0', color: '#4A155E', padding: '8px 18px', borderRadius: '25px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' as const, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' },
@@ -912,8 +912,8 @@ const styles = {
   trustRow: { display: 'flex', gap: '28px', flexWrap: 'wrap' as const },
   trustItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#4A3B50' },
   trustIcon: { fontSize: '16px' },
-  carouselContainer: { position: 'relative' as const, flex: '1 1 auto', width: '100%', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(45,21,55,0.2)', backgroundColor: '#2D1537', display: 'flex', flexDirection: 'column' as const },
-  carouselSlide: { position: 'relative' as const, width: '100%', flex: '1 1 auto', minHeight: '420px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  carouselContainer: { position: 'relative' as const, width: '100%', margin: '0 auto', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(45,21,55,0.2)', backgroundColor: '#2D1537' },
+  carouselSlide: { position: 'relative' as const, width: '100%', aspectRatio: '6 / 5', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   carouselImage: { position: 'relative' as const, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center' as const, zIndex: 2 },
   carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
   carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
