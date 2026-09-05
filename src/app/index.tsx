@@ -1,7 +1,29 @@
 import React, { useState, useEffect } from 'react';
 
+type SiteSettings = {
+  aboutText: string;
+  address: string;
+  whatsapp: string;
+  openingHoursText: string;
+  instagramUrl: string;
+};
+
+const defaultSiteSettings: SiteSettings = {
+  aboutText:
+      'Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.\n' +
+      'Trabalho focada na saúde da sua pele, utilizando protocolos modernos, dermocosméticos de alta tecnologia e seguindo as mais rigorosas normas de biossegurança.\n' +
+      'Meu objetivo é proporcionar a melhor experiência em estética na região do Taboão da Serra, unindo eficácia técnica a um ambiente acolhedor de relaxamento profundo 💜',
+  address:
+      'R. Izaura da Silva Camargo, 27\nJardim Sao Paulo, Taboão da Serra - SP\nCEP: 06767-310',
+  whatsapp: '5511916224612',
+  openingHoursText:
+      'Domingos e Segundas com hora marcada para garantir sua exclusividade.',
+  instagramUrl: 'https://www.instagram.com/yasmimlopes_estetica/',
+};
+
 export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [formData, setFormData] = useState({
     name: '',
     whatsapp: '',
@@ -70,18 +92,20 @@ export default function LandingPage() {
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  const photos = [
-    { id: 1, title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
-    { id: 2, title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
-    { id: 3, title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
-    { id: 4, title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
-    { id: 5, title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
-    { id: 6, title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
-    { id: 7, title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
-    { id: 8, title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
-    { id: 9, title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
-    { id: 10, title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
+  const defaultPhotos = [
+    { id: '1', title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
+    { id: '2', title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
+    { id: '3', title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
+    { id: '4', title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
+    { id: '5', title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
+    { id: '6', title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
+    { id: '7', title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
+    { id: '8', title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
+    { id: '9', title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
+    { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
   ];
+
+  const [photos, setPhotos] = useState(defaultPhotos);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -101,6 +125,43 @@ export default function LandingPage() {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             setTreatments(data);
+          }
+        })
+        .catch(() => {});
+
+    // Fotos e textos/contatos do site agora são editáveis pela Maria no painel
+    // admin. Se a API falhar ou não tiver nada cadastrado ainda, mantemos os
+    // valores padrão acima como fallback — o site nunca fica quebrado.
+    fetch(`${API_BASE_URL}/api/photos/public`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setPhotos(
+                data.map((p: any) => ({
+                  id: p.id,
+                  title: p.title || '',
+                  url: p.url,
+                }))
+            );
+          }
+        })
+        .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/site-settings/public`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && typeof data === 'object') {
+            setSiteSettings((prev) => ({
+              aboutText: data.aboutText?.trim() ? data.aboutText : prev.aboutText,
+              address: data.address?.trim() ? data.address : prev.address,
+              whatsapp: data.whatsapp?.trim() ? data.whatsapp : prev.whatsapp,
+              openingHoursText: data.openingHoursText?.trim()
+                  ? data.openingHoursText
+                  : prev.openingHoursText,
+              instagramUrl: data.instagramUrl?.trim()
+                  ? data.instagramUrl
+                  : prev.instagramUrl,
+            }));
           }
         })
         .catch(() => {});
@@ -281,7 +342,7 @@ export default function LandingPage() {
           `WhatsApp: ${formData.whatsapp}\n` +
           `Tratamento: ${treatmentName}\n` +
           `Data: ${day}/${month}/${year} às ${formData.time}`;
-      const link = `https://wa.me/5511916224612?text=${encodeURIComponent(whatsappMessage)}`;
+      const link = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappMessage)}`;
       setLastWhatsappLink(link);
 
       const popup = window.open(link, '_blank');
@@ -351,11 +412,23 @@ export default function LandingPage() {
     { question: "Gestante pode fazer limpeza de pele?", answer: "Sim! Com as devidas adaptações de produtos, as gestantes podem e devem cuidar da pele, além de aproveitarem nossos protocolos de relaxamento facial." }
   ];
 
+  const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
+  const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
+  const addressLines = siteSettings.address.split('\n').filter((l) => l.trim());
+  const instagramHandle = (() => {
+    try {
+      const path = new URL(siteSettings.instagramUrl).pathname.replace(/\//g, '');
+      return path ? `@${path}` : siteSettings.instagramUrl;
+    } catch {
+      return siteSettings.instagramUrl;
+    }
+  })();
+
   return (
       <div id="inicio" style={styles.container}>
 
         {/* Botão Flutuante do WhatsApp */}
-        <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.floatingWhatsApp}>
+        <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" style={styles.floatingWhatsApp}>
           <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
         </a>
 
@@ -395,7 +468,7 @@ export default function LandingPage() {
               </p>
 
               <div style={styles.heroActions}>
-                <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={styles.primaryActionButton}>
+                <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" style={styles.primaryActionButton}>
                   Agendar via WhatsApp
                 </a>
                 <a href="#tratamentos" style={styles.secondaryActionButton}>
@@ -488,15 +561,11 @@ export default function LandingPage() {
             <div style={styles.aboutText}>
               <span style={styles.badge}>Sua Esteticista</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
-              <p style={styles.aboutParagraph}>
-                Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.
-              </p>
-              <p style={styles.aboutParagraph}>
-                Trabalho focada na saúde da sua pele, utilizando protocolos modernos, <strong>dermocosméticos de alta tecnologia</strong> e seguindo as mais rigorosas normas de <strong>biossegurança</strong>.
-              </p>
-              <p style={styles.aboutParagraph}>
-                Meu objetivo é proporcionar a melhor experiência em estética na região do Taboão da Serra, unindo eficácia técnica a um ambiente acolhedor de relaxamento profundo 💜
-              </p>
+              {aboutParagraphs.map((paragraph, index) => (
+                  <p key={index} style={styles.aboutParagraph}>
+                    {paragraph}
+                  </p>
+              ))}
             </div>
           </div>
         </section>
@@ -536,15 +605,18 @@ export default function LandingPage() {
               <h3 style={{...styles.cardTitle, marginBottom: '20px'}}>Nosso Espaço</h3>
               <p style={styles.locationAddressText}>
                 <strong>Endereço:</strong><br/>
-                R. Izaura da Silva Camargo, 27 <br/>
-                Jardim Sao Paulo, Taboão da Serra - SP <br/>
-                CEP: 06767-310
+                {addressLines.map((line, index) => (
+                    <React.Fragment key={index}>
+                      {line}
+                      {index < addressLines.length - 1 && <br/>}
+                    </React.Fragment>
+                ))}
               </p>
               <p style={styles.locationAddressText}>
                 <strong>Atendimento:</strong><br/>
-                Domingos e Segundas com hora marcada para garantir sua exclusividade.
+                {siteSettings.openingHoursText}
               </p>
-              <a href="https://wa.me/5511916224612" target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, marginTop: '15px', padding: '12px 25px', fontSize: '14px'}}>
+              <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, marginTop: '15px', padding: '12px 25px', fontSize: '14px'}}>
                 Enviar Mensagem
               </a>
             </div>
@@ -857,11 +929,11 @@ export default function LandingPage() {
             </div>
             <div style={styles.footerContact}>
               <p style={{ fontWeight: 'bold', color: '#FFF' }}>Contato:</p>
-              <p>(11) 91622-4612</p>
+              <p>{siteSettings.whatsapp}</p>
               <p>contato@mariayasmimestetica.com.br</p>
               <p style={{ marginTop: '10px' }}>
-                <a href="https://www.instagram.com/yasmimlopes_estetica/" target="_blank" rel="noreferrer" style={styles.footerInstagramLink}>
-                  @yasmimlopes_estetica
+                <a href={siteSettings.instagramUrl} target="_blank" rel="noreferrer" style={styles.footerInstagramLink}>
+                  {instagramHandle}
                 </a>
               </p>
             </div>

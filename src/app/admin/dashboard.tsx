@@ -39,7 +39,30 @@ type TreatmentForm = {
   durationMinutes: string;
 };
 
-type Tab = 'agenda' | 'tratamentos' | 'depoimentos';
+type Photo = {
+  id: string;
+  url: string;
+  title: string | null;
+  sortOrder: number;
+  active: boolean;
+};
+
+type PhotoForm = {
+  id?: string;
+  url: string;
+  title: string;
+  sortOrder: string;
+};
+
+type SiteSettingsForm = {
+  aboutText: string;
+  address: string;
+  whatsapp: string;
+  openingHoursText: string;
+  instagramUrl: string;
+};
+
+type Tab = 'agenda' | 'tratamentos' | 'fotos' | 'site' | 'depoimentos';
 
 const statusLabel: Record<Appointment['status'], string> = {
   PENDING: 'Pendente',
@@ -96,6 +119,32 @@ export default function AdminDashboard() {
       useState<TreatmentForm | null>(null);
   const [savingTreatment, setSavingTreatment] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Fotos
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photosLoading, setPhotosLoading] = useState(true);
+  const [photosError, setPhotosError] = useState<string | null>(null);
+  const [photoForm, setPhotoForm] = useState<PhotoForm | null>(null);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  const [photoBusyId, setPhotoBusyId] = useState<string | null>(null);
+
+  // Site (configurações / textos institucionais)
+  const [siteForm, setSiteForm] = useState<SiteSettingsForm | null>(null);
+  const [siteLoading, setSiteLoading] = useState(true);
+  const [siteError, setSiteError] = useState<string | null>(null);
+  const [siteSaved, setSiteSaved] = useState(false);
+  const [savingSite, setSavingSite] = useState(false);
+
+  useEffect(() => {
+    // Carrega as mesmas fontes da marca usadas no site público, para o
+    // painel ficar visualmente consistente com o que a cliente vê.
+    if (typeof document === 'undefined') return;
+    const linkFont = document.createElement('link');
+    linkFont.href =
+        'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
+    linkFont.rel = 'stylesheet';
+    document.head.appendChild(linkFont);
+  }, []);
 
   useEffect(() => {
     const saved =
@@ -567,6 +616,285 @@ export default function AdminDashboard() {
     }
   };
 
+  // =========================
+  // FOTOS
+  // =========================
+
+  const loadPhotos = useCallback(async () => {
+    if (!token) return;
+
+    setPhotosLoading(true);
+    setPhotosError(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/photos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      const data: Photo[] = await res.json();
+      setPhotos(data);
+    } catch {
+      setPhotosError('Não foi possível carregar as fotos.');
+    } finally {
+      setPhotosLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (tab === 'fotos') {
+      loadPhotos();
+    }
+  }, [tab, loadPhotos]);
+
+  const openNewPhotoForm = () => {
+    setPhotoForm({ url: '', title: '', sortOrder: String(photos.length) });
+  };
+
+  const openEditPhotoForm = (photo: Photo) => {
+    setPhotoForm({
+      id: photo.id,
+      url: photo.url,
+      title: photo.title ?? '',
+      sortOrder: String(photo.sortOrder),
+    });
+  };
+
+  const savePhoto = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!token || !photoForm) return;
+
+    if (!photoForm.url.trim()) {
+      setPhotosError('Cole o link da imagem antes de salvar.');
+      return;
+    }
+
+    setSavingPhoto(true);
+    setPhotosError(null);
+
+    try {
+      const isEdit = Boolean(photoForm.id);
+
+      const res = await fetch(
+          isEdit
+              ? `${API_BASE_URL}/api/admin/photos/${photoForm.id}`
+              : `${API_BASE_URL}/api/admin/photos`,
+          {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              url: photoForm.url.trim(),
+              title: photoForm.title.trim(),
+              sortOrder: photoForm.sortOrder
+                  ? Number(photoForm.sortOrder)
+                  : undefined,
+            }),
+          }
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      const saved: Photo = await res.json();
+
+      setPhotos((prev) => {
+        const next = isEdit
+            ? prev.map((p) => (p.id === saved.id ? saved : p))
+            : [...prev, saved];
+        return [...next].sort((a, b) => a.sortOrder - b.sortOrder);
+      });
+
+      setPhotoForm(null);
+    } catch {
+      setPhotosError(
+          'Não foi possível salvar a foto. Confira o link e tente de novo.'
+      );
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
+
+  const togglePhotoActive = async (photo: Photo) => {
+    if (!token) return;
+
+    setPhotoBusyId(photo.id);
+
+    try {
+      const res = await fetch(
+          `${API_BASE_URL}/api/admin/photos/${photo.id}/status?active=${!photo.active}`,
+          {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      const updated: Photo = await res.json();
+
+      setPhotos((prev) =>
+          prev.map((p) => (p.id === updated.id ? updated : p))
+      );
+    } catch {
+      setPhotosError('Não foi possível alterar o status dessa foto.');
+    } finally {
+      setPhotoBusyId(null);
+    }
+  };
+
+  const deletePhoto = async (photo: Photo) => {
+    if (!token) return;
+
+    setPhotoBusyId(photo.id);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/photos/${photo.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    } catch {
+      setPhotosError('Não foi possível remover essa foto.');
+    } finally {
+      setPhotoBusyId(null);
+    }
+  };
+
+  // =========================
+  // SITE (textos e contato)
+  // =========================
+
+  const loadSiteSettings = useCallback(async () => {
+    if (!token) return;
+
+    setSiteLoading(true);
+    setSiteError(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/site-settings`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      const data = await res.json();
+
+      setSiteForm({
+        aboutText: data.aboutText ?? '',
+        address: data.address ?? '',
+        whatsapp: data.whatsapp ?? '',
+        openingHoursText: data.openingHoursText ?? '',
+        instagramUrl: data.instagramUrl ?? '',
+      });
+    } catch {
+      setSiteError('Não foi possível carregar as informações do site.');
+    } finally {
+      setSiteLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (tab === 'site') {
+      loadSiteSettings();
+    }
+  }, [tab, loadSiteSettings]);
+
+  const saveSiteSettings = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!token || !siteForm) return;
+
+    setSavingSite(true);
+    setSiteError(null);
+    setSiteSaved(false);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/site-settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(siteForm),
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      const data = await res.json();
+
+      setSiteForm({
+        aboutText: data.aboutText ?? '',
+        address: data.address ?? '',
+        whatsapp: data.whatsapp ?? '',
+        openingHoursText: data.openingHoursText ?? '',
+        instagramUrl: data.instagramUrl ?? '',
+      });
+      setSiteSaved(true);
+      setTimeout(() => setSiteSaved(false), 3000);
+    } catch {
+      setSiteError('Não foi possível salvar as alterações. Tente novamente.');
+    } finally {
+      setSavingSite(false);
+    }
+  };
+
   if (!token) {
     return null;
   }
@@ -584,6 +912,14 @@ export default function AdminDashboard() {
       label: 'Tratamentos',
     },
     {
+      key: 'fotos',
+      label: 'Fotos',
+    },
+    {
+      key: 'site',
+      label: 'Site',
+    },
+    {
       key: 'depoimentos',
       label: 'Depoimentos',
     },
@@ -592,9 +928,17 @@ export default function AdminDashboard() {
   return (
       <div style={styles.wrapper}>
         <header style={styles.header}>
-          <h1 style={styles.title}>
-            Painel Administrativo
-          </h1>
+          <div style={styles.headerBrand}>
+            <img
+                src="/logo.jpg.jpeg"
+                alt="Logo Maria Yasmim Lopes"
+                style={styles.headerLogo}
+            />
+            <div>
+              <h1 style={styles.title}>Painel Administrativo</h1>
+              <span style={styles.subtitle}>Maria Yasmim Lopes Estética</span>
+            </div>
+          </div>
 
           <button
               onClick={handleLogout}
@@ -1049,6 +1393,285 @@ export default function AdminDashboard() {
         )}
 
         {/* =========================
+          FOTOS
+      ========================= */}
+
+        {tab === 'fotos' && (
+            <section>
+              {photosError && (
+                  <div style={styles.errorBox}>{photosError}</div>
+              )}
+
+              <p style={styles.helperText}>
+                As fotos ativas aparecem no carrossel da página inicial, na
+                ordem definida abaixo. Cole o link de uma imagem já publicada
+                na internet (por exemplo, um link do Google Drive, Imgur ou
+                Instagram) — ainda não é possível enviar o arquivo direto do
+                computador ou celular por aqui.
+              </p>
+
+              {!photoForm && (
+                  <button
+                      onClick={openNewPhotoForm}
+                      style={styles.primaryButton}
+                  >
+                    + Nova foto
+                  </button>
+              )}
+
+              {photoForm && (
+                  <form onSubmit={savePhoto} style={styles.form}>
+                    <h3 style={styles.formTitle}>
+                      {photoForm.id ? 'Editar foto' : 'Nova foto'}
+                    </h3>
+
+                    <label style={styles.label}>Link da imagem</label>
+                    <input
+                        type="text"
+                        value={photoForm.url}
+                        onChange={(event) =>
+                            setPhotoForm({ ...photoForm, url: event.target.value })
+                        }
+                        style={styles.input}
+                        placeholder="https://..."
+                        required
+                    />
+
+                    {photoForm.url.trim() && (
+                        <img
+                            src={photoForm.url}
+                            alt="Pré-visualização"
+                            style={styles.photoPreview}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            }}
+                        />
+                    )}
+
+                    <label style={styles.label}>Título / legenda (opcional)</label>
+                    <input
+                        type="text"
+                        value={photoForm.title}
+                        onChange={(event) =>
+                            setPhotoForm({ ...photoForm, title: event.target.value })
+                        }
+                        style={styles.input}
+                        placeholder="Ex: Limpeza de Pele Profunda"
+                    />
+
+                    <label style={styles.label}>Ordem de exibição</label>
+                    <input
+                        type="number"
+                        value={photoForm.sortOrder}
+                        onChange={(event) =>
+                            setPhotoForm({
+                              ...photoForm,
+                              sortOrder: event.target.value,
+                            })
+                        }
+                        style={styles.input}
+                        placeholder="0"
+                    />
+
+                    <div
+                        style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}
+                    >
+                      <button
+                          type="submit"
+                          disabled={savingPhoto}
+                          style={styles.primaryButton}
+                      >
+                        {savingPhoto ? 'Salvando...' : 'Salvar'}
+                      </button>
+
+                      <button
+                          type="button"
+                          onClick={() => setPhotoForm(null)}
+                          style={styles.secondaryButton}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+              )}
+
+              {photosLoading ? (
+                  <p style={styles.info}>Carregando...</p>
+              ) : photos.length === 0 ? (
+                  <p style={styles.info}>Nenhuma foto cadastrada ainda.</p>
+              ) : (
+                  <div
+                      style={{
+                        ...styles.photoGrid,
+                        marginTop: 20,
+                      }}
+                  >
+                    {photos.map((photo) => (
+                        <div key={photo.id} style={styles.card}>
+                          <img
+                              src={photo.url}
+                              alt={photo.title ?? ''}
+                              style={styles.photoThumb}
+                          />
+
+                          <div style={styles.cardTop}>
+                            <strong style={styles.clientName}>
+                              {photo.title || '(sem título)'}
+                            </strong>
+
+                            <span
+                                style={{
+                                  ...styles.badge,
+                                  background: photo.active ? '#2E7D32' : '#8A8A8A',
+                                }}
+                            >
+                        {photo.active ? 'Ativa' : 'Inativa'}
+                      </span>
+                          </div>
+
+                          <p style={styles.detail}>Ordem: {photo.sortOrder}</p>
+
+                          <div style={styles.actions}>
+                            <button
+                                onClick={() => openEditPhotoForm(photo)}
+                                style={styles.actionButton}
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                                onClick={() => togglePhotoActive(photo)}
+                                disabled={photoBusyId === photo.id}
+                                style={{
+                                  ...styles.actionButton,
+                                  borderColor: photo.active ? '#B3261E' : '#2E7D32',
+                                  color: photo.active ? '#B3261E' : '#2E7D32',
+                                }}
+                            >
+                              {photoBusyId === photo.id
+                                  ? '...'
+                                  : photo.active
+                                      ? 'Desativar'
+                                      : 'Ativar'}
+                            </button>
+
+                            <button
+                                onClick={() => deletePhoto(photo)}
+                                disabled={photoBusyId === photo.id}
+                                style={{
+                                  ...styles.actionButton,
+                                  borderColor: '#B3261E',
+                                  color: '#B3261E',
+                                }}
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                    ))}
+                  </div>
+              )}
+            </section>
+        )}
+
+        {/* =========================
+          SITE (textos e contato)
+      ========================= */}
+
+        {tab === 'site' && (
+            <section>
+              {siteError && <div style={styles.errorBox}>{siteError}</div>}
+
+              {siteLoading || !siteForm ? (
+                  <p style={styles.info}>Carregando...</p>
+              ) : (
+                  <form onSubmit={saveSiteSettings} style={styles.form}>
+                    <h3 style={styles.formTitle}>Sobre / Contato</h3>
+
+                    <label style={styles.label}>Texto "Sobre" (um parágrafo por linha)</label>
+                    <textarea
+                        value={siteForm.aboutText}
+                        onChange={(event) =>
+                            setSiteForm({ ...siteForm, aboutText: event.target.value })
+                        }
+                        style={{ ...styles.input, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
+                    />
+
+                    <label style={styles.label}>Endereço (uma linha por parte)</label>
+                    <textarea
+                        value={siteForm.address}
+                        onChange={(event) =>
+                            setSiteForm({ ...siteForm, address: event.target.value })
+                        }
+                        style={{ ...styles.input, minHeight: 80, fontFamily: 'inherit', resize: 'vertical' }}
+                        placeholder={'Rua Exemplo, 123\nBairro, Cidade - UF\nCEP: 00000-000'}
+                    />
+
+                    <label style={styles.label}>Horário de atendimento</label>
+                    <input
+                        type="text"
+                        value={siteForm.openingHoursText}
+                        onChange={(event) =>
+                            setSiteForm({
+                              ...siteForm,
+                              openingHoursText: event.target.value,
+                            })
+                        }
+                        style={styles.input}
+                    />
+
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      <div style={{ flex: '1 1 200px' }}>
+                        <label style={styles.label}>WhatsApp</label>
+                        <input
+                            type="text"
+                            value={siteForm.whatsapp}
+                            onChange={(event) =>
+                                setSiteForm({ ...siteForm, whatsapp: event.target.value })
+                            }
+                            style={styles.input}
+                            placeholder="(11) 91622-4612"
+                        />
+                      </div>
+
+                      <div style={{ flex: '1 1 200px' }}>
+                        <label style={styles.label}>Link do Instagram</label>
+                        <input
+                            type="text"
+                            value={siteForm.instagramUrl}
+                            onChange={(event) =>
+                                setSiteForm({
+                                  ...siteForm,
+                                  instagramUrl: event.target.value,
+                                })
+                            }
+                            style={styles.input}
+                            placeholder="https://www.instagram.com/..."
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center' }}>
+                      <button
+                          type="submit"
+                          disabled={savingSite}
+                          style={styles.primaryButton}
+                      >
+                        {savingSite ? 'Salvando...' : 'Salvar alterações'}
+                      </button>
+
+                      {siteSaved && (
+                          <span style={{ color: '#2E7D32', fontSize: 13, fontWeight: 600 }}>
+                      Salvo com sucesso ✓
+                    </span>
+                      )}
+                    </div>
+                  </form>
+              )}
+            </section>
+        )}
+
+        {/* =========================
           DEPOIMENTOS
       ========================= */}
 
@@ -1181,6 +1804,24 @@ const styles: {
     marginBottom: 20,
     flexWrap: 'wrap',
     gap: 10,
+    background: '#FFF',
+    padding: '14px 20px',
+    borderRadius: 16,
+    border: '1px solid #F0E4F5',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+  },
+
+  headerBrand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  headerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    objectFit: 'cover',
   },
 
   title: {
@@ -1188,7 +1829,15 @@ const styles: {
         "'Playfair Display', serif",
     color: '#2D1537',
     margin: 0,
-    fontSize: 26,
+    fontSize: 22,
+  },
+
+  subtitle: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#A259C4',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 
   logoutButton: {
@@ -1408,5 +2057,37 @@ const styles: {
     color: '#2D1537',
     margin: '0 0 8px',
     fontSize: 18,
+  },
+
+  helperText: {
+    color: '#6D5D75',
+    fontSize: 13,
+    marginBottom: 16,
+    maxWidth: 640,
+    lineHeight: 1.5,
+  },
+
+  photoGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 14,
+  },
+
+  photoThumb: {
+    width: '100%',
+    height: 140,
+    objectFit: 'cover',
+    borderRadius: 10,
+    marginBottom: 10,
+    background: '#F0E4F5',
+  },
+
+  photoPreview: {
+    width: '100%',
+    maxHeight: 220,
+    objectFit: 'cover',
+    borderRadius: 10,
+    marginBottom: 4,
+    background: '#F0E4F5',
   },
 };
