@@ -1,12 +1,55 @@
 import React, { useState, useEffect } from 'react';
 
+type TrustItem = { icon: string; text: string };
+type BenefitItem = { icon: string; text: string };
+type IndicationItem = { icon: string; title: string; text: string };
+type FaqItem = { question: string; answer: string };
+
 type SiteSettings = {
   aboutText: string;
   address: string;
   whatsapp: string;
   openingHoursText: string;
   instagramUrl: string;
+  logoUrl: string;
+  heroEyebrow: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroTrustItems: TrustItem[];
+  benefitsItems: BenefitItem[];
+  indicationsSectionTitle: string;
+  indicationsItems: IndicationItem[];
+  aboutBadgeText: string;
+  aboutPhotoUrl: string;
+  treatmentsEyebrow: string;
+  treatmentsSectionTitle: string;
+  treatmentsSectionSubtitle: string;
+  locationSectionTitle: string;
+  locationSectionSubtitle: string;
+  bookingSectionTitle: string;
+  bookingSectionSubtitle: string;
+  testimonialsSectionTitle: string;
+  testimonialsSectionSubtitle: string;
+  faqSectionTitle: string;
+  faqSectionSubtitle: string;
+  faqItems: FaqItem[];
+  footerTagline: string;
+  footerContactEmail: string;
+  footerCopyrightText: string;
 };
+
+// Faz o parse de um campo JSON vindo do backend (armazenado como texto).
+// Se vier vazio, inválido ou de um formato inesperado, cai no valor padrão —
+// assim o site nunca quebra por causa de um texto salvo errado no admin.
+function parseJsonArray<T>(json: string | null | undefined, fallback: T[]): T[] {
+  if (!json || !json.trim()) return fallback;
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 const defaultSiteSettings: SiteSettings = {
   aboutText:
@@ -19,6 +62,50 @@ const defaultSiteSettings: SiteSettings = {
   openingHoursText:
       'Domingos e Segundas com hora marcada para garantir sua exclusividade.',
   instagramUrl: 'https://www.instagram.com/yasmimlopes_estetica/',
+  logoUrl: '/logo.jpg.jpeg',
+  heroEyebrow: 'Realce sua beleza natural',
+  heroTitle: 'Sua melhor versão começa aqui',
+  heroSubtitle:
+      'Tratamentos faciais personalizados para realçar sua beleza natural com segurança, acolhimento e resultados reais.',
+  heroTrustItems: [
+    { icon: '🛡️', text: 'Procedimentos seguros' },
+    { icon: '🤝', text: 'Atendimento personalizado' },
+    { icon: '⭐', text: 'Resultados comprovados' },
+  ],
+  benefitsItems: [
+    { icon: '⭐', text: 'Atendimento Exclusivo e Personalizado' },
+    { icon: '🛡️', text: 'Dermocosméticos de Alta Qualidade' },
+    { icon: '💬', text: 'Agendamento Direto com Confirmação Automática' },
+  ],
+  indicationsSectionTitle: 'Nossos tratamentos são ideais para quem busca:',
+  indicationsItems: [
+    { icon: '✨', title: 'Remoção de Cravos e Acne', text: 'Extração segura e profunda para desobstruir os poros e prevenir inflamações.' },
+    { icon: '💧', title: 'Controle de Oleosidade', text: 'Equilíbrio perfeito da derme, acabando com o excesso de brilho e pele engordurada.' },
+    { icon: '🌸', title: 'Renovação Celular', text: 'Remoção de células mortas, devolvendo a maciez e clareando levemente a pele.' },
+    { icon: '💆‍♀️', title: 'Hidratação e Viço (Glow)', text: 'Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.' },
+  ],
+  aboutBadgeText: 'Sua Esteticista',
+  aboutPhotoUrl: '/fotosobre.jpg.jpeg',
+  treatmentsEyebrow: 'Nossos tratamentos',
+  treatmentsSectionTitle: 'Cuidados para realçar sua beleza',
+  treatmentsSectionSubtitle: 'Procedimentos faciais personalizados para suas necessidades',
+  locationSectionTitle: 'Onde Estamos',
+  locationSectionSubtitle: 'Sua clínica de estética bem pertinho de você em Taboão da Serra.',
+  bookingSectionTitle: 'Agende seu Atendimento',
+  bookingSectionSubtitle: 'Preencha seus dados para registrar o horário diretamente na clínica.',
+  testimonialsSectionTitle: 'Depoimentos Reais',
+  testimonialsSectionSubtitle: 'Veja o que nossas clientes dizem sobre a experiência.',
+  faqSectionTitle: 'Perguntas Frequentes',
+  faqSectionSubtitle: 'Tire suas principais dúvidas sobre os nossos tratamentos.',
+  faqItems: [
+    { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
+    { question: 'De quanto em quanto tempo devo fazer a limpeza de pele?', answer: 'O ideal é realizar o procedimento a cada 30 ou 40 dias, acompanhando o ciclo natural de renovação celular da sua pele, mantendo-a sempre viçosa e saudável.' },
+    { question: 'Os produtos utilizados dão alergia?', answer: 'Trabalhamos exclusivamente com dermocosméticos de alta qualidade e hipoalergênicos, garantindo segurança e eficácia em cada protocolo.' },
+    { question: 'Gestante pode fazer limpeza de pele?', answer: 'Sim! Com as devidas adaptações de produtos, as gestantes podem e devem cuidar da pele, além de aproveitarem nossos protocolos de relaxamento facial.' },
+  ],
+  footerTagline: 'Excelência, tecnologia e amor em cada detalhe do cuidado estético na região de Taboão da Serra.',
+  footerContactEmail: 'contato@mariayasmimestetica.com.br',
+  footerCopyrightText: '© 2026 Maria Yasmim Lopes Estética. Todos os direitos reservados.',
 };
 
 export default function LandingPage() {
@@ -151,16 +238,40 @@ export default function LandingPage() {
         .then((res) => res.json())
         .then((data) => {
           if (data && typeof data === 'object') {
+            const str = (value: any, fallback: string) =>
+                typeof value === 'string' && value.trim() ? value : fallback;
+
             setSiteSettings((prev) => ({
-              aboutText: data.aboutText?.trim() ? data.aboutText : prev.aboutText,
-              address: data.address?.trim() ? data.address : prev.address,
-              whatsapp: data.whatsapp?.trim() ? data.whatsapp : prev.whatsapp,
-              openingHoursText: data.openingHoursText?.trim()
-                  ? data.openingHoursText
-                  : prev.openingHoursText,
-              instagramUrl: data.instagramUrl?.trim()
-                  ? data.instagramUrl
-                  : prev.instagramUrl,
+              aboutText: str(data.aboutText, prev.aboutText),
+              address: str(data.address, prev.address),
+              whatsapp: str(data.whatsapp, prev.whatsapp),
+              openingHoursText: str(data.openingHoursText, prev.openingHoursText),
+              instagramUrl: str(data.instagramUrl, prev.instagramUrl),
+              logoUrl: str(data.logoUrl, prev.logoUrl),
+              heroEyebrow: str(data.heroEyebrow, prev.heroEyebrow),
+              heroTitle: str(data.heroTitle, prev.heroTitle),
+              heroSubtitle: str(data.heroSubtitle, prev.heroSubtitle),
+              heroTrustItems: parseJsonArray<TrustItem>(data.heroTrustItemsJson, prev.heroTrustItems),
+              benefitsItems: parseJsonArray<BenefitItem>(data.benefitsItemsJson, prev.benefitsItems),
+              indicationsSectionTitle: str(data.indicationsSectionTitle, prev.indicationsSectionTitle),
+              indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, prev.indicationsItems),
+              aboutBadgeText: str(data.aboutBadgeText, prev.aboutBadgeText),
+              aboutPhotoUrl: str(data.aboutPhotoUrl, prev.aboutPhotoUrl),
+              treatmentsEyebrow: str(data.treatmentsEyebrow, prev.treatmentsEyebrow),
+              treatmentsSectionTitle: str(data.treatmentsSectionTitle, prev.treatmentsSectionTitle),
+              treatmentsSectionSubtitle: str(data.treatmentsSectionSubtitle, prev.treatmentsSectionSubtitle),
+              locationSectionTitle: str(data.locationSectionTitle, prev.locationSectionTitle),
+              locationSectionSubtitle: str(data.locationSectionSubtitle, prev.locationSectionSubtitle),
+              bookingSectionTitle: str(data.bookingSectionTitle, prev.bookingSectionTitle),
+              bookingSectionSubtitle: str(data.bookingSectionSubtitle, prev.bookingSectionSubtitle),
+              testimonialsSectionTitle: str(data.testimonialsSectionTitle, prev.testimonialsSectionTitle),
+              testimonialsSectionSubtitle: str(data.testimonialsSectionSubtitle, prev.testimonialsSectionSubtitle),
+              faqSectionTitle: str(data.faqSectionTitle, prev.faqSectionTitle),
+              faqSectionSubtitle: str(data.faqSectionSubtitle, prev.faqSectionSubtitle),
+              faqItems: parseJsonArray<FaqItem>(data.faqItemsJson, prev.faqItems),
+              footerTagline: str(data.footerTagline, prev.footerTagline),
+              footerContactEmail: str(data.footerContactEmail, prev.footerContactEmail),
+              footerCopyrightText: str(data.footerCopyrightText, prev.footerCopyrightText),
             }));
           }
         })
@@ -405,13 +516,6 @@ export default function LandingPage() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const faqData = [
-    { question: "A limpeza de pele profunda dói?", answer: "Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você." },
-    { question: "De quanto em quanto tempo devo fazer a limpeza de pele?", answer: "O ideal é realizar o procedimento a cada 30 ou 40 dias, acompanhando o ciclo natural de renovação celular da sua pele, mantendo-a sempre viçosa e saudável." },
-    { question: "Os produtos utilizados dão alergia?", answer: "Trabalhamos exclusivamente com dermocosméticos de alta qualidade e hipoalergênicos, garantindo segurança e eficácia em cada protocolo." },
-    { question: "Gestante pode fazer limpeza de pele?", answer: "Sim! Com as devidas adaptações de produtos, as gestantes podem e devem cuidar da pele, além de aproveitarem nossos protocolos de relaxamento facial." }
-  ];
-
   const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
   const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
   const addressLines = siteSettings.address.split('\n').filter((l) => l.trim());
@@ -436,7 +540,7 @@ export default function LandingPage() {
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
-              <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
+              <img src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
               <span style={styles.logoTextBlock}>
                 <span style={{ ...styles.logoText, fontSize: isMobile ? '13px' : '18px' }}>Maria Yasmim Lopes</span>
                 <span style={styles.logoSubtext}>Estética</span>
@@ -461,10 +565,10 @@ export default function LandingPage() {
         <section style={styles.hero}>
           <div style={styles.heroGrid}>
             <div style={styles.heroTextCol}>
-              <span style={styles.eyebrow}>Realce sua beleza natural</span>
-              <h1 style={styles.heroTitle}>Sua melhor versão começa aqui</h1>
+              <span style={styles.eyebrow}>{siteSettings.heroEyebrow}</span>
+              <h1 style={styles.heroTitle}>{siteSettings.heroTitle}</h1>
               <p style={styles.heroText}>
-                Tratamentos faciais personalizados para realçar sua beleza natural com segurança, acolhimento e resultados reais.
+                {siteSettings.heroSubtitle}
               </p>
 
               <div style={styles.heroActions}>
@@ -477,18 +581,12 @@ export default function LandingPage() {
               </div>
 
               <div style={styles.trustRow}>
-                <div style={styles.trustItem}>
-                  <span style={styles.trustIcon}>🛡️</span>
-                  <span>Procedimentos seguros</span>
-                </div>
-                <div style={styles.trustItem}>
-                  <span style={styles.trustIcon}>🤝</span>
-                  <span>Atendimento personalizado</span>
-                </div>
-                <div style={styles.trustItem}>
-                  <span style={styles.trustIcon}>⭐</span>
-                  <span>Resultados comprovados</span>
-                </div>
+                {siteSettings.heroTrustItems.map((item, index) => (
+                    <div key={index} style={styles.trustItem}>
+                      <span style={styles.trustIcon}>{item.icon}</span>
+                      <span>{item.text}</span>
+                    </div>
+                ))}
               </div>
             </div>
 
@@ -518,37 +616,26 @@ export default function LandingPage() {
 
         {/* Faixa de Benefícios */}
         <section style={styles.benefitsBar}>
-          <div style={styles.benefitItem}>⭐ <strong>Atendimento Exclusivo</strong> e Personalizado</div>
-          <div style={styles.benefitItem}>🛡️ <strong>Dermocosméticos</strong> de Alta Qualidade</div>
-          <div style={styles.benefitItem}>💬 <strong>Agendamento Direto</strong> com Confirmação Automática</div>
+          {siteSettings.benefitsItems.map((item, index) => (
+              <div key={index} style={styles.benefitItem}>
+                {item.icon} <strong>{item.text}</strong>
+              </div>
+          ))}
         </section>
 
         {/* Indicações */}
         <section style={styles.indicationsSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Nossos tratamentos são ideais para quem busca:</h2>
+            <h2 style={styles.sectionTitle}>{siteSettings.indicationsSectionTitle}</h2>
           </div>
           <div style={styles.indicationsGrid}>
-            <div style={styles.indicationCard}>
-              <div style={styles.indicationIcon}>✨</div>
-              <h4 style={styles.indicationTitle}>Remoção de Cravos e Acne</h4>
-              <p style={styles.indicationText}>Extração segura e profunda para desobstruir os poros e prevenir inflamações.</p>
-            </div>
-            <div style={styles.indicationCard}>
-              <div style={styles.indicationIcon}>💧</div>
-              <h4 style={styles.indicationTitle}>Controle de Oleosidade</h4>
-              <p style={styles.indicationText}>Equilíbrio perfeito da derme, acabando com o excesso de brilho e pele engordurada.</p>
-            </div>
-            <div style={styles.indicationCard}>
-              <div style={styles.indicationIcon}>🌸</div>
-              <h4 style={styles.indicationTitle}>Renovação Celular</h4>
-              <p style={styles.indicationText}>Remoção de células mortas, devolvendo a maciez e clareando levemente a pele.</p>
-            </div>
-            <div style={styles.indicationCard}>
-              <div style={styles.indicationIcon}>💆‍♀️</div>
-              <h4 style={styles.indicationTitle}>Hidratação e Viço (Glow)</h4>
-              <p style={styles.indicationText}>Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.</p>
-            </div>
+            {siteSettings.indicationsItems.map((item, index) => (
+                <div key={index} style={styles.indicationCard}>
+                  <div style={styles.indicationIcon}>{item.icon}</div>
+                  <h4 style={styles.indicationTitle}>{item.title}</h4>
+                  <p style={styles.indicationText}>{item.text}</p>
+                </div>
+            ))}
           </div>
         </section>
 
@@ -556,10 +643,10 @@ export default function LandingPage() {
         <section id="sobre" style={styles.aboutSection}>
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
-              <img src="/fotosobre.jpg.jpeg" alt="Maria Yasmim Lopes" style={styles.aboutPhotoMain} />
+              <img src={siteSettings.aboutPhotoUrl} alt="Maria Yasmim Lopes" style={styles.aboutPhotoMain} />
             </div>
             <div style={styles.aboutText}>
-              <span style={styles.badge}>Sua Esteticista</span>
+              <span style={styles.badge}>{siteSettings.aboutBadgeText}</span>
               <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
               {aboutParagraphs.map((paragraph, index) => (
                   <p key={index} style={styles.aboutParagraph}>
@@ -573,9 +660,9 @@ export default function LandingPage() {
         {/* Treatments Section */}
         <section id="tratamentos" style={styles.section}>
           <div style={styles.sectionHeader}>
-            <span style={styles.eyebrowCentered}>Nossos tratamentos</span>
-            <h2 style={styles.sectionTitle}>Cuidados para realçar sua beleza</h2>
-            <p style={styles.sectionSubtitle}>Procedimentos faciais personalizados para suas necessidades</p>
+            <span style={styles.eyebrowCentered}>{siteSettings.treatmentsEyebrow}</span>
+            <h2 style={styles.sectionTitle}>{siteSettings.treatmentsSectionTitle}</h2>
+            <p style={styles.sectionSubtitle}>{siteSettings.treatmentsSectionSubtitle}</p>
           </div>
           <div style={styles.grid}>
             {treatments.map((item, index) => (
@@ -597,8 +684,8 @@ export default function LandingPage() {
         {/* Localização Atualizada */}
         <section id="localizacao" style={styles.locationSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Onde Estamos</h2>
-            <p style={styles.sectionSubtitle}>Sua clínica de estética bem pertinho de você em Taboão da Serra.</p>
+            <h2 style={styles.sectionTitle}>{siteSettings.locationSectionTitle}</h2>
+            <p style={styles.sectionSubtitle}>{siteSettings.locationSectionSubtitle}</p>
           </div>
           <div style={styles.locationGrid}>
             <div style={styles.locationInfo}>
@@ -638,9 +725,9 @@ export default function LandingPage() {
         {/* Booking Section */}
         <section id="agendamento" style={styles.bookingSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Agende seu Atendimento</h2>
+            <h2 style={styles.sectionTitle}>{siteSettings.bookingSectionTitle}</h2>
             <p style={styles.sectionSubtitle}>
-              Preencha seus dados para registrar o horário diretamente na clínica.
+              {siteSettings.bookingSectionSubtitle}
             </p>
           </div>
 
@@ -786,8 +873,8 @@ export default function LandingPage() {
         {/* Testimonials Section */}
         <section id="depoimentos" style={styles.testimonialsSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Depoimentos Reais</h2>
-            <p style={styles.sectionSubtitle}>Veja o que nossas clientes dizem sobre a experiência.</p>
+            <h2 style={styles.sectionTitle}>{siteSettings.testimonialsSectionTitle}</h2>
+            <p style={styles.sectionSubtitle}>{siteSettings.testimonialsSectionSubtitle}</p>
           </div>
 
           {testimonials.length > 0 && (
@@ -884,11 +971,11 @@ export default function LandingPage() {
         {/* FAQ */}
         <section id="faq" style={styles.faqSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Perguntas Frequentes</h2>
-            <p style={styles.sectionSubtitle}>Tire suas principais dúvidas sobre os nossos tratamentos.</p>
+            <h2 style={styles.sectionTitle}>{siteSettings.faqSectionTitle}</h2>
+            <p style={styles.sectionSubtitle}>{siteSettings.faqSectionSubtitle}</p>
           </div>
           <div style={styles.faqContainer}>
-            {faqData.map((faq, index) => (
+            {siteSettings.faqItems.map((faq, index) => (
                 <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
                   <div style={styles.faqQuestionHeader}>
                     <h4 style={styles.faqQuestionText}>{faq.question}</h4>
@@ -925,12 +1012,12 @@ export default function LandingPage() {
           <div style={styles.footerContent}>
             <div>
               <h3 style={styles.footerTitle}>Maria Yasmim Lopes</h3>
-              <p style={styles.footerTextDesc}>Excelência, tecnologia e amor em cada detalhe do cuidado estético na região de Taboão da Serra.</p>
+              <p style={styles.footerTextDesc}>{siteSettings.footerTagline}</p>
             </div>
             <div style={styles.footerContact}>
               <p style={{ fontWeight: 'bold', color: '#FFF' }}>Contato:</p>
               <p>{siteSettings.whatsapp}</p>
-              <p>contato@mariayasmimestetica.com.br</p>
+              <p>{siteSettings.footerContactEmail}</p>
               <p style={{ marginTop: '10px' }}>
                 <a href={siteSettings.instagramUrl} target="_blank" rel="noreferrer" style={styles.footerInstagramLink}>
                   {instagramHandle}
@@ -939,7 +1026,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={styles.footerBottom}>
-            <p>&copy; 2026 Maria Yasmim Lopes Estética. Todos os direitos reservados.</p>
+            <p>{siteSettings.footerCopyrightText}</p>
           </div>
         </footer>
       </div>

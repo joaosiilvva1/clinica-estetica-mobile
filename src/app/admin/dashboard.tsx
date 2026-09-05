@@ -54,13 +54,59 @@ type PhotoForm = {
   sortOrder: string;
 };
 
+type TrustItem = { icon: string; text: string };
+type BenefitItem = { icon: string; text: string };
+type IndicationItem = { icon: string; title: string; text: string };
+type FaqItem = { question: string; answer: string };
+
 type SiteSettingsForm = {
   aboutText: string;
   address: string;
   whatsapp: string;
   openingHoursText: string;
   instagramUrl: string;
+  logoUrl: string;
+  heroEyebrow: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroTrustItems: TrustItem[];
+  benefitsItems: BenefitItem[];
+  indicationsSectionTitle: string;
+  indicationsItems: IndicationItem[];
+  aboutBadgeText: string;
+  aboutPhotoUrl: string;
+  treatmentsEyebrow: string;
+  treatmentsSectionTitle: string;
+  treatmentsSectionSubtitle: string;
+  locationSectionTitle: string;
+  locationSectionSubtitle: string;
+  bookingSectionTitle: string;
+  bookingSectionSubtitle: string;
+  testimonialsSectionTitle: string;
+  testimonialsSectionSubtitle: string;
+  faqSectionTitle: string;
+  faqSectionSubtitle: string;
+  faqItems: FaqItem[];
+  footerTagline: string;
+  footerContactEmail: string;
+  footerCopyrightText: string;
 };
+
+// O backend guarda listas (selos de confiança, benefícios, indicações, FAQ)
+// como texto JSON. Essas funções convertem pra cá e pra lá, sem nunca quebrar
+// a tela se o texto salvo estiver vazio ou corrompido.
+function parseJsonArray<T>(json: string | null | undefined, fallback: T[]): T[] {
+  if (!json || !json.trim()) return fallback;
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const stringifyOrNull = (items: unknown[]) =>
+    items.length > 0 ? JSON.stringify(items) : null;
 
 type Tab = 'agenda' | 'tratamentos' | 'fotos' | 'site' | 'depoimentos';
 
@@ -835,6 +881,31 @@ export default function AdminDashboard() {
         whatsapp: data.whatsapp ?? '',
         openingHoursText: data.openingHoursText ?? '',
         instagramUrl: data.instagramUrl ?? '',
+        logoUrl: data.logoUrl ?? '',
+        heroEyebrow: data.heroEyebrow ?? '',
+        heroTitle: data.heroTitle ?? '',
+        heroSubtitle: data.heroSubtitle ?? '',
+        heroTrustItems: parseJsonArray<TrustItem>(data.heroTrustItemsJson, []),
+        benefitsItems: parseJsonArray<BenefitItem>(data.benefitsItemsJson, []),
+        indicationsSectionTitle: data.indicationsSectionTitle ?? '',
+        indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, []),
+        aboutBadgeText: data.aboutBadgeText ?? '',
+        aboutPhotoUrl: data.aboutPhotoUrl ?? '',
+        treatmentsEyebrow: data.treatmentsEyebrow ?? '',
+        treatmentsSectionTitle: data.treatmentsSectionTitle ?? '',
+        treatmentsSectionSubtitle: data.treatmentsSectionSubtitle ?? '',
+        locationSectionTitle: data.locationSectionTitle ?? '',
+        locationSectionSubtitle: data.locationSectionSubtitle ?? '',
+        bookingSectionTitle: data.bookingSectionTitle ?? '',
+        bookingSectionSubtitle: data.bookingSectionSubtitle ?? '',
+        testimonialsSectionTitle: data.testimonialsSectionTitle ?? '',
+        testimonialsSectionSubtitle: data.testimonialsSectionSubtitle ?? '',
+        faqSectionTitle: data.faqSectionTitle ?? '',
+        faqSectionSubtitle: data.faqSectionSubtitle ?? '',
+        faqItems: parseJsonArray<FaqItem>(data.faqItemsJson, []),
+        footerTagline: data.footerTagline ?? '',
+        footerContactEmail: data.footerContactEmail ?? '',
+        footerCopyrightText: data.footerCopyrightText ?? '',
       });
     } catch {
       setSiteError('Não foi possível carregar as informações do site.');
@@ -859,13 +930,46 @@ export default function AdminDashboard() {
     setSiteSaved(false);
 
     try {
+      const payload = {
+        aboutText: siteForm.aboutText,
+        address: siteForm.address,
+        whatsapp: siteForm.whatsapp,
+        openingHoursText: siteForm.openingHoursText,
+        instagramUrl: siteForm.instagramUrl,
+        logoUrl: siteForm.logoUrl,
+        heroEyebrow: siteForm.heroEyebrow,
+        heroTitle: siteForm.heroTitle,
+        heroSubtitle: siteForm.heroSubtitle,
+        heroTrustItemsJson: stringifyOrNull(siteForm.heroTrustItems),
+        benefitsItemsJson: stringifyOrNull(siteForm.benefitsItems),
+        indicationsSectionTitle: siteForm.indicationsSectionTitle,
+        indicationsItemsJson: stringifyOrNull(siteForm.indicationsItems),
+        aboutBadgeText: siteForm.aboutBadgeText,
+        aboutPhotoUrl: siteForm.aboutPhotoUrl,
+        treatmentsEyebrow: siteForm.treatmentsEyebrow,
+        treatmentsSectionTitle: siteForm.treatmentsSectionTitle,
+        treatmentsSectionSubtitle: siteForm.treatmentsSectionSubtitle,
+        locationSectionTitle: siteForm.locationSectionTitle,
+        locationSectionSubtitle: siteForm.locationSectionSubtitle,
+        bookingSectionTitle: siteForm.bookingSectionTitle,
+        bookingSectionSubtitle: siteForm.bookingSectionSubtitle,
+        testimonialsSectionTitle: siteForm.testimonialsSectionTitle,
+        testimonialsSectionSubtitle: siteForm.testimonialsSectionSubtitle,
+        faqSectionTitle: siteForm.faqSectionTitle,
+        faqSectionSubtitle: siteForm.faqSectionSubtitle,
+        faqItemsJson: stringifyOrNull(siteForm.faqItems),
+        footerTagline: siteForm.footerTagline,
+        footerContactEmail: siteForm.footerContactEmail,
+        footerCopyrightText: siteForm.footerCopyrightText,
+      };
+
       const res = await fetch(`${API_BASE_URL}/api/admin/site-settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(siteForm),
+        body: JSON.stringify(payload),
       });
 
       if (res.status === 401 || res.status === 403) {
@@ -885,6 +989,31 @@ export default function AdminDashboard() {
         whatsapp: data.whatsapp ?? '',
         openingHoursText: data.openingHoursText ?? '',
         instagramUrl: data.instagramUrl ?? '',
+        logoUrl: data.logoUrl ?? '',
+        heroEyebrow: data.heroEyebrow ?? '',
+        heroTitle: data.heroTitle ?? '',
+        heroSubtitle: data.heroSubtitle ?? '',
+        heroTrustItems: parseJsonArray<TrustItem>(data.heroTrustItemsJson, []),
+        benefitsItems: parseJsonArray<BenefitItem>(data.benefitsItemsJson, []),
+        indicationsSectionTitle: data.indicationsSectionTitle ?? '',
+        indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, []),
+        aboutBadgeText: data.aboutBadgeText ?? '',
+        aboutPhotoUrl: data.aboutPhotoUrl ?? '',
+        treatmentsEyebrow: data.treatmentsEyebrow ?? '',
+        treatmentsSectionTitle: data.treatmentsSectionTitle ?? '',
+        treatmentsSectionSubtitle: data.treatmentsSectionSubtitle ?? '',
+        locationSectionTitle: data.locationSectionTitle ?? '',
+        locationSectionSubtitle: data.locationSectionSubtitle ?? '',
+        bookingSectionTitle: data.bookingSectionTitle ?? '',
+        bookingSectionSubtitle: data.bookingSectionSubtitle ?? '',
+        testimonialsSectionTitle: data.testimonialsSectionTitle ?? '',
+        testimonialsSectionSubtitle: data.testimonialsSectionSubtitle ?? '',
+        faqSectionTitle: data.faqSectionTitle ?? '',
+        faqSectionSubtitle: data.faqSectionSubtitle ?? '',
+        faqItems: parseJsonArray<FaqItem>(data.faqItemsJson, []),
+        footerTagline: data.footerTagline ?? '',
+        footerContactEmail: data.footerContactEmail ?? '',
+        footerCopyrightText: data.footerCopyrightText ?? '',
       });
       setSiteSaved(true);
       setTimeout(() => setSiteSaved(false), 3000);
@@ -893,6 +1022,32 @@ export default function AdminDashboard() {
     } finally {
       setSavingSite(false);
     }
+  };
+
+  // Helpers genéricos para editar as listas (selos, benefícios, indicações, FAQ)
+  // dentro do formulário do site sem repetir a mesma lógica de add/editar/remover
+  // quatro vezes.
+  const updateListItem = <K extends keyof SiteSettingsForm>(
+      key: K,
+      index: number,
+      patch: Partial<SiteSettingsForm[K] extends (infer U)[] ? U : never>
+  ) => {
+    if (!siteForm) return;
+    const list = siteForm[key] as unknown as any[];
+    const updated = list.map((item, i) => (i === index ? { ...item, ...patch } : item));
+    setSiteForm({ ...siteForm, [key]: updated });
+  };
+
+  const addListItem = <K extends keyof SiteSettingsForm>(key: K, emptyItem: any) => {
+    if (!siteForm) return;
+    const list = siteForm[key] as unknown as any[];
+    setSiteForm({ ...siteForm, [key]: [...list, emptyItem] });
+  };
+
+  const removeListItem = <K extends keyof SiteSettingsForm>(key: K, index: number) => {
+    if (!siteForm) return;
+    const list = siteForm[key] as unknown as any[];
+    setSiteForm({ ...siteForm, [key]: list.filter((_, i) => i !== index) });
   };
 
   if (!token) {
@@ -1591,7 +1746,212 @@ export default function AdminDashboard() {
                     <p style={styles.info}>Carregando...</p>
                 ) : (
                     <form onSubmit={saveSiteSettings} style={styles.form}>
-                      <h3 style={styles.formTitle}>Sobre / Contato</h3>
+
+                      <p style={styles.helperText}>
+                        Tudo que aparece na página do site (textos, selos, cards, perguntas
+                        frequentes, rodapé) pode ser editado aqui. Deixe um campo em branco
+                        para usar o texto padrão. Imagens são links (cole o endereço de uma
+                        imagem já publicada na internet).
+                      </p>
+
+                      {/* --- Cabeçalho --- */}
+                      <h3 style={styles.formTitle}>Cabeçalho</h3>
+
+                      <label style={styles.label}>Link do logo</label>
+                      <input
+                          type="text"
+                          value={siteForm.logoUrl}
+                          onChange={(event) => setSiteForm({ ...siteForm, logoUrl: event.target.value })}
+                          style={styles.input}
+                          placeholder="/logo.jpg.jpeg"
+                      />
+
+                      {/* --- Hero (topo do site) --- */}
+                      <h3 style={styles.formTitle}>Topo do site (Hero)</h3>
+
+                      <label style={styles.label}>Frase de destaque (acima do título)</label>
+                      <input
+                          type="text"
+                          value={siteForm.heroEyebrow}
+                          onChange={(event) => setSiteForm({ ...siteForm, heroEyebrow: event.target.value })}
+                          style={styles.input}
+                          placeholder="Realce sua beleza natural"
+                      />
+
+                      <label style={styles.label}>Título principal</label>
+                      <input
+                          type="text"
+                          value={siteForm.heroTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, heroTitle: event.target.value })}
+                          style={styles.input}
+                          placeholder="Sua melhor versão começa aqui"
+                      />
+
+                      <label style={styles.label}>Subtítulo</label>
+                      <textarea
+                          value={siteForm.heroSubtitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, heroSubtitle: event.target.value })}
+                          style={{ ...styles.input, minHeight: 70, fontFamily: 'inherit', resize: 'vertical' }}
+                      />
+
+                      <label style={styles.label}>Selos de confiança (ícone + texto)</label>
+                      <div style={styles.list}>
+                        {siteForm.heroTrustItems.map((item, index) => (
+                            <div key={index} style={styles.listItemRow}>
+                              <input
+                                  type="text"
+                                  value={item.icon}
+                                  onChange={(e) => updateListItem('heroTrustItems', index, { icon: e.target.value })}
+                                  style={styles.iconInput}
+                                  placeholder="🛡️"
+                              />
+                              <input
+                                  type="text"
+                                  value={item.text}
+                                  onChange={(e) => updateListItem('heroTrustItems', index, { text: e.target.value })}
+                                  style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                  placeholder="Procedimentos seguros"
+                              />
+                              <button
+                                  type="button"
+                                  onClick={() => removeListItem('heroTrustItems', index)}
+                                  style={styles.removeButton}
+                              >
+                                Remover
+                              </button>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => addListItem('heroTrustItems', { icon: '⭐', text: '' })}
+                            style={styles.secondaryButton}
+                        >
+                          + Adicionar selo
+                        </button>
+                      </div>
+
+                      {/* --- Faixa de benefícios --- */}
+                      <h3 style={styles.formTitle}>Faixa de benefícios</h3>
+                      <p style={styles.helperText}>Aparece como uma faixa escura logo abaixo do topo.</p>
+
+                      <div style={styles.list}>
+                        {siteForm.benefitsItems.map((item, index) => (
+                            <div key={index} style={styles.listItemRow}>
+                              <input
+                                  type="text"
+                                  value={item.icon}
+                                  onChange={(e) => updateListItem('benefitsItems', index, { icon: e.target.value })}
+                                  style={styles.iconInput}
+                                  placeholder="⭐"
+                              />
+                              <input
+                                  type="text"
+                                  value={item.text}
+                                  onChange={(e) => updateListItem('benefitsItems', index, { text: e.target.value })}
+                                  style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                  placeholder="Atendimento Exclusivo e Personalizado"
+                              />
+                              <button
+                                  type="button"
+                                  onClick={() => removeListItem('benefitsItems', index)}
+                                  style={styles.removeButton}
+                              >
+                                Remover
+                              </button>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => addListItem('benefitsItems', { icon: '⭐', text: '' })}
+                            style={styles.secondaryButton}
+                        >
+                          + Adicionar item
+                        </button>
+                      </div>
+
+                      {/* --- Indicações --- */}
+                      <h3 style={styles.formTitle}>Seção "Indicações" (cards de quem se beneficia)</h3>
+
+                      <label style={styles.label}>Título da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.indicationsSectionTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, indicationsSectionTitle: event.target.value })}
+                          style={styles.input}
+                          placeholder="Nossos tratamentos são ideais para quem busca:"
+                      />
+
+                      <label style={styles.label}>Cards (ícone + título + texto)</label>
+                      <div style={styles.list}>
+                        {siteForm.indicationsItems.map((item, index) => (
+                            <div key={index} style={styles.listItemBox}>
+                              <div style={styles.listItemRow}>
+                                <input
+                                    type="text"
+                                    value={item.icon}
+                                    onChange={(e) => updateListItem('indicationsItems', index, { icon: e.target.value })}
+                                    style={styles.iconInput}
+                                    placeholder="✨"
+                                />
+                                <input
+                                    type="text"
+                                    value={item.title}
+                                    onChange={(e) => updateListItem('indicationsItems', index, { title: e.target.value })}
+                                    style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                    placeholder="Título do card"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removeListItem('indicationsItems', index)}
+                                    style={styles.removeButton}
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                              <textarea
+                                  value={item.text}
+                                  onChange={(e) => updateListItem('indicationsItems', index, { text: e.target.value })}
+                                  style={{ ...styles.input, minHeight: 55, marginTop: 8, marginBottom: 0, fontFamily: 'inherit', resize: 'vertical' }}
+                                  placeholder="Descrição do card"
+                              />
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => addListItem('indicationsItems', { icon: '✨', title: '', text: '' })}
+                            style={styles.secondaryButton}
+                        >
+                          + Adicionar card
+                        </button>
+                      </div>
+
+                      {/* --- Sobre --- */}
+                      <h3 style={styles.formTitle}>Sobre</h3>
+
+                      <label style={styles.label}>Selo acima do nome (ex: "Sua Esteticista")</label>
+                      <input
+                          type="text"
+                          value={siteForm.aboutBadgeText}
+                          onChange={(event) => setSiteForm({ ...siteForm, aboutBadgeText: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      <label style={styles.label}>Link da foto da seção "Sobre"</label>
+                      <input
+                          type="text"
+                          value={siteForm.aboutPhotoUrl}
+                          onChange={(event) => setSiteForm({ ...siteForm, aboutPhotoUrl: event.target.value })}
+                          style={styles.input}
+                          placeholder="https://..."
+                      />
+                      {siteForm.aboutPhotoUrl.trim() && (
+                          <img
+                              src={siteForm.aboutPhotoUrl}
+                              alt="Pré-visualização"
+                              style={styles.photoPreview}
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
+                      )}
 
                       <label style={styles.label}>Texto "Sobre" (um parágrafo por linha)</label>
                       <textarea
@@ -1600,6 +1960,59 @@ export default function AdminDashboard() {
                               setSiteForm({ ...siteForm, aboutText: event.target.value })
                           }
                           style={{ ...styles.input, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
+                      />
+
+                      {/* --- Tratamentos (cabeçalho da seção) --- */}
+                      <h3 style={styles.formTitle}>Seção "Tratamentos" (cabeçalho)</h3>
+                      <p style={styles.helperText}>
+                        Os tratamentos em si (nome, preço, descrição) são editados na aba
+                        "Tratamentos".
+                      </p>
+
+                      <label style={styles.label}>Frase de destaque</label>
+                      <input
+                          type="text"
+                          value={siteForm.treatmentsEyebrow}
+                          onChange={(event) => setSiteForm({ ...siteForm, treatmentsEyebrow: event.target.value })}
+                          style={styles.input}
+                          placeholder="Nossos tratamentos"
+                      />
+
+                      <label style={styles.label}>Título da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.treatmentsSectionTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, treatmentsSectionTitle: event.target.value })}
+                          style={styles.input}
+                          placeholder="Cuidados para realçar sua beleza"
+                      />
+
+                      <label style={styles.label}>Subtítulo da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.treatmentsSectionSubtitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, treatmentsSectionSubtitle: event.target.value })}
+                          style={styles.input}
+                          placeholder="Procedimentos faciais personalizados para suas necessidades"
+                      />
+
+                      {/* --- Localização --- */}
+                      <h3 style={styles.formTitle}>Seção "Onde Estamos"</h3>
+
+                      <label style={styles.label}>Título da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.locationSectionTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, locationSectionTitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      <label style={styles.label}>Subtítulo da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.locationSectionSubtitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, locationSectionSubtitle: event.target.value })}
+                          style={styles.input}
                       />
 
                       <label style={styles.label}>Endereço (uma linha por parte)</label>
@@ -1625,6 +2038,121 @@ export default function AdminDashboard() {
                           style={styles.input}
                       />
 
+                      {/* --- Agendamento --- */}
+                      <h3 style={styles.formTitle}>Seção "Agendamento" (cabeçalho)</h3>
+
+                      <label style={styles.label}>Título da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.bookingSectionTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, bookingSectionTitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      <label style={styles.label}>Subtítulo da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.bookingSectionSubtitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, bookingSectionSubtitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      {/* --- Depoimentos (cabeçalho) --- */}
+                      <h3 style={styles.formTitle}>Seção "Depoimentos" (cabeçalho)</h3>
+                      <p style={styles.helperText}>
+                        Os depoimentos em si são aprovados na aba "Depoimentos".
+                      </p>
+
+                      <label style={styles.label}>Título da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.testimonialsSectionTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionTitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      <label style={styles.label}>Subtítulo da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.testimonialsSectionSubtitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionSubtitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      {/* --- FAQ --- */}
+                      <h3 style={styles.formTitle}>Perguntas Frequentes</h3>
+
+                      <label style={styles.label}>Título da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.faqSectionTitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, faqSectionTitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      <label style={styles.label}>Subtítulo da seção</label>
+                      <input
+                          type="text"
+                          value={siteForm.faqSectionSubtitle}
+                          onChange={(event) => setSiteForm({ ...siteForm, faqSectionSubtitle: event.target.value })}
+                          style={styles.input}
+                      />
+
+                      <label style={styles.label}>Perguntas e respostas</label>
+                      <div style={styles.list}>
+                        {siteForm.faqItems.map((item, index) => (
+                            <div key={index} style={styles.listItemBox}>
+                              <div style={styles.listItemRow}>
+                                <input
+                                    type="text"
+                                    value={item.question}
+                                    onChange={(e) => updateListItem('faqItems', index, { question: e.target.value })}
+                                    style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                    placeholder="Pergunta"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removeListItem('faqItems', index)}
+                                    style={styles.removeButton}
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                              <textarea
+                                  value={item.answer}
+                                  onChange={(e) => updateListItem('faqItems', index, { answer: e.target.value })}
+                                  style={{ ...styles.input, minHeight: 70, marginTop: 8, marginBottom: 0, fontFamily: 'inherit', resize: 'vertical' }}
+                                  placeholder="Resposta"
+                              />
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => addListItem('faqItems', { question: '', answer: '' })}
+                            style={styles.secondaryButton}
+                        >
+                          + Adicionar pergunta
+                        </button>
+                      </div>
+
+                      {/* --- Rodapé / Contato --- */}
+                      <h3 style={styles.formTitle}>Rodapé e contato</h3>
+
+                      <label style={styles.label}>Frase do rodapé</label>
+                      <textarea
+                          value={siteForm.footerTagline}
+                          onChange={(event) => setSiteForm({ ...siteForm, footerTagline: event.target.value })}
+                          style={{ ...styles.input, minHeight: 60, fontFamily: 'inherit', resize: 'vertical' }}
+                      />
+
+                      <label style={styles.label}>Texto de direitos autorais</label>
+                      <input
+                          type="text"
+                          value={siteForm.footerCopyrightText}
+                          onChange={(event) => setSiteForm({ ...siteForm, footerCopyrightText: event.target.value })}
+                          style={styles.input}
+                      />
+
                       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                         <div style={{ flex: '1 1 200px' }}>
                           <label style={styles.label}>WhatsApp</label>
@@ -1636,6 +2164,17 @@ export default function AdminDashboard() {
                               }
                               style={styles.input}
                               placeholder="(11) 91622-4612"
+                          />
+                        </div>
+
+                        <div style={{ flex: '1 1 200px' }}>
+                          <label style={styles.label}>E-mail de contato</label>
+                          <input
+                              type="text"
+                              value={siteForm.footerContactEmail}
+                              onChange={(event) => setSiteForm({ ...siteForm, footerContactEmail: event.target.value })}
+                              style={styles.input}
+                              placeholder="contato@..."
                           />
                         </div>
 
@@ -1656,7 +2195,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center', position: 'sticky', bottom: 0, background: '#FAF9F6', padding: '12px 0' }}>
                         <button
                             type="submit"
                             disabled={savingSite}
@@ -1962,6 +2501,45 @@ const styles: {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
+    marginBottom: 16,
+  },
+
+  listItemRow: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+  },
+
+  listItemBox: {
+    background: '#FAF9F6',
+    border: '1px solid #E8D7F1',
+    borderRadius: 12,
+    padding: 12,
+  },
+
+  iconInput: {
+    padding: '12px 10px',
+    borderRadius: 10,
+    border: '1px solid #D4A5E0',
+    fontSize: 15,
+    fontFamily: 'inherit',
+    color: '#2D1537',
+    background: '#FAF9F6',
+    width: 56,
+    textAlign: 'center',
+    boxSizing: 'border-box',
+  },
+
+  removeButton: {
+    background: '#FDECEA',
+    color: '#B3261E',
+    border: '1px solid #F3C6C2',
+    borderRadius: 10,
+    padding: '10px 12px',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
   },
 
   listGrid: {
