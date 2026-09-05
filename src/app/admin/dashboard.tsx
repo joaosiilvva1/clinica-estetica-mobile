@@ -926,859 +926,865 @@ export default function AdminDashboard() {
   ];
 
   return (
-      <div style={styles.wrapper}>
-        <header style={styles.header}>
-          <div style={styles.headerBrand}>
-            <img
-                src="/logo.jpg.jpeg"
-                alt="Logo Maria Yasmim Lopes"
-                style={styles.headerLogo}
-            />
-            <div>
-              <h1 style={styles.title}>Painel Administrativo</h1>
-              <span style={styles.subtitle}>Maria Yasmim Lopes Estética</span>
+      <div style={styles.pageBackground}>
+        <header style={styles.siteHeader}>
+          <div style={styles.siteHeaderContent}>
+            <div style={styles.logoContainer}>
+              <img
+                  src="/logo.jpg.jpeg"
+                  alt="Logo Maria Yasmim Lopes"
+                  style={styles.logoCircle}
+              />
+              <span style={styles.logoTextBlock}>
+                <span style={styles.logoText}>Maria Yasmim Lopes</span>
+                <span style={styles.logoSubtext}>Estética</span>
+              </span>
             </div>
-          </div>
 
-          <button
-              onClick={handleLogout}
-              style={styles.logoutButton}
-          >
-            Sair
-          </button>
+            <span style={styles.headerAdminLabel}>Painel Administrativo</span>
+
+            <button
+                onClick={handleLogout}
+                style={styles.logoutButton}
+            >
+              Sair
+            </button>
+          </div>
         </header>
 
-        <nav style={styles.tabBar}>
-          {tabs.map((item) => (
-              <button
-                  key={item.key}
-                  onClick={() => setTab(item.key)}
-                  style={{
-                    ...styles.tabButton,
-                    ...(tab === item.key
-                        ? styles.tabButtonActive
-                        : {}),
-                  }}
-              >
-                {item.label}
-              </button>
-          ))}
-        </nav>
+        <div style={styles.wrapper}>
+          <nav style={styles.tabBar}>
+            {tabs.map((item) => (
+                <button
+                    key={item.key}
+                    onClick={() => setTab(item.key)}
+                    style={{
+                      ...styles.tabButton,
+                      ...(tab === item.key
+                          ? styles.tabButtonActive
+                          : {}),
+                    }}
+                >
+                  {item.label}
+                </button>
+            ))}
+          </nav>
 
-        {/* =========================
+          {/* =========================
           AGENDA
       ========================= */}
 
-        {tab === 'agenda' && (
-            <section>
-              <div style={styles.controls}>
-                <label style={styles.label}>
-                  Data
-                </label>
+          {tab === 'agenda' && (
+              <section>
+                <div style={styles.controls}>
+                  <label style={styles.label}>
+                    Data
+                  </label>
 
-                <input
-                    type="date"
-                    value={date}
-                    onChange={(event) =>
-                        setDate(event.target.value)
-                    }
-                    style={styles.dateInput}
-                />
-              </div>
+                  <input
+                      type="date"
+                      value={date}
+                      onChange={(event) =>
+                          setDate(event.target.value)
+                      }
+                      style={styles.dateInput}
+                  />
+                </div>
 
-              {error && (
-                  <div style={styles.errorBox}>
-                    {error}
-                  </div>
-              )}
+                {error && (
+                    <div style={styles.errorBox}>
+                      {error}
+                    </div>
+                )}
 
-              {loading ? (
-                  <p style={styles.info}>
-                    Carregando...
-                  </p>
-              ) : appointments.length === 0 ? (
-                  <p style={styles.info}>
-                    Nenhum agendamento para essa data.
-                  </p>
-              ) : (
-                  <div
-                      style={{
-                        ...styles.list,
-                        ...(isMobile
-                            ? {}
-                            : styles.listGrid),
-                      }}
-                  >
-                    {appointments.map((appointment) => (
-                        <div
-                            key={appointment.id}
-                            style={styles.card}
-                        >
-                          <div style={styles.cardTop}>
-                            <strong style={styles.time}>
-                              {formatTime(
-                                  appointment.scheduledAt
-                              )}
-                            </strong>
+                {loading ? (
+                    <p style={styles.info}>
+                      Carregando...
+                    </p>
+                ) : appointments.length === 0 ? (
+                    <p style={styles.info}>
+                      Nenhum agendamento para essa data.
+                    </p>
+                ) : (
+                    <div
+                        style={{
+                          ...styles.list,
+                          ...(isMobile
+                              ? {}
+                              : styles.listGrid),
+                        }}
+                    >
+                      {appointments.map((appointment) => (
+                          <div
+                              key={appointment.id}
+                              style={styles.card}
+                          >
+                            <div style={styles.cardTop}>
+                              <strong style={styles.time}>
+                                {formatTime(
+                                    appointment.scheduledAt
+                                )}
+                              </strong>
 
-                            <span
-                                style={{
-                                  ...styles.badge,
-                                  background:
-                                      statusColor[
-                                          appointment.status
-                                          ],
-                                }}
-                            >
+                              <span
+                                  style={{
+                                    ...styles.badge,
+                                    background:
+                                        statusColor[
+                                            appointment.status
+                                            ],
+                                  }}
+                              >
                       {
                         statusLabel[
                             appointment.status
                             ]
                       }
                     </span>
+                            </div>
+
+                            <p style={styles.clientName}>
+                              {appointment.clientName}
+                            </p>
+
+                            <p style={styles.detail}>
+                              {appointment.treatmentName}
+                            </p>
+
+                            <a
+                                href={`https://wa.me/${appointment.clientWhatsapp.replace(
+                                    /\D/g,
+                                    ''
+                                )}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={styles.whatsapp}
+                            >
+                              WhatsApp:{' '}
+                              {appointment.clientWhatsapp}
+                            </a>
+
+                            {appointment.notes && (
+                                <p style={styles.notes}>
+                                  Obs: {appointment.notes}
+                                </p>
+                            )}
+
+                            <div style={styles.actions}>
+                              {(
+                                  [
+                                    'CONFIRMED',
+                                    'COMPLETED',
+                                    'CANCELLED',
+                                  ] as const
+                              )
+                                  .filter(
+                                      (status) =>
+                                          status !==
+                                          appointment.status
+                                  )
+                                  .map((status) => (
+                                      <button
+                                          key={status}
+                                          onClick={() =>
+                                              updateStatus(
+                                                  appointment.id,
+                                                  status
+                                              )
+                                          }
+                                          disabled={
+                                              updatingId ===
+                                              appointment.id
+                                          }
+                                          style={
+                                            styles.actionButton
+                                          }
+                                      >
+                                        {updatingId ===
+                                        appointment.id
+                                            ? '...'
+                                            : statusLabel[status]}
+                                      </button>
+                                  ))}
+                            </div>
                           </div>
+                      ))}
+                    </div>
+                )}
+              </section>
+          )}
 
-                          <p style={styles.clientName}>
-                            {appointment.clientName}
-                          </p>
-
-                          <p style={styles.detail}>
-                            {appointment.treatmentName}
-                          </p>
-
-                          <a
-                              href={`https://wa.me/${appointment.clientWhatsapp.replace(
-                                  /\D/g,
-                                  ''
-                              )}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={styles.whatsapp}
-                          >
-                            WhatsApp:{' '}
-                            {appointment.clientWhatsapp}
-                          </a>
-
-                          {appointment.notes && (
-                              <p style={styles.notes}>
-                                Obs: {appointment.notes}
-                              </p>
-                          )}
-
-                          <div style={styles.actions}>
-                            {(
-                                [
-                                  'CONFIRMED',
-                                  'COMPLETED',
-                                  'CANCELLED',
-                                ] as const
-                            )
-                                .filter(
-                                    (status) =>
-                                        status !==
-                                        appointment.status
-                                )
-                                .map((status) => (
-                                    <button
-                                        key={status}
-                                        onClick={() =>
-                                            updateStatus(
-                                                appointment.id,
-                                                status
-                                            )
-                                        }
-                                        disabled={
-                                            updatingId ===
-                                            appointment.id
-                                        }
-                                        style={
-                                          styles.actionButton
-                                        }
-                                    >
-                                      {updatingId ===
-                                      appointment.id
-                                          ? '...'
-                                          : statusLabel[status]}
-                                    </button>
-                                ))}
-                          </div>
-                        </div>
-                    ))}
-                  </div>
-              )}
-            </section>
-        )}
-
-        {/* =========================
+          {/* =========================
           TRATAMENTOS
       ========================= */}
 
-        {tab === 'tratamentos' && (
-            <section>
-              {treatmentsError && (
-                  <div style={styles.errorBox}>
-                    {treatmentsError}
-                  </div>
-              )}
+          {tab === 'tratamentos' && (
+              <section>
+                {treatmentsError && (
+                    <div style={styles.errorBox}>
+                      {treatmentsError}
+                    </div>
+                )}
 
-              {!treatmentForm && (
-                  <button
-                      onClick={openNewTreatmentForm}
-                      style={styles.primaryButton}
-                  >
-                    + Novo tratamento
-                  </button>
-              )}
-
-              {treatmentForm && (
-                  <form
-                      onSubmit={saveTreatment}
-                      style={styles.form}
-                  >
-                    <h3 style={styles.formTitle}>
-                      {treatmentForm.id
-                          ? 'Editar tratamento'
-                          : 'Novo tratamento'}
-                    </h3>
-
-                    <label style={styles.label}>
-                      Nome
-                    </label>
-
-                    <input
-                        type="text"
-                        value={treatmentForm.name}
-                        onChange={(event) =>
-                            setTreatmentForm({
-                              ...treatmentForm,
-                              name: event.target.value,
-                            })
-                        }
-                        style={styles.input}
-                        required
-                    />
-
-                    <label style={styles.label}>
-                      Descrição
-                    </label>
-
-                    <textarea
-                        value={
-                          treatmentForm.description
-                        }
-                        onChange={(event) =>
-                            setTreatmentForm({
-                              ...treatmentForm,
-                              description:
-                              event.target.value,
-                            })
-                        }
-                        style={{
-                          ...styles.input,
-                          minHeight: 80,
-                          fontFamily: 'inherit',
-                          resize: 'vertical',
-                        }}
-                    />
-
-                    <div
-                        style={{
-                          display: 'flex',
-                          gap: 12,
-                          flexWrap: 'wrap',
-                        }}
+                {!treatmentForm && (
+                    <button
+                        onClick={openNewTreatmentForm}
+                        style={styles.primaryButton}
                     >
+                      + Novo tratamento
+                    </button>
+                )}
+
+                {treatmentForm && (
+                    <form
+                        onSubmit={saveTreatment}
+                        style={styles.form}
+                    >
+                      <h3 style={styles.formTitle}>
+                        {treatmentForm.id
+                            ? 'Editar tratamento'
+                            : 'Novo tratamento'}
+                      </h3>
+
+                      <label style={styles.label}>
+                        Nome
+                      </label>
+
+                      <input
+                          type="text"
+                          value={treatmentForm.name}
+                          onChange={(event) =>
+                              setTreatmentForm({
+                                ...treatmentForm,
+                                name: event.target.value,
+                              })
+                          }
+                          style={styles.input}
+                          required
+                      />
+
+                      <label style={styles.label}>
+                        Descrição
+                      </label>
+
+                      <textarea
+                          value={
+                            treatmentForm.description
+                          }
+                          onChange={(event) =>
+                              setTreatmentForm({
+                                ...treatmentForm,
+                                description:
+                                event.target.value,
+                              })
+                          }
+                          style={{
+                            ...styles.input,
+                            minHeight: 80,
+                            fontFamily: 'inherit',
+                            resize: 'vertical',
+                          }}
+                      />
+
                       <div
                           style={{
-                            flex: '1 1 140px',
+                            display: 'flex',
+                            gap: 12,
+                            flexWrap: 'wrap',
                           }}
                       >
-                        <label style={styles.label}>
-                          Preço (R$)
-                        </label>
+                        <div
+                            style={{
+                              flex: '1 1 140px',
+                            }}
+                        >
+                          <label style={styles.label}>
+                            Preço (R$)
+                          </label>
 
-                        <input
-                            type="text"
-                            inputMode="decimal"
-                            value={
-                              treatmentForm.price
-                            }
-                            onChange={(event) =>
-                                setTreatmentForm({
-                                  ...treatmentForm,
-                                  price:
-                                  event.target.value,
-                                })
-                            }
-                            style={styles.input}
-                            placeholder="120.00"
-                            required
-                        />
+                          <input
+                              type="text"
+                              inputMode="decimal"
+                              value={
+                                treatmentForm.price
+                              }
+                              onChange={(event) =>
+                                  setTreatmentForm({
+                                    ...treatmentForm,
+                                    price:
+                                    event.target.value,
+                                  })
+                              }
+                              style={styles.input}
+                              placeholder="120.00"
+                              required
+                          />
+                        </div>
+
+                        <div
+                            style={{
+                              flex: '1 1 140px',
+                            }}
+                        >
+                          <label style={styles.label}>
+                            Duração (min)
+                          </label>
+
+                          <input
+                              type="number"
+                              value={
+                                treatmentForm.durationMinutes
+                              }
+                              onChange={(event) =>
+                                  setTreatmentForm({
+                                    ...treatmentForm,
+                                    durationMinutes:
+                                    event.target.value,
+                                  })
+                              }
+                              style={styles.input}
+                              placeholder="60"
+                              required
+                          />
+                        </div>
                       </div>
 
                       <div
                           style={{
-                            flex: '1 1 140px',
+                            display: 'flex',
+                            gap: 10,
+                            marginTop: 8,
+                            flexWrap: 'wrap',
                           }}
                       >
-                        <label style={styles.label}>
-                          Duração (min)
-                        </label>
+                        <button
+                            type="submit"
+                            disabled={savingTreatment}
+                            style={styles.primaryButton}
+                        >
+                          {savingTreatment
+                              ? 'Salvando...'
+                              : 'Salvar'}
+                        </button>
 
-                        <input
-                            type="number"
-                            value={
-                              treatmentForm.durationMinutes
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setTreatmentForm(null)
                             }
-                            onChange={(event) =>
-                                setTreatmentForm({
-                                  ...treatmentForm,
-                                  durationMinutes:
-                                  event.target.value,
-                                })
+                            style={
+                              styles.secondaryButton
                             }
-                            style={styles.input}
-                            placeholder="60"
-                            required
-                        />
+                        >
+                          Cancelar
+                        </button>
                       </div>
-                    </div>
+                    </form>
+                )}
 
+                {treatmentsLoading ? (
+                    <p style={styles.info}>
+                      Carregando...
+                    </p>
+                ) : treatments.length === 0 ? (
+                    <p style={styles.info}>
+                      Nenhum tratamento cadastrado ainda.
+                    </p>
+                ) : (
                     <div
                         style={{
-                          display: 'flex',
-                          gap: 10,
-                          marginTop: 8,
-                          flexWrap: 'wrap',
+                          ...styles.list,
+                          ...(isMobile
+                              ? {}
+                              : styles.listGrid),
+                          marginTop: 20,
                         }}
                     >
-                      <button
-                          type="submit"
-                          disabled={savingTreatment}
-                          style={styles.primaryButton}
-                      >
-                        {savingTreatment
-                            ? 'Salvando...'
-                            : 'Salvar'}
-                      </button>
+                      {treatments.map(
+                          (treatment) => (
+                              <div
+                                  key={treatment.id}
+                                  style={styles.card}
+                              >
+                                <div style={styles.cardTop}>
+                                  <strong style={styles.time}>
+                                    {treatment.name}
+                                  </strong>
 
-                      <button
-                          type="button"
-                          onClick={() =>
-                              setTreatmentForm(null)
-                          }
-                          style={
-                            styles.secondaryButton
-                          }
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </form>
-              )}
-
-              {treatmentsLoading ? (
-                  <p style={styles.info}>
-                    Carregando...
-                  </p>
-              ) : treatments.length === 0 ? (
-                  <p style={styles.info}>
-                    Nenhum tratamento cadastrado ainda.
-                  </p>
-              ) : (
-                  <div
-                      style={{
-                        ...styles.list,
-                        ...(isMobile
-                            ? {}
-                            : styles.listGrid),
-                        marginTop: 20,
-                      }}
-                  >
-                    {treatments.map(
-                        (treatment) => (
-                            <div
-                                key={treatment.id}
-                                style={styles.card}
-                            >
-                              <div style={styles.cardTop}>
-                                <strong style={styles.time}>
-                                  {treatment.name}
-                                </strong>
-
-                                <span
-                                    style={{
-                                      ...styles.badge,
-                                      background:
-                                          treatment.active
-                                              ? '#2E7D32'
-                                              : '#8A8A8A',
-                                    }}
-                                >
+                                  <span
+                                      style={{
+                                        ...styles.badge,
+                                        background:
+                                            treatment.active
+                                                ? '#2E7D32'
+                                                : '#8A8A8A',
+                                      }}
+                                  >
                         {treatment.active
                             ? 'Ativo'
                             : 'Inativo'}
                       </span>
+                                </div>
+
+                                {!!treatment.description && (
+                                    <p style={styles.detail}>
+                                      {
+                                        treatment.description
+                                      }
+                                    </p>
+                                )}
+
+                                <p style={styles.detail}>
+                                  {formatPrice(
+                                      treatment.price
+                                  )}{' '}
+                                  ·{' '}
+                                  {
+                                    treatment.durationMinutes
+                                  }{' '}
+                                  min
+                                </p>
+
+                                <div style={styles.actions}>
+                                  <button
+                                      onClick={() =>
+                                          openEditTreatmentForm(
+                                              treatment
+                                          )
+                                      }
+                                      style={
+                                        styles.actionButton
+                                      }
+                                  >
+                                    Editar
+                                  </button>
+
+                                  <button
+                                      onClick={() =>
+                                          toggleTreatmentActive(
+                                              treatment
+                                          )
+                                      }
+                                      disabled={
+                                          togglingId ===
+                                          treatment.id
+                                      }
+                                      style={{
+                                        ...styles.actionButton,
+                                        borderColor:
+                                            treatment.active
+                                                ? '#B3261E'
+                                                : '#2E7D32',
+                                        color:
+                                            treatment.active
+                                                ? '#B3261E'
+                                                : '#2E7D32',
+                                      }}
+                                  >
+                                    {togglingId ===
+                                    treatment.id
+                                        ? '...'
+                                        : treatment.active
+                                            ? 'Desativar'
+                                            : 'Ativar'}
+                                  </button>
+                                </div>
                               </div>
+                          )
+                      )}
+                    </div>
+                )}
+              </section>
+          )}
 
-                              {!!treatment.description && (
-                                  <p style={styles.detail}>
-                                    {
-                                      treatment.description
-                                    }
-                                  </p>
-                              )}
-
-                              <p style={styles.detail}>
-                                {formatPrice(
-                                    treatment.price
-                                )}{' '}
-                                ·{' '}
-                                {
-                                  treatment.durationMinutes
-                                }{' '}
-                                min
-                              </p>
-
-                              <div style={styles.actions}>
-                                <button
-                                    onClick={() =>
-                                        openEditTreatmentForm(
-                                            treatment
-                                        )
-                                    }
-                                    style={
-                                      styles.actionButton
-                                    }
-                                >
-                                  Editar
-                                </button>
-
-                                <button
-                                    onClick={() =>
-                                        toggleTreatmentActive(
-                                            treatment
-                                        )
-                                    }
-                                    disabled={
-                                        togglingId ===
-                                        treatment.id
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      borderColor:
-                                          treatment.active
-                                              ? '#B3261E'
-                                              : '#2E7D32',
-                                      color:
-                                          treatment.active
-                                              ? '#B3261E'
-                                              : '#2E7D32',
-                                    }}
-                                >
-                                  {togglingId ===
-                                  treatment.id
-                                      ? '...'
-                                      : treatment.active
-                                          ? 'Desativar'
-                                          : 'Ativar'}
-                                </button>
-                              </div>
-                            </div>
-                        )
-                    )}
-                  </div>
-              )}
-            </section>
-        )}
-
-        {/* =========================
+          {/* =========================
           FOTOS
       ========================= */}
 
-        {tab === 'fotos' && (
-            <section>
-              {photosError && (
-                  <div style={styles.errorBox}>{photosError}</div>
-              )}
+          {tab === 'fotos' && (
+              <section>
+                {photosError && (
+                    <div style={styles.errorBox}>{photosError}</div>
+                )}
 
-              <p style={styles.helperText}>
-                As fotos ativas aparecem no carrossel da página inicial, na
-                ordem definida abaixo. Cole o link de uma imagem já publicada
-                na internet (por exemplo, um link do Google Drive, Imgur ou
-                Instagram) — ainda não é possível enviar o arquivo direto do
-                computador ou celular por aqui.
-              </p>
+                <p style={styles.helperText}>
+                  As fotos ativas aparecem no carrossel da página inicial, na
+                  ordem definida abaixo. Cole o link de uma imagem já publicada
+                  na internet (por exemplo, um link do Google Drive, Imgur ou
+                  Instagram) — ainda não é possível enviar o arquivo direto do
+                  computador ou celular por aqui.
+                </p>
 
-              {!photoForm && (
-                  <button
-                      onClick={openNewPhotoForm}
-                      style={styles.primaryButton}
-                  >
-                    + Nova foto
-                  </button>
-              )}
-
-              {photoForm && (
-                  <form onSubmit={savePhoto} style={styles.form}>
-                    <h3 style={styles.formTitle}>
-                      {photoForm.id ? 'Editar foto' : 'Nova foto'}
-                    </h3>
-
-                    <label style={styles.label}>Link da imagem</label>
-                    <input
-                        type="text"
-                        value={photoForm.url}
-                        onChange={(event) =>
-                            setPhotoForm({ ...photoForm, url: event.target.value })
-                        }
-                        style={styles.input}
-                        placeholder="https://..."
-                        required
-                    />
-
-                    {photoForm.url.trim() && (
-                        <img
-                            src={photoForm.url}
-                            alt="Pré-visualização"
-                            style={styles.photoPreview}
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.display = 'none';
-                            }}
-                        />
-                    )}
-
-                    <label style={styles.label}>Título / legenda (opcional)</label>
-                    <input
-                        type="text"
-                        value={photoForm.title}
-                        onChange={(event) =>
-                            setPhotoForm({ ...photoForm, title: event.target.value })
-                        }
-                        style={styles.input}
-                        placeholder="Ex: Limpeza de Pele Profunda"
-                    />
-
-                    <label style={styles.label}>Ordem de exibição</label>
-                    <input
-                        type="number"
-                        value={photoForm.sortOrder}
-                        onChange={(event) =>
-                            setPhotoForm({
-                              ...photoForm,
-                              sortOrder: event.target.value,
-                            })
-                        }
-                        style={styles.input}
-                        placeholder="0"
-                    />
-
-                    <div
-                        style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}
+                {!photoForm && (
+                    <button
+                        onClick={openNewPhotoForm}
+                        style={styles.primaryButton}
                     >
-                      <button
-                          type="submit"
-                          disabled={savingPhoto}
-                          style={styles.primaryButton}
-                      >
-                        {savingPhoto ? 'Salvando...' : 'Salvar'}
-                      </button>
+                      + Nova foto
+                    </button>
+                )}
 
-                      <button
-                          type="button"
-                          onClick={() => setPhotoForm(null)}
-                          style={styles.secondaryButton}
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </form>
-              )}
+                {photoForm && (
+                    <form onSubmit={savePhoto} style={styles.form}>
+                      <h3 style={styles.formTitle}>
+                        {photoForm.id ? 'Editar foto' : 'Nova foto'}
+                      </h3>
 
-              {photosLoading ? (
-                  <p style={styles.info}>Carregando...</p>
-              ) : photos.length === 0 ? (
-                  <p style={styles.info}>Nenhuma foto cadastrada ainda.</p>
-              ) : (
-                  <div
-                      style={{
-                        ...styles.photoGrid,
-                        marginTop: 20,
-                      }}
-                  >
-                    {photos.map((photo) => (
-                        <div key={photo.id} style={styles.card}>
+                      <label style={styles.label}>Link da imagem</label>
+                      <input
+                          type="text"
+                          value={photoForm.url}
+                          onChange={(event) =>
+                              setPhotoForm({ ...photoForm, url: event.target.value })
+                          }
+                          style={styles.input}
+                          placeholder="https://..."
+                          required
+                      />
+
+                      {photoForm.url.trim() && (
                           <img
-                              src={photo.url}
-                              alt={photo.title ?? ''}
-                              style={styles.photoThumb}
+                              src={photoForm.url}
+                              alt="Pré-visualização"
+                              style={styles.photoPreview}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              }}
                           />
+                      )}
 
-                          <div style={styles.cardTop}>
-                            <strong style={styles.clientName}>
-                              {photo.title || '(sem título)'}
-                            </strong>
+                      <label style={styles.label}>Título / legenda (opcional)</label>
+                      <input
+                          type="text"
+                          value={photoForm.title}
+                          onChange={(event) =>
+                              setPhotoForm({ ...photoForm, title: event.target.value })
+                          }
+                          style={styles.input}
+                          placeholder="Ex: Limpeza de Pele Profunda"
+                      />
 
-                            <span
-                                style={{
-                                  ...styles.badge,
-                                  background: photo.active ? '#2E7D32' : '#8A8A8A',
-                                }}
-                            >
+                      <label style={styles.label}>Ordem de exibição</label>
+                      <input
+                          type="number"
+                          value={photoForm.sortOrder}
+                          onChange={(event) =>
+                              setPhotoForm({
+                                ...photoForm,
+                                sortOrder: event.target.value,
+                              })
+                          }
+                          style={styles.input}
+                          placeholder="0"
+                      />
+
+                      <div
+                          style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}
+                      >
+                        <button
+                            type="submit"
+                            disabled={savingPhoto}
+                            style={styles.primaryButton}
+                        >
+                          {savingPhoto ? 'Salvando...' : 'Salvar'}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setPhotoForm(null)}
+                            style={styles.secondaryButton}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                )}
+
+                {photosLoading ? (
+                    <p style={styles.info}>Carregando...</p>
+                ) : photos.length === 0 ? (
+                    <p style={styles.info}>Nenhuma foto cadastrada ainda.</p>
+                ) : (
+                    <div
+                        style={{
+                          ...styles.photoGrid,
+                          marginTop: 20,
+                        }}
+                    >
+                      {photos.map((photo) => (
+                          <div key={photo.id} style={styles.card}>
+                            <img
+                                src={photo.url}
+                                alt={photo.title ?? ''}
+                                style={styles.photoThumb}
+                            />
+
+                            <div style={styles.cardTop}>
+                              <strong style={styles.clientName}>
+                                {photo.title || '(sem título)'}
+                              </strong>
+
+                              <span
+                                  style={{
+                                    ...styles.badge,
+                                    background: photo.active ? '#2E7D32' : '#8A8A8A',
+                                  }}
+                              >
                         {photo.active ? 'Ativa' : 'Inativa'}
                       </span>
+                            </div>
+
+                            <p style={styles.detail}>Ordem: {photo.sortOrder}</p>
+
+                            <div style={styles.actions}>
+                              <button
+                                  onClick={() => openEditPhotoForm(photo)}
+                                  style={styles.actionButton}
+                              >
+                                Editar
+                              </button>
+
+                              <button
+                                  onClick={() => togglePhotoActive(photo)}
+                                  disabled={photoBusyId === photo.id}
+                                  style={{
+                                    ...styles.actionButton,
+                                    borderColor: photo.active ? '#B3261E' : '#2E7D32',
+                                    color: photo.active ? '#B3261E' : '#2E7D32',
+                                  }}
+                              >
+                                {photoBusyId === photo.id
+                                    ? '...'
+                                    : photo.active
+                                        ? 'Desativar'
+                                        : 'Ativar'}
+                              </button>
+
+                              <button
+                                  onClick={() => deletePhoto(photo)}
+                                  disabled={photoBusyId === photo.id}
+                                  style={{
+                                    ...styles.actionButton,
+                                    borderColor: '#B3261E',
+                                    color: '#B3261E',
+                                  }}
+                              >
+                                Excluir
+                              </button>
+                            </div>
                           </div>
+                      ))}
+                    </div>
+                )}
+              </section>
+          )}
 
-                          <p style={styles.detail}>Ordem: {photo.sortOrder}</p>
-
-                          <div style={styles.actions}>
-                            <button
-                                onClick={() => openEditPhotoForm(photo)}
-                                style={styles.actionButton}
-                            >
-                              Editar
-                            </button>
-
-                            <button
-                                onClick={() => togglePhotoActive(photo)}
-                                disabled={photoBusyId === photo.id}
-                                style={{
-                                  ...styles.actionButton,
-                                  borderColor: photo.active ? '#B3261E' : '#2E7D32',
-                                  color: photo.active ? '#B3261E' : '#2E7D32',
-                                }}
-                            >
-                              {photoBusyId === photo.id
-                                  ? '...'
-                                  : photo.active
-                                      ? 'Desativar'
-                                      : 'Ativar'}
-                            </button>
-
-                            <button
-                                onClick={() => deletePhoto(photo)}
-                                disabled={photoBusyId === photo.id}
-                                style={{
-                                  ...styles.actionButton,
-                                  borderColor: '#B3261E',
-                                  color: '#B3261E',
-                                }}
-                            >
-                              Excluir
-                            </button>
-                          </div>
-                        </div>
-                    ))}
-                  </div>
-              )}
-            </section>
-        )}
-
-        {/* =========================
+          {/* =========================
           SITE (textos e contato)
       ========================= */}
 
-        {tab === 'site' && (
-            <section>
-              {siteError && <div style={styles.errorBox}>{siteError}</div>}
+          {tab === 'site' && (
+              <section>
+                {siteError && <div style={styles.errorBox}>{siteError}</div>}
 
-              {siteLoading || !siteForm ? (
-                  <p style={styles.info}>Carregando...</p>
-              ) : (
-                  <form onSubmit={saveSiteSettings} style={styles.form}>
-                    <h3 style={styles.formTitle}>Sobre / Contato</h3>
+                {siteLoading || !siteForm ? (
+                    <p style={styles.info}>Carregando...</p>
+                ) : (
+                    <form onSubmit={saveSiteSettings} style={styles.form}>
+                      <h3 style={styles.formTitle}>Sobre / Contato</h3>
 
-                    <label style={styles.label}>Texto "Sobre" (um parágrafo por linha)</label>
-                    <textarea
-                        value={siteForm.aboutText}
-                        onChange={(event) =>
-                            setSiteForm({ ...siteForm, aboutText: event.target.value })
-                        }
-                        style={{ ...styles.input, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
-                    />
+                      <label style={styles.label}>Texto "Sobre" (um parágrafo por linha)</label>
+                      <textarea
+                          value={siteForm.aboutText}
+                          onChange={(event) =>
+                              setSiteForm({ ...siteForm, aboutText: event.target.value })
+                          }
+                          style={{ ...styles.input, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
+                      />
 
-                    <label style={styles.label}>Endereço (uma linha por parte)</label>
-                    <textarea
-                        value={siteForm.address}
-                        onChange={(event) =>
-                            setSiteForm({ ...siteForm, address: event.target.value })
-                        }
-                        style={{ ...styles.input, minHeight: 80, fontFamily: 'inherit', resize: 'vertical' }}
-                        placeholder={'Rua Exemplo, 123\nBairro, Cidade - UF\nCEP: 00000-000'}
-                    />
+                      <label style={styles.label}>Endereço (uma linha por parte)</label>
+                      <textarea
+                          value={siteForm.address}
+                          onChange={(event) =>
+                              setSiteForm({ ...siteForm, address: event.target.value })
+                          }
+                          style={{ ...styles.input, minHeight: 80, fontFamily: 'inherit', resize: 'vertical' }}
+                          placeholder={'Rua Exemplo, 123\nBairro, Cidade - UF\nCEP: 00000-000'}
+                      />
 
-                    <label style={styles.label}>Horário de atendimento</label>
-                    <input
-                        type="text"
-                        value={siteForm.openingHoursText}
-                        onChange={(event) =>
-                            setSiteForm({
-                              ...siteForm,
-                              openingHoursText: event.target.value,
-                            })
-                        }
-                        style={styles.input}
-                    />
+                      <label style={styles.label}>Horário de atendimento</label>
+                      <input
+                          type="text"
+                          value={siteForm.openingHoursText}
+                          onChange={(event) =>
+                              setSiteForm({
+                                ...siteForm,
+                                openingHoursText: event.target.value,
+                              })
+                          }
+                          style={styles.input}
+                      />
 
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                      <div style={{ flex: '1 1 200px' }}>
-                        <label style={styles.label}>WhatsApp</label>
-                        <input
-                            type="text"
-                            value={siteForm.whatsapp}
-                            onChange={(event) =>
-                                setSiteForm({ ...siteForm, whatsapp: event.target.value })
-                            }
-                            style={styles.input}
-                            placeholder="(11) 91622-4612"
-                        />
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 200px' }}>
+                          <label style={styles.label}>WhatsApp</label>
+                          <input
+                              type="text"
+                              value={siteForm.whatsapp}
+                              onChange={(event) =>
+                                  setSiteForm({ ...siteForm, whatsapp: event.target.value })
+                              }
+                              style={styles.input}
+                              placeholder="(11) 91622-4612"
+                          />
+                        </div>
+
+                        <div style={{ flex: '1 1 200px' }}>
+                          <label style={styles.label}>Link do Instagram</label>
+                          <input
+                              type="text"
+                              value={siteForm.instagramUrl}
+                              onChange={(event) =>
+                                  setSiteForm({
+                                    ...siteForm,
+                                    instagramUrl: event.target.value,
+                                  })
+                              }
+                              style={styles.input}
+                              placeholder="https://www.instagram.com/..."
+                          />
+                        </div>
                       </div>
 
-                      <div style={{ flex: '1 1 200px' }}>
-                        <label style={styles.label}>Link do Instagram</label>
-                        <input
-                            type="text"
-                            value={siteForm.instagramUrl}
-                            onChange={(event) =>
-                                setSiteForm({
-                                  ...siteForm,
-                                  instagramUrl: event.target.value,
-                                })
-                            }
-                            style={styles.input}
-                            placeholder="https://www.instagram.com/..."
-                        />
-                      </div>
-                    </div>
+                      <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center' }}>
+                        <button
+                            type="submit"
+                            disabled={savingSite}
+                            style={styles.primaryButton}
+                        >
+                          {savingSite ? 'Salvando...' : 'Salvar alterações'}
+                        </button>
 
-                    <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center' }}>
-                      <button
-                          type="submit"
-                          disabled={savingSite}
-                          style={styles.primaryButton}
-                      >
-                        {savingSite ? 'Salvando...' : 'Salvar alterações'}
-                      </button>
-
-                      {siteSaved && (
-                          <span style={{ color: '#2E7D32', fontSize: 13, fontWeight: 600 }}>
+                        {siteSaved && (
+                            <span style={{ color: '#2E7D32', fontSize: 13, fontWeight: 600 }}>
                       Salvo com sucesso ✓
                     </span>
-                      )}
-                    </div>
-                  </form>
-              )}
-            </section>
-        )}
+                        )}
+                      </div>
+                    </form>
+                )}
+              </section>
+          )}
 
-        {/* =========================
+          {/* =========================
           DEPOIMENTOS
       ========================= */}
 
-        {tab === 'depoimentos' && (
-            <section>
-              {testimonialsError && (
-                  <div style={styles.errorBox}>
-                    {testimonialsError}
-                  </div>
-              )}
+          {tab === 'depoimentos' && (
+              <section>
+                {testimonialsError && (
+                    <div style={styles.errorBox}>
+                      {testimonialsError}
+                    </div>
+                )}
 
-              {testimonialsLoading ? (
-                  <p style={styles.info}>
-                    Carregando...
-                  </p>
-              ) : pendingTestimonials.length === 0 ? (
-                  <p style={styles.info}>
-                    Nenhum depoimento aguardando
-                    aprovação.
-                  </p>
-              ) : (
-                  <div
-                      style={{
-                        ...styles.list,
-                        ...(isMobile
-                            ? {}
-                            : styles.listGrid),
-                      }}
-                  >
-                    {pendingTestimonials.map(
-                        (testimonial) => (
-                            <div
-                                key={testimonial.id}
-                                style={styles.card}
-                            >
-                              <div style={styles.cardTop}>
-                                <strong style={styles.time}>
-                                  {
-                                    testimonial.clientName
-                                  }
-                                </strong>
+                {testimonialsLoading ? (
+                    <p style={styles.info}>
+                      Carregando...
+                    </p>
+                ) : pendingTestimonials.length === 0 ? (
+                    <p style={styles.info}>
+                      Nenhum depoimento aguardando
+                      aprovação.
+                    </p>
+                ) : (
+                    <div
+                        style={{
+                          ...styles.list,
+                          ...(isMobile
+                              ? {}
+                              : styles.listGrid),
+                        }}
+                    >
+                      {pendingTestimonials.map(
+                          (testimonial) => (
+                              <div
+                                  key={testimonial.id}
+                                  style={styles.card}
+                              >
+                                <div style={styles.cardTop}>
+                                  <strong style={styles.time}>
+                                    {
+                                      testimonial.clientName
+                                    }
+                                  </strong>
 
-                                <span style={styles.time}>
+                                  <span style={styles.time}>
                         {'⭐'.repeat(
                             testimonial.rating
                         )}
                       </span>
+                                </div>
+
+                                <p style={styles.detail}>
+                                  {testimonial.comment}
+                                </p>
+
+                                <div style={styles.actions}>
+                                  <button
+                                      onClick={() =>
+                                          approveTestimonial(
+                                              testimonial.id
+                                          )
+                                      }
+                                      disabled={
+                                          moderatingId ===
+                                          testimonial.id
+                                      }
+                                      style={{
+                                        ...styles.actionButton,
+                                        borderColor:
+                                            '#2E7D32',
+                                        color: '#2E7D32',
+                                      }}
+                                  >
+                                    {moderatingId ===
+                                    testimonial.id
+                                        ? '...'
+                                        : 'Aprovar'}
+                                  </button>
+
+                                  <button
+                                      onClick={() =>
+                                          rejectTestimonial(
+                                              testimonial.id
+                                          )
+                                      }
+                                      disabled={
+                                          moderatingId ===
+                                          testimonial.id
+                                      }
+                                      style={{
+                                        ...styles.actionButton,
+                                        borderColor:
+                                            '#B3261E',
+                                        color: '#B3261E',
+                                      }}
+                                  >
+                                    {moderatingId ===
+                                    testimonial.id
+                                        ? '...'
+                                        : 'Rejeitar'}
+                                  </button>
+                                </div>
                               </div>
-
-                              <p style={styles.detail}>
-                                {testimonial.comment}
-                              </p>
-
-                              <div style={styles.actions}>
-                                <button
-                                    onClick={() =>
-                                        approveTestimonial(
-                                            testimonial.id
-                                        )
-                                    }
-                                    disabled={
-                                        moderatingId ===
-                                        testimonial.id
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      borderColor:
-                                          '#2E7D32',
-                                      color: '#2E7D32',
-                                    }}
-                                >
-                                  {moderatingId ===
-                                  testimonial.id
-                                      ? '...'
-                                      : 'Aprovar'}
-                                </button>
-
-                                <button
-                                    onClick={() =>
-                                        rejectTestimonial(
-                                            testimonial.id
-                                        )
-                                    }
-                                    disabled={
-                                        moderatingId ===
-                                        testimonial.id
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      borderColor:
-                                          '#B3261E',
-                                      color: '#B3261E',
-                                    }}
-                                >
-                                  {moderatingId ===
-                                  testimonial.id
-                                      ? '...'
-                                      : 'Rejeitar'}
-                                </button>
-                              </div>
-                            </div>
-                        )
-                    )}
-                  </div>
-              )}
-            </section>
-        )}
+                          )
+                      )}
+                    </div>
+                )}
+              </section>
+          )}
+        </div>
       </div>
   );
 }
@@ -1786,69 +1792,96 @@ export default function AdminDashboard() {
 const styles: {
   [key: string]: React.CSSProperties;
 } = {
-  wrapper: {
+  pageBackground: {
     minHeight: '100vh',
-    background: '#FAF9F6',
-    fontFamily:
-        "'Montserrat', sans-serif",
-    padding: 24,
-    maxWidth: 960,
-    margin: '0 auto',
-    boxSizing: 'border-box',
+    background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)',
+    fontFamily: "'Montserrat', sans-serif",
   },
 
-  header: {
+  // --- Header: réplica exata do header do site público (mesma logo,
+  // mesma tipografia, mesmo fundo fixo), só trocando o menu e o botão. ---
+  siteHeader: {
+    boxSizing: 'border-box',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    backgroundColor: '#FAF9F6',
+    borderBottom: '1px solid #E8D7F1',
+    zIndex: 1000,
+    padding: '12px 20px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+  },
+
+  siteHeaderContent: {
+    maxWidth: 1200,
+    margin: '0 auto',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    gap: 12,
     flexWrap: 'wrap',
-    gap: 10,
-    background: '#FFF',
-    padding: '14px 20px',
-    borderRadius: 16,
-    border: '1px solid #F0E4F5',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
   },
 
-  headerBrand: {
+  logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
 
-  headerLogo: {
-    width: 44,
-    height: 44,
+  logoCircle: {
+    width: 40,
+    height: 40,
     borderRadius: '50%',
     objectFit: 'cover',
   },
 
-  title: {
-    fontFamily:
-        "'Playfair Display', serif",
-    color: '#2D1537',
-    margin: 0,
-    fontSize: 22,
+  logoTextBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    lineHeight: 1.2,
   },
 
-  subtitle: {
-    fontSize: 12,
+  logoText: {
+    fontWeight: 'bold',
+    color: '#3D1A4C',
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 18,
+  },
+
+  logoSubtext: {
+    fontSize: 10,
     fontWeight: 600,
     color: '#A259C4',
-    letterSpacing: 1,
+    letterSpacing: 2,
     textTransform: 'uppercase',
   },
 
-  logoutButton: {
-    padding: '8px 16px',
-    borderRadius: 20,
-    border: '1px solid #A259C4',
-    background: 'transparent',
-    color: '#A259C4',
-    cursor: 'pointer',
-    fontSize: 13,
+  headerAdminLabel: {
     fontWeight: 600,
+    fontSize: 14,
+    color: '#2D1537',
+  },
+
+  logoutButton: {
+    backgroundColor: '#A259C4',
+    color: '#FFF',
+    padding: '9px 20px',
+    borderRadius: 25,
+    border: 'none',
+    fontWeight: 600,
+    fontSize: 13,
+    cursor: 'pointer',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    whiteSpace: 'nowrap',
+  },
+
+  // --- Conteúdo abaixo do header fixo ---
+  wrapper: {
+    padding: '108px 24px 40px',
+    maxWidth: 960,
+    margin: '0 auto',
+    boxSizing: 'border-box',
   },
 
   tabBar: {
