@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { useRouter } from 'expo-router';
 import LandingPage from '../index';
 
@@ -166,6 +166,7 @@ export default function AdminDashboard() {
       useState<TreatmentForm | null>(null);
   const [savingTreatment, setSavingTreatment] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fotos
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -663,6 +664,49 @@ export default function AdminDashboard() {
     }
   };
 
+  // Exclusão definitiva. Só é chamada pelo botão "Excluir", que só aparece
+  // quando o tratamento já está inativo (ver JSX abaixo) — mas o backend
+  // também recusa se, por algum motivo, chegar ativo aqui.
+  const deleteTreatment = async (treatment: Treatment) => {
+    if (!token) return;
+
+    const confirmed = window.confirm(
+        `Excluir "${treatment.name}" definitivamente? Isso também apaga TODOS os agendamentos (passados e futuros) vinculados a esse tratamento. Essa ação não pode ser desfeita.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(treatment.id);
+
+    try {
+      const res = await fetch(
+          `${API_BASE_URL}/api/admin/treatments/${treatment.id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      setTreatments((prev) => prev.filter((item) => item.id !== treatment.id));
+    } catch {
+      setTreatmentsError(
+          'Não foi possível excluir esse tratamento. Confira se ele já está inativo e tente de novo.'
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // =========================
   // FOTOS
   // =========================
@@ -1113,42 +1157,78 @@ export default function AdminDashboard() {
     },
   ];
   const ADMIN_BAR_HEIGHT = 56;
+  const adminBarRef = useRef<HTMLElement>(null);
+  const [adminBarHeight, setAdminBarHeight] = useState(ADMIN_BAR_HEIGHT);
+
+  // Mede a altura real da barra do admin (ela quebra em 2 linhas em telas
+  // estreitas), pra empurrar o site pra baixo na medida certa em vez de usar
+  // um número fixo que descola do conteúdo assim que o texto/botões mudam.
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (adminBarRef.current) {
+        const measured = adminBarRef.current.getBoundingClientRect().height;
+        if (measured > 0) setAdminBarHeight(measured);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isMobile, editMode]);
 
   return (
       <div style={styles.pageBackground}>
         {/* Barra fixa do admin, por cima do site real */}
-        <header style={styles.adminBar}>
-          <div style={styles.adminBarContent}>
+        <header ref={adminBarRef} style={{ ...styles.adminBar, height: 'auto', minHeight: ADMIN_BAR_HEIGHT }}>
+          <div
+              style={{
+                ...styles.adminBarContent,
+                ...(isMobile ? { flexWrap: 'wrap' as const, height: 'auto', padding: '10px 16px', rowGap: 8 } : {}),
+              }}
+          >
             <div style={styles.adminBarBrand}>
               <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.adminBarLogo} />
               <span style={styles.logoTextBlock}>
                 <span style={styles.adminBarTitle}>Maria Yasmim Lopes</span>
-                <span style={styles.adminBarSubtitle}>Painel Administrativo</span>
+                {/* Some no modo estreito: era o segundo maior motivo do wrap
+                    forçar o botão "Sair" pra fora da tela. */}
+                {!isMobile && (
+                    <span style={styles.adminBarSubtitle}>Painel Administrativo</span>
+                )}
               </span>
             </div>
 
-            <div style={styles.adminBarActions}>
+            <div
+                style={{
+                  ...styles.adminBarActions,
+                  ...(isMobile ? { flexWrap: 'wrap' as const, width: '100%', justifyContent: 'flex-start' as const } : {}),
+                }}
+            >
               <button
                   onClick={() => setEditMode((v) => !v)}
+                  title="Editar site"
                   style={{
                     ...styles.adminBarButton,
                     ...(editMode ? styles.adminBarButtonActive : {}),
                   }}
               >
-                {editMode ? '✓ Editando' : '✏️ Editar site'}
+                {isMobile
+                    ? (editMode ? '✓' : '✏️')
+                    : (editMode ? '✓ Editando' : '✏️ Editar site')}
               </button>
-              <button onClick={() => openDrawer('agenda')} style={styles.adminBarButton}>
-                📅 Agenda
+              <button onClick={() => openDrawer('agenda')} title="Agenda" style={styles.adminBarButton}>
+                {isMobile ? '📅' : '📅 Agenda'}
               </button>
-              <button onClick={handleLogout} style={styles.logoutButton}>
-                Sair
+              <button onClick={handleLogout} title="Sair" style={styles.logoutButton}>
+                {isMobile ? '⏻' : 'Sair'}
               </button>
             </div>
           </div>
         </header>
 
-        {/* O site de verdade, exatamente como a cliente vê — com lápis de edição quando o modo edição está ligado */}
-        <LandingPage editable={editMode} onEditSection={handleEditSection} topOffset={ADMIN_BAR_HEIGHT} />
+        {/* O site de verdade, exatamente como a cliente vê — com lápis de edição quando o modo edição está ligado.
+            topOffset é medido de verdade (ref abaixo), porque em telas estreitas a barra quebra em 2 linhas
+            e a altura fixa de ADMIN_BAR_HEIGHT deixaria de bater com a altura real. */}
+        <LandingPage editable={editMode} onEditSection={handleEditSection} topOffset={adminBarHeight} />
 
         {/* Painel lateral: abre ao clicar em um lápis de alguma seção ou no botão "Agenda" */}
         {drawerOpen && <div style={styles.drawerOverlay} onClick={closeDrawer} />}
@@ -1599,6 +1679,30 @@ export default function AdminDashboard() {
                                                 ? 'Desativar'
                                                 : 'Ativar'}
                                       </button>
+
+                                      {!treatment.active && (
+                                          <button
+                                              onClick={() =>
+                                                  deleteTreatment(
+                                                      treatment
+                                                  )
+                                              }
+                                              disabled={
+                                                  deletingId ===
+                                                  treatment.id
+                                              }
+                                              style={{
+                                                ...styles.actionButton,
+                                                borderColor: '#B3261E',
+                                                color: '#B3261E',
+                                                backgroundColor: 'rgba(179,38,30,0.06)',
+                                              }}
+                                          >
+                                            {deletingId === treatment.id
+                                                ? '...'
+                                                : 'Excluir'}
+                                          </button>
+                                      )}
                                     </div>
                                   </div>
                               )
