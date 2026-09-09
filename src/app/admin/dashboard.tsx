@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
+import LandingPage from '../index';
 
 const API_BASE_URL =
     process.env.EXPO_PUBLIC_API_URL ||
@@ -1050,6 +1051,38 @@ export default function AdminDashboard() {
     setSiteForm({ ...siteForm, [key]: list.filter((_, i) => i !== index) });
   };
 
+  // =========================
+  // MODO EDIÇÃO — agora o admin renderiza o site de verdade (LandingPage)
+  // e abre uma gaveta lateral com os formulários já existentes de cada aba.
+  // =========================
+  const [editMode, setEditMode] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const sectionToTab: Record<string, Tab> = {
+    hero: 'site',
+    photos: 'fotos',
+    benefits: 'site',
+    indications: 'site',
+    about: 'site',
+    treatments: 'tratamentos',
+    location: 'site',
+    testimonials: 'depoimentos',
+    faq: 'site',
+    footer: 'site',
+  };
+
+  const openDrawer = (targetTab: Tab) => {
+    setTab(targetTab);
+    setDrawerOpen(true);
+    setEditMode(true);
+  };
+
+  const closeDrawer = () => setDrawerOpen(false);
+
+  const handleEditSection = (section: string) => {
+    openDrawer(sectionToTab[section] ?? 'site');
+  };
+
   if (!token) {
     return null;
   }
@@ -1079,1251 +1112,1276 @@ export default function AdminDashboard() {
       label: 'Depoimentos',
     },
   ];
+  const ADMIN_BAR_HEIGHT = 56;
 
   return (
       <div style={styles.pageBackground}>
-        <header style={styles.siteHeader}>
-          <div style={styles.siteHeaderContent}>
-            <div style={styles.logoContainer}>
-              <img
-                  src="/logo.jpg.jpeg"
-                  alt="Logo Maria Yasmim Lopes"
-                  style={styles.logoCircle}
-              />
+        {/* Barra fixa do admin, por cima do site real */}
+        <header style={styles.adminBar}>
+          <div style={styles.adminBarContent}>
+            <div style={styles.adminBarBrand}>
+              <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.adminBarLogo} />
               <span style={styles.logoTextBlock}>
-                <span style={styles.logoText}>Maria Yasmim Lopes</span>
-                <span style={styles.logoSubtext}>Estética</span>
+                <span style={styles.adminBarTitle}>Maria Yasmim Lopes</span>
+                <span style={styles.adminBarSubtitle}>Painel Administrativo</span>
               </span>
             </div>
 
-            <span style={styles.headerAdminLabel}>Painel Administrativo</span>
-
-            <button
-                onClick={handleLogout}
-                style={styles.logoutButton}
-            >
-              Sair
-            </button>
+            <div style={styles.adminBarActions}>
+              <button
+                  onClick={() => setEditMode((v) => !v)}
+                  style={{
+                    ...styles.adminBarButton,
+                    ...(editMode ? styles.adminBarButtonActive : {}),
+                  }}
+              >
+                {editMode ? '✓ Editando' : '✏️ Editar site'}
+              </button>
+              <button onClick={() => openDrawer('agenda')} style={styles.adminBarButton}>
+                📅 Agenda
+              </button>
+              <button onClick={handleLogout} style={styles.logoutButton}>
+                Sair
+              </button>
+            </div>
           </div>
         </header>
 
-        <div style={styles.wrapper}>
-          <nav style={styles.tabBar}>
-            {tabs.map((item) => (
-                <button
-                    key={item.key}
-                    onClick={() => setTab(item.key)}
-                    style={{
-                      ...styles.tabButton,
-                      ...(tab === item.key
-                          ? styles.tabButtonActive
-                          : {}),
-                    }}
-                >
-                  {item.label}
-                </button>
-            ))}
-          </nav>
+        {/* O site de verdade, exatamente como a cliente vê — com lápis de edição quando o modo edição está ligado */}
+        <LandingPage editable={editMode} onEditSection={handleEditSection} topOffset={ADMIN_BAR_HEIGHT} />
 
-          {/* =========================
+        {/* Painel lateral: abre ao clicar em um lápis de alguma seção ou no botão "Agenda" */}
+        {drawerOpen && <div style={styles.drawerOverlay} onClick={closeDrawer} />}
+        <aside
+            style={{
+              ...styles.drawer,
+              transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
+            }}
+        >
+          <div style={styles.drawerHeader}>
+            <strong>Editar site</strong>
+            <button onClick={closeDrawer} style={styles.drawerCloseButton} aria-label="Fechar">×</button>
+          </div>
+          <div style={styles.drawerBody}>
+            <div style={{ ...styles.wrapper, padding: '20px 20px 40px', maxWidth: '100%' }}>
+              <nav style={styles.tabBar}>
+                {tabs.map((item) => (
+                    <button
+                        key={item.key}
+                        onClick={() => setTab(item.key)}
+                        style={{
+                          ...styles.tabButton,
+                          ...(tab === item.key
+                              ? styles.tabButtonActive
+                              : {}),
+                        }}
+                    >
+                      {item.label}
+                    </button>
+                ))}
+              </nav>
+
+              {/* =========================
           AGENDA
       ========================= */}
 
-          {tab === 'agenda' && (
-              <section>
-                <div style={styles.controls}>
-                  <label style={styles.label}>
-                    Data
-                  </label>
-
-                  <input
-                      type="date"
-                      value={date}
-                      onChange={(event) =>
-                          setDate(event.target.value)
-                      }
-                      style={styles.dateInput}
-                  />
-                </div>
-
-                {error && (
-                    <div style={styles.errorBox}>
-                      {error}
-                    </div>
-                )}
-
-                {loading ? (
-                    <p style={styles.info}>
-                      Carregando...
-                    </p>
-                ) : appointments.length === 0 ? (
-                    <p style={styles.info}>
-                      Nenhum agendamento para essa data.
-                    </p>
-                ) : (
-                    <div
-                        style={{
-                          ...styles.list,
-                          ...(isMobile
-                              ? {}
-                              : styles.listGrid),
-                        }}
-                    >
-                      {appointments.map((appointment) => (
-                          <div
-                              key={appointment.id}
-                              style={styles.card}
-                          >
-                            <div style={styles.cardTop}>
-                              <strong style={styles.time}>
-                                {formatTime(
-                                    appointment.scheduledAt
-                                )}
-                              </strong>
-
-                              <span
-                                  style={{
-                                    ...styles.badge,
-                                    background:
-                                        statusColor[
-                                            appointment.status
-                                            ],
-                                  }}
-                              >
-                      {
-                        statusLabel[
-                            appointment.status
-                            ]
-                      }
-                    </span>
-                            </div>
-
-                            <p style={styles.clientName}>
-                              {appointment.clientName}
-                            </p>
-
-                            <p style={styles.detail}>
-                              {appointment.treatmentName}
-                            </p>
-
-                            <a
-                                href={`https://wa.me/${appointment.clientWhatsapp.replace(
-                                    /\D/g,
-                                    ''
-                                )}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={styles.whatsapp}
-                            >
-                              WhatsApp:{' '}
-                              {appointment.clientWhatsapp}
-                            </a>
-
-                            {appointment.notes && (
-                                <p style={styles.notes}>
-                                  Obs: {appointment.notes}
-                                </p>
-                            )}
-
-                            <div style={styles.actions}>
-                              {(
-                                  [
-                                    'CONFIRMED',
-                                    'COMPLETED',
-                                    'CANCELLED',
-                                  ] as const
-                              )
-                                  .filter(
-                                      (status) =>
-                                          status !==
-                                          appointment.status
-                                  )
-                                  .map((status) => (
-                                      <button
-                                          key={status}
-                                          onClick={() =>
-                                              updateStatus(
-                                                  appointment.id,
-                                                  status
-                                              )
-                                          }
-                                          disabled={
-                                              updatingId ===
-                                              appointment.id
-                                          }
-                                          style={
-                                            styles.actionButton
-                                          }
-                                      >
-                                        {updatingId ===
-                                        appointment.id
-                                            ? '...'
-                                            : statusLabel[status]}
-                                      </button>
-                                  ))}
-                            </div>
-                          </div>
-                      ))}
-                    </div>
-                )}
-              </section>
-          )}
-
-          {/* =========================
-          TRATAMENTOS
-      ========================= */}
-
-          {tab === 'tratamentos' && (
-              <section>
-                {treatmentsError && (
-                    <div style={styles.errorBox}>
-                      {treatmentsError}
-                    </div>
-                )}
-
-                {!treatmentForm && (
-                    <button
-                        onClick={openNewTreatmentForm}
-                        style={styles.primaryButton}
-                    >
-                      + Novo tratamento
-                    </button>
-                )}
-
-                {treatmentForm && (
-                    <form
-                        onSubmit={saveTreatment}
-                        style={styles.form}
-                    >
-                      <h3 style={styles.formTitle}>
-                        {treatmentForm.id
-                            ? 'Editar tratamento'
-                            : 'Novo tratamento'}
-                      </h3>
-
+              {tab === 'agenda' && (
+                  <section>
+                    <div style={styles.controls}>
                       <label style={styles.label}>
-                        Nome
+                        Data
                       </label>
 
                       <input
-                          type="text"
-                          value={treatmentForm.name}
+                          type="date"
+                          value={date}
                           onChange={(event) =>
-                              setTreatmentForm({
-                                ...treatmentForm,
-                                name: event.target.value,
-                              })
+                              setDate(event.target.value)
                           }
-                          style={styles.input}
-                          required
+                          style={styles.dateInput}
                       />
+                    </div>
 
-                      <label style={styles.label}>
-                        Descrição
-                      </label>
+                    {error && (
+                        <div style={styles.errorBox}>
+                          {error}
+                        </div>
+                    )}
 
-                      <textarea
-                          value={
-                            treatmentForm.description
-                          }
-                          onChange={(event) =>
-                              setTreatmentForm({
-                                ...treatmentForm,
-                                description:
-                                event.target.value,
-                              })
-                          }
-                          style={{
-                            ...styles.input,
-                            minHeight: 80,
-                            fontFamily: 'inherit',
-                            resize: 'vertical',
-                          }}
-                      />
-
-                      <div
-                          style={{
-                            display: 'flex',
-                            gap: 12,
-                            flexWrap: 'wrap',
-                          }}
-                      >
+                    {loading ? (
+                        <p style={styles.info}>
+                          Carregando...
+                        </p>
+                    ) : appointments.length === 0 ? (
+                        <p style={styles.info}>
+                          Nenhum agendamento para essa data.
+                        </p>
+                    ) : (
                         <div
                             style={{
-                              flex: '1 1 140px',
+                              ...styles.list,
+                              ...(isMobile
+                                  ? {}
+                                  : styles.listGrid),
                             }}
                         >
-                          <label style={styles.label}>
-                            Preço (R$)
-                          </label>
-
-                          <input
-                              type="text"
-                              inputMode="decimal"
-                              value={
-                                treatmentForm.price
-                              }
-                              onChange={(event) =>
-                                  setTreatmentForm({
-                                    ...treatmentForm,
-                                    price:
-                                    event.target.value,
-                                  })
-                              }
-                              style={styles.input}
-                              placeholder="120.00"
-                              required
-                          />
-                        </div>
-
-                        <div
-                            style={{
-                              flex: '1 1 140px',
-                            }}
-                        >
-                          <label style={styles.label}>
-                            Duração (min)
-                          </label>
-
-                          <input
-                              type="number"
-                              value={
-                                treatmentForm.durationMinutes
-                              }
-                              onChange={(event) =>
-                                  setTreatmentForm({
-                                    ...treatmentForm,
-                                    durationMinutes:
-                                    event.target.value,
-                                  })
-                              }
-                              style={styles.input}
-                              placeholder="60"
-                              required
-                          />
-                        </div>
-                      </div>
-
-                      <div
-                          style={{
-                            display: 'flex',
-                            gap: 10,
-                            marginTop: 8,
-                            flexWrap: 'wrap',
-                          }}
-                      >
-                        <button
-                            type="submit"
-                            disabled={savingTreatment}
-                            style={styles.primaryButton}
-                        >
-                          {savingTreatment
-                              ? 'Salvando...'
-                              : 'Salvar'}
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setTreatmentForm(null)
-                            }
-                            style={
-                              styles.secondaryButton
-                            }
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                )}
-
-                {treatmentsLoading ? (
-                    <p style={styles.info}>
-                      Carregando...
-                    </p>
-                ) : treatments.length === 0 ? (
-                    <p style={styles.info}>
-                      Nenhum tratamento cadastrado ainda.
-                    </p>
-                ) : (
-                    <div
-                        style={{
-                          ...styles.list,
-                          ...(isMobile
-                              ? {}
-                              : styles.listGrid),
-                          marginTop: 20,
-                        }}
-                    >
-                      {treatments.map(
-                          (treatment) => (
+                          {appointments.map((appointment) => (
                               <div
-                                  key={treatment.id}
+                                  key={appointment.id}
                                   style={styles.card}
                               >
                                 <div style={styles.cardTop}>
                                   <strong style={styles.time}>
-                                    {treatment.name}
+                                    {formatTime(
+                                        appointment.scheduledAt
+                                    )}
                                   </strong>
 
                                   <span
                                       style={{
                                         ...styles.badge,
                                         background:
-                                            treatment.active
-                                                ? '#2E7D32'
-                                                : '#8A8A8A',
+                                            statusColor[
+                                                appointment.status
+                                                ],
                                       }}
                                   >
+                      {
+                        statusLabel[
+                            appointment.status
+                            ]
+                      }
+                    </span>
+                                </div>
+
+                                <p style={styles.clientName}>
+                                  {appointment.clientName}
+                                </p>
+
+                                <p style={styles.detail}>
+                                  {appointment.treatmentName}
+                                </p>
+
+                                <a
+                                    href={`https://wa.me/${appointment.clientWhatsapp.replace(
+                                        /\D/g,
+                                        ''
+                                    )}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={styles.whatsapp}
+                                >
+                                  WhatsApp:{' '}
+                                  {appointment.clientWhatsapp}
+                                </a>
+
+                                {appointment.notes && (
+                                    <p style={styles.notes}>
+                                      Obs: {appointment.notes}
+                                    </p>
+                                )}
+
+                                <div style={styles.actions}>
+                                  {(
+                                      [
+                                        'CONFIRMED',
+                                        'COMPLETED',
+                                        'CANCELLED',
+                                      ] as const
+                                  )
+                                      .filter(
+                                          (status) =>
+                                              status !==
+                                              appointment.status
+                                      )
+                                      .map((status) => (
+                                          <button
+                                              key={status}
+                                              onClick={() =>
+                                                  updateStatus(
+                                                      appointment.id,
+                                                      status
+                                                  )
+                                              }
+                                              disabled={
+                                                  updatingId ===
+                                                  appointment.id
+                                              }
+                                              style={
+                                                styles.actionButton
+                                              }
+                                          >
+                                            {updatingId ===
+                                            appointment.id
+                                                ? '...'
+                                                : statusLabel[status]}
+                                          </button>
+                                      ))}
+                                </div>
+                              </div>
+                          ))}
+                        </div>
+                    )}
+                  </section>
+              )}
+
+              {/* =========================
+          TRATAMENTOS
+      ========================= */}
+
+              {tab === 'tratamentos' && (
+                  <section>
+                    {treatmentsError && (
+                        <div style={styles.errorBox}>
+                          {treatmentsError}
+                        </div>
+                    )}
+
+                    {!treatmentForm && (
+                        <button
+                            onClick={openNewTreatmentForm}
+                            style={styles.primaryButton}
+                        >
+                          + Novo tratamento
+                        </button>
+                    )}
+
+                    {treatmentForm && (
+                        <form
+                            onSubmit={saveTreatment}
+                            style={styles.form}
+                        >
+                          <h3 style={styles.formTitle}>
+                            {treatmentForm.id
+                                ? 'Editar tratamento'
+                                : 'Novo tratamento'}
+                          </h3>
+
+                          <label style={styles.label}>
+                            Nome
+                          </label>
+
+                          <input
+                              type="text"
+                              value={treatmentForm.name}
+                              onChange={(event) =>
+                                  setTreatmentForm({
+                                    ...treatmentForm,
+                                    name: event.target.value,
+                                  })
+                              }
+                              style={styles.input}
+                              required
+                          />
+
+                          <label style={styles.label}>
+                            Descrição
+                          </label>
+
+                          <textarea
+                              value={
+                                treatmentForm.description
+                              }
+                              onChange={(event) =>
+                                  setTreatmentForm({
+                                    ...treatmentForm,
+                                    description:
+                                    event.target.value,
+                                  })
+                              }
+                              style={{
+                                ...styles.input,
+                                minHeight: 80,
+                                fontFamily: 'inherit',
+                                resize: 'vertical',
+                              }}
+                          />
+
+                          <div
+                              style={{
+                                display: 'flex',
+                                gap: 12,
+                                flexWrap: 'wrap',
+                              }}
+                          >
+                            <div
+                                style={{
+                                  flex: '1 1 140px',
+                                }}
+                            >
+                              <label style={styles.label}>
+                                Preço (R$)
+                              </label>
+
+                              <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={
+                                    treatmentForm.price
+                                  }
+                                  onChange={(event) =>
+                                      setTreatmentForm({
+                                        ...treatmentForm,
+                                        price:
+                                        event.target.value,
+                                      })
+                                  }
+                                  style={styles.input}
+                                  placeholder="120.00"
+                                  required
+                              />
+                            </div>
+
+                            <div
+                                style={{
+                                  flex: '1 1 140px',
+                                }}
+                            >
+                              <label style={styles.label}>
+                                Duração (min)
+                              </label>
+
+                              <input
+                                  type="number"
+                                  value={
+                                    treatmentForm.durationMinutes
+                                  }
+                                  onChange={(event) =>
+                                      setTreatmentForm({
+                                        ...treatmentForm,
+                                        durationMinutes:
+                                        event.target.value,
+                                      })
+                                  }
+                                  style={styles.input}
+                                  placeholder="60"
+                                  required
+                              />
+                            </div>
+                          </div>
+
+                          <div
+                              style={{
+                                display: 'flex',
+                                gap: 10,
+                                marginTop: 8,
+                                flexWrap: 'wrap',
+                              }}
+                          >
+                            <button
+                                type="submit"
+                                disabled={savingTreatment}
+                                style={styles.primaryButton}
+                            >
+                              {savingTreatment
+                                  ? 'Salvando...'
+                                  : 'Salvar'}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setTreatmentForm(null)
+                                }
+                                style={
+                                  styles.secondaryButton
+                                }
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                    )}
+
+                    {treatmentsLoading ? (
+                        <p style={styles.info}>
+                          Carregando...
+                        </p>
+                    ) : treatments.length === 0 ? (
+                        <p style={styles.info}>
+                          Nenhum tratamento cadastrado ainda.
+                        </p>
+                    ) : (
+                        <div
+                            style={{
+                              ...styles.list,
+                              ...(isMobile
+                                  ? {}
+                                  : styles.listGrid),
+                              marginTop: 20,
+                            }}
+                        >
+                          {treatments.map(
+                              (treatment) => (
+                                  <div
+                                      key={treatment.id}
+                                      style={styles.card}
+                                  >
+                                    <div style={styles.cardTop}>
+                                      <strong style={styles.time}>
+                                        {treatment.name}
+                                      </strong>
+
+                                      <span
+                                          style={{
+                                            ...styles.badge,
+                                            background:
+                                                treatment.active
+                                                    ? '#2E7D32'
+                                                    : '#8A8A8A',
+                                          }}
+                                      >
                         {treatment.active
                             ? 'Ativo'
                             : 'Inativo'}
                       </span>
+                                    </div>
+
+                                    {!!treatment.description && (
+                                        <p style={styles.detail}>
+                                          {
+                                            treatment.description
+                                          }
+                                        </p>
+                                    )}
+
+                                    <p style={styles.detail}>
+                                      {formatPrice(
+                                          treatment.price
+                                      )}{' '}
+                                      ·{' '}
+                                      {
+                                        treatment.durationMinutes
+                                      }{' '}
+                                      min
+                                    </p>
+
+                                    <div style={styles.actions}>
+                                      <button
+                                          onClick={() =>
+                                              openEditTreatmentForm(
+                                                  treatment
+                                              )
+                                          }
+                                          style={
+                                            styles.actionButton
+                                          }
+                                      >
+                                        Editar
+                                      </button>
+
+                                      <button
+                                          onClick={() =>
+                                              toggleTreatmentActive(
+                                                  treatment
+                                              )
+                                          }
+                                          disabled={
+                                              togglingId ===
+                                              treatment.id
+                                          }
+                                          style={{
+                                            ...styles.actionButton,
+                                            borderColor:
+                                                treatment.active
+                                                    ? '#B3261E'
+                                                    : '#2E7D32',
+                                            color:
+                                                treatment.active
+                                                    ? '#B3261E'
+                                                    : '#2E7D32',
+                                          }}
+                                      >
+                                        {togglingId ===
+                                        treatment.id
+                                            ? '...'
+                                            : treatment.active
+                                                ? 'Desativar'
+                                                : 'Ativar'}
+                                      </button>
+                                    </div>
+                                  </div>
+                              )
+                          )}
+                        </div>
+                    )}
+                  </section>
+              )}
+
+              {/* =========================
+          FOTOS
+      ========================= */}
+
+              {tab === 'fotos' && (
+                  <section>
+                    {photosError && (
+                        <div style={styles.errorBox}>{photosError}</div>
+                    )}
+
+                    <p style={styles.helperText}>
+                      As fotos ativas aparecem no carrossel da página inicial, na
+                      ordem definida abaixo. Cole o link de uma imagem já publicada
+                      na internet (por exemplo, um link do Google Drive, Imgur ou
+                      Instagram) — ainda não é possível enviar o arquivo direto do
+                      computador ou celular por aqui.
+                    </p>
+
+                    {!photoForm && (
+                        <button
+                            onClick={openNewPhotoForm}
+                            style={styles.primaryButton}
+                        >
+                          + Nova foto
+                        </button>
+                    )}
+
+                    {photoForm && (
+                        <form onSubmit={savePhoto} style={styles.form}>
+                          <h3 style={styles.formTitle}>
+                            {photoForm.id ? 'Editar foto' : 'Nova foto'}
+                          </h3>
+
+                          <label style={styles.label}>Link da imagem</label>
+                          <input
+                              type="text"
+                              value={photoForm.url}
+                              onChange={(event) =>
+                                  setPhotoForm({ ...photoForm, url: event.target.value })
+                              }
+                              style={styles.input}
+                              placeholder="https://..."
+                              required
+                          />
+
+                          {photoForm.url.trim() && (
+                              <img
+                                  src={photoForm.url}
+                                  alt="Pré-visualização"
+                                  style={styles.photoPreview}
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                  }}
+                              />
+                          )}
+
+                          <label style={styles.label}>Título / legenda (opcional)</label>
+                          <input
+                              type="text"
+                              value={photoForm.title}
+                              onChange={(event) =>
+                                  setPhotoForm({ ...photoForm, title: event.target.value })
+                              }
+                              style={styles.input}
+                              placeholder="Ex: Limpeza de Pele Profunda"
+                          />
+
+                          <label style={styles.label}>Ordem de exibição</label>
+                          <input
+                              type="number"
+                              value={photoForm.sortOrder}
+                              onChange={(event) =>
+                                  setPhotoForm({
+                                    ...photoForm,
+                                    sortOrder: event.target.value,
+                                  })
+                              }
+                              style={styles.input}
+                              placeholder="0"
+                          />
+
+                          <div
+                              style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}
+                          >
+                            <button
+                                type="submit"
+                                disabled={savingPhoto}
+                                style={styles.primaryButton}
+                            >
+                              {savingPhoto ? 'Salvando...' : 'Salvar'}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setPhotoForm(null)}
+                                style={styles.secondaryButton}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                    )}
+
+                    {photosLoading ? (
+                        <p style={styles.info}>Carregando...</p>
+                    ) : photos.length === 0 ? (
+                        <p style={styles.info}>Nenhuma foto cadastrada ainda.</p>
+                    ) : (
+                        <div
+                            style={{
+                              ...styles.photoGrid,
+                              marginTop: 20,
+                            }}
+                        >
+                          {photos.map((photo) => (
+                              <div key={photo.id} style={styles.card}>
+                                <img
+                                    src={photo.url}
+                                    alt={photo.title ?? ''}
+                                    style={styles.photoThumb}
+                                />
+
+                                <div style={styles.cardTop}>
+                                  <strong style={styles.clientName}>
+                                    {photo.title || '(sem título)'}
+                                  </strong>
+
+                                  <span
+                                      style={{
+                                        ...styles.badge,
+                                        background: photo.active ? '#2E7D32' : '#8A8A8A',
+                                      }}
+                                  >
+                        {photo.active ? 'Ativa' : 'Inativa'}
+                      </span>
                                 </div>
 
-                                {!!treatment.description && (
-                                    <p style={styles.detail}>
-                                      {
-                                        treatment.description
-                                      }
-                                    </p>
-                                )}
-
-                                <p style={styles.detail}>
-                                  {formatPrice(
-                                      treatment.price
-                                  )}{' '}
-                                  ·{' '}
-                                  {
-                                    treatment.durationMinutes
-                                  }{' '}
-                                  min
-                                </p>
+                                <p style={styles.detail}>Ordem: {photo.sortOrder}</p>
 
                                 <div style={styles.actions}>
                                   <button
-                                      onClick={() =>
-                                          openEditTreatmentForm(
-                                              treatment
-                                          )
-                                      }
-                                      style={
-                                        styles.actionButton
-                                      }
+                                      onClick={() => openEditPhotoForm(photo)}
+                                      style={styles.actionButton}
                                   >
                                     Editar
                                   </button>
 
                                   <button
-                                      onClick={() =>
-                                          toggleTreatmentActive(
-                                              treatment
-                                          )
-                                      }
-                                      disabled={
-                                          togglingId ===
-                                          treatment.id
-                                      }
+                                      onClick={() => togglePhotoActive(photo)}
+                                      disabled={photoBusyId === photo.id}
                                       style={{
                                         ...styles.actionButton,
-                                        borderColor:
-                                            treatment.active
-                                                ? '#B3261E'
-                                                : '#2E7D32',
-                                        color:
-                                            treatment.active
-                                                ? '#B3261E'
-                                                : '#2E7D32',
+                                        borderColor: photo.active ? '#B3261E' : '#2E7D32',
+                                        color: photo.active ? '#B3261E' : '#2E7D32',
                                       }}
                                   >
-                                    {togglingId ===
-                                    treatment.id
+                                    {photoBusyId === photo.id
                                         ? '...'
-                                        : treatment.active
+                                        : photo.active
                                             ? 'Desativar'
                                             : 'Ativar'}
                                   </button>
+
+                                  <button
+                                      onClick={() => deletePhoto(photo)}
+                                      disabled={photoBusyId === photo.id}
+                                      style={{
+                                        ...styles.actionButton,
+                                        borderColor: '#B3261E',
+                                        color: '#B3261E',
+                                      }}
+                                  >
+                                    Excluir
+                                  </button>
                                 </div>
                               </div>
-                          )
-                      )}
-                    </div>
-                )}
-              </section>
-          )}
+                          ))}
+                        </div>
+                    )}
+                  </section>
+              )}
 
-          {/* =========================
-          FOTOS
-      ========================= */}
-
-          {tab === 'fotos' && (
-              <section>
-                {photosError && (
-                    <div style={styles.errorBox}>{photosError}</div>
-                )}
-
-                <p style={styles.helperText}>
-                  As fotos ativas aparecem no carrossel da página inicial, na
-                  ordem definida abaixo. Cole o link de uma imagem já publicada
-                  na internet (por exemplo, um link do Google Drive, Imgur ou
-                  Instagram) — ainda não é possível enviar o arquivo direto do
-                  computador ou celular por aqui.
-                </p>
-
-                {!photoForm && (
-                    <button
-                        onClick={openNewPhotoForm}
-                        style={styles.primaryButton}
-                    >
-                      + Nova foto
-                    </button>
-                )}
-
-                {photoForm && (
-                    <form onSubmit={savePhoto} style={styles.form}>
-                      <h3 style={styles.formTitle}>
-                        {photoForm.id ? 'Editar foto' : 'Nova foto'}
-                      </h3>
-
-                      <label style={styles.label}>Link da imagem</label>
-                      <input
-                          type="text"
-                          value={photoForm.url}
-                          onChange={(event) =>
-                              setPhotoForm({ ...photoForm, url: event.target.value })
-                          }
-                          style={styles.input}
-                          placeholder="https://..."
-                          required
-                      />
-
-                      {photoForm.url.trim() && (
-                          <img
-                              src={photoForm.url}
-                              alt="Pré-visualização"
-                              style={styles.photoPreview}
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                              }}
-                          />
-                      )}
-
-                      <label style={styles.label}>Título / legenda (opcional)</label>
-                      <input
-                          type="text"
-                          value={photoForm.title}
-                          onChange={(event) =>
-                              setPhotoForm({ ...photoForm, title: event.target.value })
-                          }
-                          style={styles.input}
-                          placeholder="Ex: Limpeza de Pele Profunda"
-                      />
-
-                      <label style={styles.label}>Ordem de exibição</label>
-                      <input
-                          type="number"
-                          value={photoForm.sortOrder}
-                          onChange={(event) =>
-                              setPhotoForm({
-                                ...photoForm,
-                                sortOrder: event.target.value,
-                              })
-                          }
-                          style={styles.input}
-                          placeholder="0"
-                      />
-
-                      <div
-                          style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}
-                      >
-                        <button
-                            type="submit"
-                            disabled={savingPhoto}
-                            style={styles.primaryButton}
-                        >
-                          {savingPhoto ? 'Salvando...' : 'Salvar'}
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setPhotoForm(null)}
-                            style={styles.secondaryButton}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                )}
-
-                {photosLoading ? (
-                    <p style={styles.info}>Carregando...</p>
-                ) : photos.length === 0 ? (
-                    <p style={styles.info}>Nenhuma foto cadastrada ainda.</p>
-                ) : (
-                    <div
-                        style={{
-                          ...styles.photoGrid,
-                          marginTop: 20,
-                        }}
-                    >
-                      {photos.map((photo) => (
-                          <div key={photo.id} style={styles.card}>
-                            <img
-                                src={photo.url}
-                                alt={photo.title ?? ''}
-                                style={styles.photoThumb}
-                            />
-
-                            <div style={styles.cardTop}>
-                              <strong style={styles.clientName}>
-                                {photo.title || '(sem título)'}
-                              </strong>
-
-                              <span
-                                  style={{
-                                    ...styles.badge,
-                                    background: photo.active ? '#2E7D32' : '#8A8A8A',
-                                  }}
-                              >
-                        {photo.active ? 'Ativa' : 'Inativa'}
-                      </span>
-                            </div>
-
-                            <p style={styles.detail}>Ordem: {photo.sortOrder}</p>
-
-                            <div style={styles.actions}>
-                              <button
-                                  onClick={() => openEditPhotoForm(photo)}
-                                  style={styles.actionButton}
-                              >
-                                Editar
-                              </button>
-
-                              <button
-                                  onClick={() => togglePhotoActive(photo)}
-                                  disabled={photoBusyId === photo.id}
-                                  style={{
-                                    ...styles.actionButton,
-                                    borderColor: photo.active ? '#B3261E' : '#2E7D32',
-                                    color: photo.active ? '#B3261E' : '#2E7D32',
-                                  }}
-                              >
-                                {photoBusyId === photo.id
-                                    ? '...'
-                                    : photo.active
-                                        ? 'Desativar'
-                                        : 'Ativar'}
-                              </button>
-
-                              <button
-                                  onClick={() => deletePhoto(photo)}
-                                  disabled={photoBusyId === photo.id}
-                                  style={{
-                                    ...styles.actionButton,
-                                    borderColor: '#B3261E',
-                                    color: '#B3261E',
-                                  }}
-                              >
-                                Excluir
-                              </button>
-                            </div>
-                          </div>
-                      ))}
-                    </div>
-                )}
-              </section>
-          )}
-
-          {/* =========================
+              {/* =========================
           SITE (textos e contato)
       ========================= */}
 
-          {tab === 'site' && (
-              <section>
-                {siteError && <div style={styles.errorBox}>{siteError}</div>}
+              {tab === 'site' && (
+                  <section>
+                    {siteError && <div style={styles.errorBox}>{siteError}</div>}
 
-                {siteLoading || !siteForm ? (
-                    <p style={styles.info}>Carregando...</p>
-                ) : (
-                    <form onSubmit={saveSiteSettings} style={styles.form}>
+                    {siteLoading || !siteForm ? (
+                        <p style={styles.info}>Carregando...</p>
+                    ) : (
+                        <form onSubmit={saveSiteSettings} style={styles.form}>
 
-                      <p style={styles.helperText}>
-                        Tudo que aparece na página do site (textos, selos, cards, perguntas
-                        frequentes, rodapé) pode ser editado aqui. Deixe um campo em branco
-                        para usar o texto padrão. Imagens são links (cole o endereço de uma
-                        imagem já publicada na internet).
-                      </p>
+                          <p style={styles.helperText}>
+                            Tudo que aparece na página do site (textos, selos, cards, perguntas
+                            frequentes, rodapé) pode ser editado aqui. Deixe um campo em branco
+                            para usar o texto padrão. Imagens são links (cole o endereço de uma
+                            imagem já publicada na internet).
+                          </p>
 
-                      {/* --- Cabeçalho --- */}
-                      <h3 style={styles.formTitle}>Cabeçalho</h3>
+                          {/* --- Cabeçalho --- */}
+                          <h3 style={styles.formTitle}>Cabeçalho</h3>
 
-                      <label style={styles.label}>Link do logo</label>
-                      <input
-                          type="text"
-                          value={siteForm.logoUrl}
-                          onChange={(event) => setSiteForm({ ...siteForm, logoUrl: event.target.value })}
-                          style={styles.input}
-                          placeholder="/logo.jpg.jpeg"
-                      />
-
-                      {/* --- Hero (topo do site) --- */}
-                      <h3 style={styles.formTitle}>Topo do site (Hero)</h3>
-
-                      <label style={styles.label}>Frase de destaque (acima do título)</label>
-                      <input
-                          type="text"
-                          value={siteForm.heroEyebrow}
-                          onChange={(event) => setSiteForm({ ...siteForm, heroEyebrow: event.target.value })}
-                          style={styles.input}
-                          placeholder="Realce sua beleza natural"
-                      />
-
-                      <label style={styles.label}>Título principal</label>
-                      <input
-                          type="text"
-                          value={siteForm.heroTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, heroTitle: event.target.value })}
-                          style={styles.input}
-                          placeholder="Sua melhor versão começa aqui"
-                      />
-
-                      <label style={styles.label}>Subtítulo</label>
-                      <textarea
-                          value={siteForm.heroSubtitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, heroSubtitle: event.target.value })}
-                          style={{ ...styles.input, minHeight: 70, fontFamily: 'inherit', resize: 'vertical' }}
-                      />
-
-                      <label style={styles.label}>Selos de confiança (ícone + texto)</label>
-                      <div style={styles.list}>
-                        {siteForm.heroTrustItems.map((item, index) => (
-                            <div key={index} style={styles.listItemRow}>
-                              <input
-                                  type="text"
-                                  value={item.icon}
-                                  onChange={(e) => updateListItem('heroTrustItems', index, { icon: e.target.value })}
-                                  style={styles.iconInput}
-                                  placeholder="🛡️"
-                              />
-                              <input
-                                  type="text"
-                                  value={item.text}
-                                  onChange={(e) => updateListItem('heroTrustItems', index, { text: e.target.value })}
-                                  style={{ ...styles.input, marginBottom: 0, flex: 1 }}
-                                  placeholder="Procedimentos seguros"
-                              />
-                              <button
-                                  type="button"
-                                  onClick={() => removeListItem('heroTrustItems', index)}
-                                  style={styles.removeButton}
-                              >
-                                Remover
-                              </button>
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            onClick={() => addListItem('heroTrustItems', { icon: '⭐', text: '' })}
-                            style={styles.secondaryButton}
-                        >
-                          + Adicionar selo
-                        </button>
-                      </div>
-
-                      {/* --- Faixa de benefícios --- */}
-                      <h3 style={styles.formTitle}>Faixa de benefícios</h3>
-                      <p style={styles.helperText}>Aparece como uma faixa escura logo abaixo do topo.</p>
-
-                      <div style={styles.list}>
-                        {siteForm.benefitsItems.map((item, index) => (
-                            <div key={index} style={styles.listItemRow}>
-                              <input
-                                  type="text"
-                                  value={item.icon}
-                                  onChange={(e) => updateListItem('benefitsItems', index, { icon: e.target.value })}
-                                  style={styles.iconInput}
-                                  placeholder="⭐"
-                              />
-                              <input
-                                  type="text"
-                                  value={item.text}
-                                  onChange={(e) => updateListItem('benefitsItems', index, { text: e.target.value })}
-                                  style={{ ...styles.input, marginBottom: 0, flex: 1 }}
-                                  placeholder="Atendimento Exclusivo e Personalizado"
-                              />
-                              <button
-                                  type="button"
-                                  onClick={() => removeListItem('benefitsItems', index)}
-                                  style={styles.removeButton}
-                              >
-                                Remover
-                              </button>
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            onClick={() => addListItem('benefitsItems', { icon: '⭐', text: '' })}
-                            style={styles.secondaryButton}
-                        >
-                          + Adicionar item
-                        </button>
-                      </div>
-
-                      {/* --- Indicações --- */}
-                      <h3 style={styles.formTitle}>Seção "Indicações" (cards de quem se beneficia)</h3>
-
-                      <label style={styles.label}>Título da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.indicationsSectionTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, indicationsSectionTitle: event.target.value })}
-                          style={styles.input}
-                          placeholder="Nossos tratamentos são ideais para quem busca:"
-                      />
-
-                      <label style={styles.label}>Cards (ícone + título + texto)</label>
-                      <div style={styles.list}>
-                        {siteForm.indicationsItems.map((item, index) => (
-                            <div key={index} style={styles.listItemBox}>
-                              <div style={styles.listItemRow}>
-                                <input
-                                    type="text"
-                                    value={item.icon}
-                                    onChange={(e) => updateListItem('indicationsItems', index, { icon: e.target.value })}
-                                    style={styles.iconInput}
-                                    placeholder="✨"
-                                />
-                                <input
-                                    type="text"
-                                    value={item.title}
-                                    onChange={(e) => updateListItem('indicationsItems', index, { title: e.target.value })}
-                                    style={{ ...styles.input, marginBottom: 0, flex: 1 }}
-                                    placeholder="Título do card"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeListItem('indicationsItems', index)}
-                                    style={styles.removeButton}
-                                >
-                                  Remover
-                                </button>
-                              </div>
-                              <textarea
-                                  value={item.text}
-                                  onChange={(e) => updateListItem('indicationsItems', index, { text: e.target.value })}
-                                  style={{ ...styles.input, minHeight: 55, marginTop: 8, marginBottom: 0, fontFamily: 'inherit', resize: 'vertical' }}
-                                  placeholder="Descrição do card"
-                              />
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            onClick={() => addListItem('indicationsItems', { icon: '✨', title: '', text: '' })}
-                            style={styles.secondaryButton}
-                        >
-                          + Adicionar card
-                        </button>
-                      </div>
-
-                      {/* --- Sobre --- */}
-                      <h3 style={styles.formTitle}>Sobre</h3>
-
-                      <label style={styles.label}>Selo acima do nome (ex: "Sua Esteticista")</label>
-                      <input
-                          type="text"
-                          value={siteForm.aboutBadgeText}
-                          onChange={(event) => setSiteForm({ ...siteForm, aboutBadgeText: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Link da foto da seção "Sobre"</label>
-                      <input
-                          type="text"
-                          value={siteForm.aboutPhotoUrl}
-                          onChange={(event) => setSiteForm({ ...siteForm, aboutPhotoUrl: event.target.value })}
-                          style={styles.input}
-                          placeholder="https://..."
-                      />
-                      {siteForm.aboutPhotoUrl.trim() && (
-                          <img
-                              src={siteForm.aboutPhotoUrl}
-                              alt="Pré-visualização"
-                              style={styles.photoPreview}
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                          />
-                      )}
-
-                      <label style={styles.label}>Texto "Sobre" (um parágrafo por linha)</label>
-                      <textarea
-                          value={siteForm.aboutText}
-                          onChange={(event) =>
-                              setSiteForm({ ...siteForm, aboutText: event.target.value })
-                          }
-                          style={{ ...styles.input, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
-                      />
-
-                      {/* --- Tratamentos (cabeçalho da seção) --- */}
-                      <h3 style={styles.formTitle}>Seção "Tratamentos" (cabeçalho)</h3>
-                      <p style={styles.helperText}>
-                        Os tratamentos em si (nome, preço, descrição) são editados na aba
-                        "Tratamentos".
-                      </p>
-
-                      <label style={styles.label}>Frase de destaque</label>
-                      <input
-                          type="text"
-                          value={siteForm.treatmentsEyebrow}
-                          onChange={(event) => setSiteForm({ ...siteForm, treatmentsEyebrow: event.target.value })}
-                          style={styles.input}
-                          placeholder="Nossos tratamentos"
-                      />
-
-                      <label style={styles.label}>Título da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.treatmentsSectionTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, treatmentsSectionTitle: event.target.value })}
-                          style={styles.input}
-                          placeholder="Cuidados para realçar sua beleza"
-                      />
-
-                      <label style={styles.label}>Subtítulo da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.treatmentsSectionSubtitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, treatmentsSectionSubtitle: event.target.value })}
-                          style={styles.input}
-                          placeholder="Procedimentos faciais personalizados para suas necessidades"
-                      />
-
-                      {/* --- Localização --- */}
-                      <h3 style={styles.formTitle}>Seção "Onde Estamos"</h3>
-
-                      <label style={styles.label}>Título da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.locationSectionTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, locationSectionTitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Subtítulo da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.locationSectionSubtitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, locationSectionSubtitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Endereço (uma linha por parte)</label>
-                      <textarea
-                          value={siteForm.address}
-                          onChange={(event) =>
-                              setSiteForm({ ...siteForm, address: event.target.value })
-                          }
-                          style={{ ...styles.input, minHeight: 80, fontFamily: 'inherit', resize: 'vertical' }}
-                          placeholder={'Rua Exemplo, 123\nBairro, Cidade - UF\nCEP: 00000-000'}
-                      />
-
-                      <label style={styles.label}>Horário de atendimento</label>
-                      <input
-                          type="text"
-                          value={siteForm.openingHoursText}
-                          onChange={(event) =>
-                              setSiteForm({
-                                ...siteForm,
-                                openingHoursText: event.target.value,
-                              })
-                          }
-                          style={styles.input}
-                      />
-
-                      {/* --- Agendamento --- */}
-                      <h3 style={styles.formTitle}>Seção "Agendamento" (cabeçalho)</h3>
-
-                      <label style={styles.label}>Título da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.bookingSectionTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, bookingSectionTitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Subtítulo da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.bookingSectionSubtitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, bookingSectionSubtitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      {/* --- Depoimentos (cabeçalho) --- */}
-                      <h3 style={styles.formTitle}>Seção "Depoimentos" (cabeçalho)</h3>
-                      <p style={styles.helperText}>
-                        Os depoimentos em si são aprovados na aba "Depoimentos".
-                      </p>
-
-                      <label style={styles.label}>Título da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.testimonialsSectionTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionTitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Subtítulo da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.testimonialsSectionSubtitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionSubtitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      {/* --- FAQ --- */}
-                      <h3 style={styles.formTitle}>Perguntas Frequentes</h3>
-
-                      <label style={styles.label}>Título da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.faqSectionTitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, faqSectionTitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Subtítulo da seção</label>
-                      <input
-                          type="text"
-                          value={siteForm.faqSectionSubtitle}
-                          onChange={(event) => setSiteForm({ ...siteForm, faqSectionSubtitle: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <label style={styles.label}>Perguntas e respostas</label>
-                      <div style={styles.list}>
-                        {siteForm.faqItems.map((item, index) => (
-                            <div key={index} style={styles.listItemBox}>
-                              <div style={styles.listItemRow}>
-                                <input
-                                    type="text"
-                                    value={item.question}
-                                    onChange={(e) => updateListItem('faqItems', index, { question: e.target.value })}
-                                    style={{ ...styles.input, marginBottom: 0, flex: 1 }}
-                                    placeholder="Pergunta"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeListItem('faqItems', index)}
-                                    style={styles.removeButton}
-                                >
-                                  Remover
-                                </button>
-                              </div>
-                              <textarea
-                                  value={item.answer}
-                                  onChange={(e) => updateListItem('faqItems', index, { answer: e.target.value })}
-                                  style={{ ...styles.input, minHeight: 70, marginTop: 8, marginBottom: 0, fontFamily: 'inherit', resize: 'vertical' }}
-                                  placeholder="Resposta"
-                              />
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            onClick={() => addListItem('faqItems', { question: '', answer: '' })}
-                            style={styles.secondaryButton}
-                        >
-                          + Adicionar pergunta
-                        </button>
-                      </div>
-
-                      {/* --- Rodapé / Contato --- */}
-                      <h3 style={styles.formTitle}>Rodapé e contato</h3>
-
-                      <label style={styles.label}>Frase do rodapé</label>
-                      <textarea
-                          value={siteForm.footerTagline}
-                          onChange={(event) => setSiteForm({ ...siteForm, footerTagline: event.target.value })}
-                          style={{ ...styles.input, minHeight: 60, fontFamily: 'inherit', resize: 'vertical' }}
-                      />
-
-                      <label style={styles.label}>Texto de direitos autorais</label>
-                      <input
-                          type="text"
-                          value={siteForm.footerCopyrightText}
-                          onChange={(event) => setSiteForm({ ...siteForm, footerCopyrightText: event.target.value })}
-                          style={styles.input}
-                      />
-
-                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                        <div style={{ flex: '1 1 200px' }}>
-                          <label style={styles.label}>WhatsApp</label>
+                          <label style={styles.label}>Link do logo</label>
                           <input
                               type="text"
-                              value={siteForm.whatsapp}
+                              value={siteForm.logoUrl}
+                              onChange={(event) => setSiteForm({ ...siteForm, logoUrl: event.target.value })}
+                              style={styles.input}
+                              placeholder="/logo.jpg.jpeg"
+                          />
+
+                          {/* --- Hero (topo do site) --- */}
+                          <h3 style={styles.formTitle}>Topo do site (Hero)</h3>
+
+                          <label style={styles.label}>Frase de destaque (acima do título)</label>
+                          <input
+                              type="text"
+                              value={siteForm.heroEyebrow}
+                              onChange={(event) => setSiteForm({ ...siteForm, heroEyebrow: event.target.value })}
+                              style={styles.input}
+                              placeholder="Realce sua beleza natural"
+                          />
+
+                          <label style={styles.label}>Título principal</label>
+                          <input
+                              type="text"
+                              value={siteForm.heroTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, heroTitle: event.target.value })}
+                              style={styles.input}
+                              placeholder="Sua melhor versão começa aqui"
+                          />
+
+                          <label style={styles.label}>Subtítulo</label>
+                          <textarea
+                              value={siteForm.heroSubtitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, heroSubtitle: event.target.value })}
+                              style={{ ...styles.input, minHeight: 70, fontFamily: 'inherit', resize: 'vertical' }}
+                          />
+
+                          <label style={styles.label}>Selos de confiança (ícone + texto)</label>
+                          <div style={styles.list}>
+                            {siteForm.heroTrustItems.map((item, index) => (
+                                <div key={index} style={styles.listItemRow}>
+                                  <input
+                                      type="text"
+                                      value={item.icon}
+                                      onChange={(e) => updateListItem('heroTrustItems', index, { icon: e.target.value })}
+                                      style={styles.iconInput}
+                                      placeholder="🛡️"
+                                  />
+                                  <input
+                                      type="text"
+                                      value={item.text}
+                                      onChange={(e) => updateListItem('heroTrustItems', index, { text: e.target.value })}
+                                      style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                      placeholder="Procedimentos seguros"
+                                  />
+                                  <button
+                                      type="button"
+                                      onClick={() => removeListItem('heroTrustItems', index)}
+                                      style={styles.removeButton}
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addListItem('heroTrustItems', { icon: '⭐', text: '' })}
+                                style={styles.secondaryButton}
+                            >
+                              + Adicionar selo
+                            </button>
+                          </div>
+
+                          {/* --- Faixa de benefícios --- */}
+                          <h3 style={styles.formTitle}>Faixa de benefícios</h3>
+                          <p style={styles.helperText}>Aparece como uma faixa escura logo abaixo do topo.</p>
+
+                          <div style={styles.list}>
+                            {siteForm.benefitsItems.map((item, index) => (
+                                <div key={index} style={styles.listItemRow}>
+                                  <input
+                                      type="text"
+                                      value={item.icon}
+                                      onChange={(e) => updateListItem('benefitsItems', index, { icon: e.target.value })}
+                                      style={styles.iconInput}
+                                      placeholder="⭐"
+                                  />
+                                  <input
+                                      type="text"
+                                      value={item.text}
+                                      onChange={(e) => updateListItem('benefitsItems', index, { text: e.target.value })}
+                                      style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                      placeholder="Atendimento Exclusivo e Personalizado"
+                                  />
+                                  <button
+                                      type="button"
+                                      onClick={() => removeListItem('benefitsItems', index)}
+                                      style={styles.removeButton}
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addListItem('benefitsItems', { icon: '⭐', text: '' })}
+                                style={styles.secondaryButton}
+                            >
+                              + Adicionar item
+                            </button>
+                          </div>
+
+                          {/* --- Indicações --- */}
+                          <h3 style={styles.formTitle}>Seção "Indicações" (cards de quem se beneficia)</h3>
+
+                          <label style={styles.label}>Título da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.indicationsSectionTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, indicationsSectionTitle: event.target.value })}
+                              style={styles.input}
+                              placeholder="Nossos tratamentos são ideais para quem busca:"
+                          />
+
+                          <label style={styles.label}>Cards (ícone + título + texto)</label>
+                          <div style={styles.list}>
+                            {siteForm.indicationsItems.map((item, index) => (
+                                <div key={index} style={styles.listItemBox}>
+                                  <div style={styles.listItemRow}>
+                                    <input
+                                        type="text"
+                                        value={item.icon}
+                                        onChange={(e) => updateListItem('indicationsItems', index, { icon: e.target.value })}
+                                        style={styles.iconInput}
+                                        placeholder="✨"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={item.title}
+                                        onChange={(e) => updateListItem('indicationsItems', index, { title: e.target.value })}
+                                        style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                        placeholder="Título do card"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeListItem('indicationsItems', index)}
+                                        style={styles.removeButton}
+                                    >
+                                      Remover
+                                    </button>
+                                  </div>
+                                  <textarea
+                                      value={item.text}
+                                      onChange={(e) => updateListItem('indicationsItems', index, { text: e.target.value })}
+                                      style={{ ...styles.input, minHeight: 55, marginTop: 8, marginBottom: 0, fontFamily: 'inherit', resize: 'vertical' }}
+                                      placeholder="Descrição do card"
+                                  />
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addListItem('indicationsItems', { icon: '✨', title: '', text: '' })}
+                                style={styles.secondaryButton}
+                            >
+                              + Adicionar card
+                            </button>
+                          </div>
+
+                          {/* --- Sobre --- */}
+                          <h3 style={styles.formTitle}>Sobre</h3>
+
+                          <label style={styles.label}>Selo acima do nome (ex: "Sua Esteticista")</label>
+                          <input
+                              type="text"
+                              value={siteForm.aboutBadgeText}
+                              onChange={(event) => setSiteForm({ ...siteForm, aboutBadgeText: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Link da foto da seção "Sobre"</label>
+                          <input
+                              type="text"
+                              value={siteForm.aboutPhotoUrl}
+                              onChange={(event) => setSiteForm({ ...siteForm, aboutPhotoUrl: event.target.value })}
+                              style={styles.input}
+                              placeholder="https://..."
+                          />
+                          {siteForm.aboutPhotoUrl.trim() && (
+                              <img
+                                  src={siteForm.aboutPhotoUrl}
+                                  alt="Pré-visualização"
+                                  style={styles.photoPreview}
+                                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                              />
+                          )}
+
+                          <label style={styles.label}>Texto "Sobre" (um parágrafo por linha)</label>
+                          <textarea
+                              value={siteForm.aboutText}
                               onChange={(event) =>
-                                  setSiteForm({ ...siteForm, whatsapp: event.target.value })
+                                  setSiteForm({ ...siteForm, aboutText: event.target.value })
                               }
-                              style={styles.input}
-                              placeholder="(11) 91622-4612"
+                              style={{ ...styles.input, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
                           />
-                        </div>
 
-                        <div style={{ flex: '1 1 200px' }}>
-                          <label style={styles.label}>E-mail de contato</label>
+                          {/* --- Tratamentos (cabeçalho da seção) --- */}
+                          <h3 style={styles.formTitle}>Seção "Tratamentos" (cabeçalho)</h3>
+                          <p style={styles.helperText}>
+                            Os tratamentos em si (nome, preço, descrição) são editados na aba
+                            "Tratamentos".
+                          </p>
+
+                          <label style={styles.label}>Frase de destaque</label>
                           <input
                               type="text"
-                              value={siteForm.footerContactEmail}
-                              onChange={(event) => setSiteForm({ ...siteForm, footerContactEmail: event.target.value })}
+                              value={siteForm.treatmentsEyebrow}
+                              onChange={(event) => setSiteForm({ ...siteForm, treatmentsEyebrow: event.target.value })}
                               style={styles.input}
-                              placeholder="contato@..."
+                              placeholder="Nossos tratamentos"
                           />
-                        </div>
 
-                        <div style={{ flex: '1 1 200px' }}>
-                          <label style={styles.label}>Link do Instagram</label>
+                          <label style={styles.label}>Título da seção</label>
                           <input
                               type="text"
-                              value={siteForm.instagramUrl}
+                              value={siteForm.treatmentsSectionTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, treatmentsSectionTitle: event.target.value })}
+                              style={styles.input}
+                              placeholder="Cuidados para realçar sua beleza"
+                          />
+
+                          <label style={styles.label}>Subtítulo da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.treatmentsSectionSubtitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, treatmentsSectionSubtitle: event.target.value })}
+                              style={styles.input}
+                              placeholder="Procedimentos faciais personalizados para suas necessidades"
+                          />
+
+                          {/* --- Localização --- */}
+                          <h3 style={styles.formTitle}>Seção "Onde Estamos"</h3>
+
+                          <label style={styles.label}>Título da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.locationSectionTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, locationSectionTitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Subtítulo da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.locationSectionSubtitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, locationSectionSubtitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Endereço (uma linha por parte)</label>
+                          <textarea
+                              value={siteForm.address}
+                              onChange={(event) =>
+                                  setSiteForm({ ...siteForm, address: event.target.value })
+                              }
+                              style={{ ...styles.input, minHeight: 80, fontFamily: 'inherit', resize: 'vertical' }}
+                              placeholder={'Rua Exemplo, 123\nBairro, Cidade - UF\nCEP: 00000-000'}
+                          />
+
+                          <label style={styles.label}>Horário de atendimento</label>
+                          <input
+                              type="text"
+                              value={siteForm.openingHoursText}
                               onChange={(event) =>
                                   setSiteForm({
                                     ...siteForm,
-                                    instagramUrl: event.target.value,
+                                    openingHoursText: event.target.value,
                                   })
                               }
                               style={styles.input}
-                              placeholder="https://www.instagram.com/..."
                           />
-                        </div>
-                      </div>
 
-                      <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center', position: 'sticky', bottom: 0, background: '#FAF9F6', padding: '12px 0' }}>
-                        <button
-                            type="submit"
-                            disabled={savingSite}
-                            style={styles.primaryButton}
-                        >
-                          {savingSite ? 'Salvando...' : 'Salvar alterações'}
-                        </button>
+                          {/* --- Agendamento --- */}
+                          <h3 style={styles.formTitle}>Seção "Agendamento" (cabeçalho)</h3>
 
-                        {siteSaved && (
-                            <span style={{ color: '#2E7D32', fontSize: 13, fontWeight: 600 }}>
+                          <label style={styles.label}>Título da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.bookingSectionTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, bookingSectionTitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Subtítulo da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.bookingSectionSubtitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, bookingSectionSubtitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          {/* --- Depoimentos (cabeçalho) --- */}
+                          <h3 style={styles.formTitle}>Seção "Depoimentos" (cabeçalho)</h3>
+                          <p style={styles.helperText}>
+                            Os depoimentos em si são aprovados na aba "Depoimentos".
+                          </p>
+
+                          <label style={styles.label}>Título da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.testimonialsSectionTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionTitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Subtítulo da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.testimonialsSectionSubtitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionSubtitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          {/* --- FAQ --- */}
+                          <h3 style={styles.formTitle}>Perguntas Frequentes</h3>
+
+                          <label style={styles.label}>Título da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.faqSectionTitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, faqSectionTitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Subtítulo da seção</label>
+                          <input
+                              type="text"
+                              value={siteForm.faqSectionSubtitle}
+                              onChange={(event) => setSiteForm({ ...siteForm, faqSectionSubtitle: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <label style={styles.label}>Perguntas e respostas</label>
+                          <div style={styles.list}>
+                            {siteForm.faqItems.map((item, index) => (
+                                <div key={index} style={styles.listItemBox}>
+                                  <div style={styles.listItemRow}>
+                                    <input
+                                        type="text"
+                                        value={item.question}
+                                        onChange={(e) => updateListItem('faqItems', index, { question: e.target.value })}
+                                        style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+                                        placeholder="Pergunta"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeListItem('faqItems', index)}
+                                        style={styles.removeButton}
+                                    >
+                                      Remover
+                                    </button>
+                                  </div>
+                                  <textarea
+                                      value={item.answer}
+                                      onChange={(e) => updateListItem('faqItems', index, { answer: e.target.value })}
+                                      style={{ ...styles.input, minHeight: 70, marginTop: 8, marginBottom: 0, fontFamily: 'inherit', resize: 'vertical' }}
+                                      placeholder="Resposta"
+                                  />
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addListItem('faqItems', { question: '', answer: '' })}
+                                style={styles.secondaryButton}
+                            >
+                              + Adicionar pergunta
+                            </button>
+                          </div>
+
+                          {/* --- Rodapé / Contato --- */}
+                          <h3 style={styles.formTitle}>Rodapé e contato</h3>
+
+                          <label style={styles.label}>Frase do rodapé</label>
+                          <textarea
+                              value={siteForm.footerTagline}
+                              onChange={(event) => setSiteForm({ ...siteForm, footerTagline: event.target.value })}
+                              style={{ ...styles.input, minHeight: 60, fontFamily: 'inherit', resize: 'vertical' }}
+                          />
+
+                          <label style={styles.label}>Texto de direitos autorais</label>
+                          <input
+                              type="text"
+                              value={siteForm.footerCopyrightText}
+                              onChange={(event) => setSiteForm({ ...siteForm, footerCopyrightText: event.target.value })}
+                              style={styles.input}
+                          />
+
+                          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                            <div style={{ flex: '1 1 200px' }}>
+                              <label style={styles.label}>WhatsApp</label>
+                              <input
+                                  type="text"
+                                  value={siteForm.whatsapp}
+                                  onChange={(event) =>
+                                      setSiteForm({ ...siteForm, whatsapp: event.target.value })
+                                  }
+                                  style={styles.input}
+                                  placeholder="(11) 91622-4612"
+                              />
+                            </div>
+
+                            <div style={{ flex: '1 1 200px' }}>
+                              <label style={styles.label}>E-mail de contato</label>
+                              <input
+                                  type="text"
+                                  value={siteForm.footerContactEmail}
+                                  onChange={(event) => setSiteForm({ ...siteForm, footerContactEmail: event.target.value })}
+                                  style={styles.input}
+                                  placeholder="contato@..."
+                              />
+                            </div>
+
+                            <div style={{ flex: '1 1 200px' }}>
+                              <label style={styles.label}>Link do Instagram</label>
+                              <input
+                                  type="text"
+                                  value={siteForm.instagramUrl}
+                                  onChange={(event) =>
+                                      setSiteForm({
+                                        ...siteForm,
+                                        instagramUrl: event.target.value,
+                                      })
+                                  }
+                                  style={styles.input}
+                                  placeholder="https://www.instagram.com/..."
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center', position: 'sticky', bottom: 0, background: '#FAF9F6', padding: '12px 0' }}>
+                            <button
+                                type="submit"
+                                disabled={savingSite}
+                                style={styles.primaryButton}
+                            >
+                              {savingSite ? 'Salvando...' : 'Salvar alterações'}
+                            </button>
+
+                            {siteSaved && (
+                                <span style={{ color: '#2E7D32', fontSize: 13, fontWeight: 600 }}>
                       Salvo com sucesso ✓
                     </span>
-                        )}
-                      </div>
-                    </form>
-                )}
-              </section>
-          )}
+                            )}
+                          </div>
+                        </form>
+                    )}
+                  </section>
+              )}
 
-          {/* =========================
+              {/* =========================
           DEPOIMENTOS
       ========================= */}
 
-          {tab === 'depoimentos' && (
-              <section>
-                {testimonialsError && (
-                    <div style={styles.errorBox}>
-                      {testimonialsError}
-                    </div>
-                )}
+              {tab === 'depoimentos' && (
+                  <section>
+                    {testimonialsError && (
+                        <div style={styles.errorBox}>
+                          {testimonialsError}
+                        </div>
+                    )}
 
-                {testimonialsLoading ? (
-                    <p style={styles.info}>
-                      Carregando...
-                    </p>
-                ) : pendingTestimonials.length === 0 ? (
-                    <p style={styles.info}>
-                      Nenhum depoimento aguardando
-                      aprovação.
-                    </p>
-                ) : (
-                    <div
-                        style={{
-                          ...styles.list,
-                          ...(isMobile
-                              ? {}
-                              : styles.listGrid),
-                        }}
-                    >
-                      {pendingTestimonials.map(
-                          (testimonial) => (
-                              <div
-                                  key={testimonial.id}
-                                  style={styles.card}
-                              >
-                                <div style={styles.cardTop}>
-                                  <strong style={styles.time}>
-                                    {
-                                      testimonial.clientName
-                                    }
-                                  </strong>
+                    {testimonialsLoading ? (
+                        <p style={styles.info}>
+                          Carregando...
+                        </p>
+                    ) : pendingTestimonials.length === 0 ? (
+                        <p style={styles.info}>
+                          Nenhum depoimento aguardando
+                          aprovação.
+                        </p>
+                    ) : (
+                        <div
+                            style={{
+                              ...styles.list,
+                              ...(isMobile
+                                  ? {}
+                                  : styles.listGrid),
+                            }}
+                        >
+                          {pendingTestimonials.map(
+                              (testimonial) => (
+                                  <div
+                                      key={testimonial.id}
+                                      style={styles.card}
+                                  >
+                                    <div style={styles.cardTop}>
+                                      <strong style={styles.time}>
+                                        {
+                                          testimonial.clientName
+                                        }
+                                      </strong>
 
-                                  <span style={styles.time}>
+                                      <span style={styles.time}>
                         {'⭐'.repeat(
                             testimonial.rating
                         )}
                       </span>
-                                </div>
+                                    </div>
 
-                                <p style={styles.detail}>
-                                  {testimonial.comment}
-                                </p>
+                                    <p style={styles.detail}>
+                                      {testimonial.comment}
+                                    </p>
 
-                                <div style={styles.actions}>
-                                  <button
-                                      onClick={() =>
-                                          approveTestimonial(
+                                    <div style={styles.actions}>
+                                      <button
+                                          onClick={() =>
+                                              approveTestimonial(
+                                                  testimonial.id
+                                              )
+                                          }
+                                          disabled={
+                                              moderatingId ===
                                               testimonial.id
-                                          )
-                                      }
-                                      disabled={
-                                          moderatingId ===
-                                          testimonial.id
-                                      }
-                                      style={{
-                                        ...styles.actionButton,
-                                        borderColor:
-                                            '#2E7D32',
-                                        color: '#2E7D32',
-                                      }}
-                                  >
-                                    {moderatingId ===
-                                    testimonial.id
-                                        ? '...'
-                                        : 'Aprovar'}
-                                  </button>
+                                          }
+                                          style={{
+                                            ...styles.actionButton,
+                                            borderColor:
+                                                '#2E7D32',
+                                            color: '#2E7D32',
+                                          }}
+                                      >
+                                        {moderatingId ===
+                                        testimonial.id
+                                            ? '...'
+                                            : 'Aprovar'}
+                                      </button>
 
-                                  <button
-                                      onClick={() =>
-                                          rejectTestimonial(
+                                      <button
+                                          onClick={() =>
+                                              rejectTestimonial(
+                                                  testimonial.id
+                                              )
+                                          }
+                                          disabled={
+                                              moderatingId ===
                                               testimonial.id
-                                          )
-                                      }
-                                      disabled={
-                                          moderatingId ===
-                                          testimonial.id
-                                      }
-                                      style={{
-                                        ...styles.actionButton,
-                                        borderColor:
-                                            '#B3261E',
-                                        color: '#B3261E',
-                                      }}
-                                  >
-                                    {moderatingId ===
-                                    testimonial.id
-                                        ? '...'
-                                        : 'Rejeitar'}
-                                  </button>
-                                </div>
-                              </div>
-                          )
-                      )}
-                    </div>
-                )}
-              </section>
-          )}
-        </div>
+                                          }
+                                          style={{
+                                            ...styles.actionButton,
+                                            borderColor:
+                                                '#B3261E',
+                                            color: '#B3261E',
+                                          }}
+                                      >
+                                        {moderatingId ===
+                                        testimonial.id
+                                            ? '...'
+                                            : 'Rejeitar'}
+                                      </button>
+                                    </div>
+                                  </div>
+                              )
+                          )}
+                        </div>
+                    )}
+                  </section>
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
   );
 }
@@ -2700,5 +2758,120 @@ const styles: {
     borderRadius: 10,
     marginBottom: 4,
     background: '#F0E4F5',
+  },
+
+  // --- Barra fixa do admin (por cima do site real) ---
+  adminBar: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 56,
+    backgroundColor: '#2D1537',
+    zIndex: 2000,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+    boxSizing: 'border-box',
+  },
+  adminBarContent: {
+    maxWidth: 1200,
+    margin: '0 auto',
+    height: '100%',
+    padding: '0 20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  adminBarBrand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
+  adminBarLogo: {
+    width: 30,
+    height: 30,
+    borderRadius: '50%',
+    objectFit: 'cover',
+  },
+  adminBarTitle: {
+    color: '#FFF',
+    fontWeight: 700,
+    fontSize: 14,
+    fontFamily: "'Playfair Display', serif",
+  },
+  adminBarSubtitle: {
+    color: '#D4A5E0',
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  adminBarActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
+  adminBarButton: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    color: '#FFF',
+    border: '1px solid rgba(255,255,255,0.3)',
+    padding: '8px 14px',
+    borderRadius: 20,
+    fontWeight: 600,
+    fontSize: 13,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  adminBarButtonActive: {
+    backgroundColor: '#A259C4',
+    borderColor: '#A259C4',
+  },
+
+  // --- Gaveta lateral de edição ---
+  drawerOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(45,21,55,0.35)',
+    zIndex: 2998,
+  },
+  drawer: {
+    position: 'fixed',
+    top: 0,
+    right: 0,
+    height: '100vh',
+    width: 440,
+    maxWidth: '100vw',
+    backgroundColor: '#FAF9F6',
+    boxShadow: '-8px 0 30px rgba(0,0,0,0.2)',
+    zIndex: 2999,
+    display: 'flex',
+    flexDirection: 'column',
+    transition: 'transform 0.25s ease',
+  },
+  drawerHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '18px 20px',
+    borderBottom: '1px solid #E8D7F1',
+    backgroundColor: '#FFF',
+    color: '#2D1537',
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 18,
+  },
+  drawerCloseButton: {
+    background: 'none',
+    border: 'none',
+    fontSize: 26,
+    lineHeight: 1,
+    color: '#2D1537',
+    cursor: 'pointer',
+  },
+  drawerBody: {
+    flex: 1,
+    overflowY: 'auto',
   },
 };

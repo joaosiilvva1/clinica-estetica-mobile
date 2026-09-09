@@ -108,7 +108,60 @@ const defaultSiteSettings: SiteSettings = {
   footerCopyrightText: '© 2026 Maria Yasmim Lopes Estética. Todos os direitos reservados.',
 };
 
-export default function LandingPage() {
+type EditSectionKey =
+    | 'hero'
+    | 'photos'
+    | 'benefits'
+    | 'indications'
+    | 'about'
+    | 'treatments'
+    | 'location'
+    | 'testimonials'
+    | 'faq'
+    | 'footer';
+
+type LandingPageProps = {
+  // Quando true, o site é renderizado com lápis de edição sobre cada seção
+  // (usado pelo painel administrativo, que reaproveita esta mesma página).
+  editable?: boolean;
+  onEditSection?: (section: EditSectionKey) => void;
+  // Empurra o header fixo (e a barra flutuante do WhatsApp) para baixo, para
+  // abrir espaço pra barra do admin quando esta página é usada no painel.
+  topOffset?: number;
+};
+
+function EditPencil({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+      <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClick();
+          }}
+          title={`Editar: ${label}`}
+          style={{
+            position: 'absolute',
+            top: 14,
+            right: 14,
+            zIndex: 40,
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            border: '2px solid #FFF',
+            backgroundColor: '#A259C4',
+            color: '#FFF',
+            fontSize: 15,
+            cursor: 'pointer',
+            boxShadow: '0 3px 10px rgba(45,21,55,0.4)',
+          }}
+      >
+        ✏️
+      </button>
+  );
+}
+
+export default function LandingPage({ editable = false, onEditSection, topOffset = 0 }: LandingPageProps = {}) {
+  const editSection = (section: EditSectionKey) => onEditSection?.(section);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [formData, setFormData] = useState({
@@ -537,7 +590,7 @@ export default function LandingPage() {
         </a>
 
         {/* Header Fixo e Limpo */}
-        <header style={styles.header}>
+        <header style={{ ...styles.header, top: topOffset }}>
           <div style={styles.headerContent}>
             <a href="#inicio" style={styles.logoContainer}>
               <img src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
@@ -562,7 +615,8 @@ export default function LandingPage() {
         </header>
 
         {/* Hero Section */}
-        <section style={styles.hero}>
+        <section style={{ ...styles.hero, position: 'relative' as const }}>
+          {editable && <EditPencil label="Início (título e texto)" onClick={() => editSection('hero')} />}
           <div style={styles.heroGrid}>
             <div style={styles.heroTextCol}>
               <span style={styles.eyebrow}>{siteSettings.heroEyebrow}</span>
@@ -590,7 +644,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div style={styles.heroPhotoCol}>
+            <div style={{ ...styles.heroPhotoCol, position: 'relative' as const }}>
+              {editable && <EditPencil label="Fotos" onClick={() => editSection('photos')} />}
               <div style={styles.carouselContainer}>
                 <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
                 <div style={styles.carouselSlide}>
@@ -615,7 +670,8 @@ export default function LandingPage() {
         </section>
 
         {/* Faixa de Benefícios */}
-        <section style={styles.benefitsBar}>
+        <section style={{ ...styles.benefitsBar, position: 'relative' as const }}>
+          {editable && <EditPencil label="Benefícios" onClick={() => editSection('benefits')} />}
           {siteSettings.benefitsItems.map((item, index) => (
               <div key={index} style={styles.benefitItem}>
                 {item.icon} <strong>{item.text}</strong>
@@ -624,7 +680,8 @@ export default function LandingPage() {
         </section>
 
         {/* Indicações */}
-        <section style={styles.indicationsSection}>
+        <section style={{ ...styles.indicationsSection, position: 'relative' as const }}>
+          {editable && <EditPencil label="Indicações" onClick={() => editSection('indications')} />}
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>{siteSettings.indicationsSectionTitle}</h2>
           </div>
@@ -640,7 +697,8 @@ export default function LandingPage() {
         </section>
 
         {/* About Section */}
-        <section id="sobre" style={styles.aboutSection}>
+        <section id="sobre" style={{ ...styles.aboutSection, position: 'relative' as const }}>
+          {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
           <div style={styles.aboutGrid}>
             <div style={styles.aboutPhotos}>
               <img src={siteSettings.aboutPhotoUrl} alt="Maria Yasmim Lopes" style={styles.aboutPhotoMain} />
@@ -658,7 +716,8 @@ export default function LandingPage() {
         </section>
 
         {/* Treatments Section */}
-        <section id="tratamentos" style={styles.section}>
+        <section id="tratamentos" style={{ ...styles.section, position: 'relative' as const }}>
+          {editable && <EditPencil label="Tratamentos" onClick={() => editSection('treatments')} />}
           <div style={styles.sectionHeader}>
             <span style={styles.eyebrowCentered}>{siteSettings.treatmentsEyebrow}</span>
             <h2 style={styles.sectionTitle}>{siteSettings.treatmentsSectionTitle}</h2>
@@ -682,7 +741,8 @@ export default function LandingPage() {
         </section>
 
         {/* Localização Atualizada */}
-        <section id="localizacao" style={styles.locationSection}>
+        <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
+          {editable && <EditPencil label="Localização" onClick={() => editSection('location')} />}
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>{siteSettings.locationSectionTitle}</h2>
             <p style={styles.sectionSubtitle}>{siteSettings.locationSectionSubtitle}</p>
@@ -871,7 +931,8 @@ export default function LandingPage() {
         </section>
 
         {/* Testimonials Section */}
-        <section id="depoimentos" style={styles.testimonialsSection}>
+        <section id="depoimentos" style={{ ...styles.testimonialsSection, position: 'relative' as const }}>
+          {editable && <EditPencil label="Depoimentos" onClick={() => editSection('testimonials')} />}
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>{siteSettings.testimonialsSectionTitle}</h2>
             <p style={styles.sectionSubtitle}>{siteSettings.testimonialsSectionSubtitle}</p>
@@ -969,7 +1030,8 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ */}
-        <section id="faq" style={styles.faqSection}>
+        <section id="faq" style={{ ...styles.faqSection, position: 'relative' as const }}>
+          {editable && <EditPencil label="Perguntas frequentes" onClick={() => editSection('faq')} />}
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>{siteSettings.faqSectionTitle}</h2>
             <p style={styles.sectionSubtitle}>{siteSettings.faqSectionSubtitle}</p>
@@ -1008,7 +1070,8 @@ export default function LandingPage() {
         )}
 
         {/* Footer */}
-        <footer id="contato" style={styles.footer}>
+        <footer id="contato" style={{ ...styles.footer, position: 'relative' as const }}>
+          {editable && <EditPencil label="Rodapé" onClick={() => editSection('footer')} />}
           <div style={styles.footerContent}>
             <div>
               <h3 style={styles.footerTitle}>Maria Yasmim Lopes</h3>
