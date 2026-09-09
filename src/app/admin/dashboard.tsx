@@ -1102,6 +1102,26 @@ export default function AdminDashboard() {
   const [editMode, setEditMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Altura real da barra do admin (medida, não fixa — ela quebra em 2 linhas
+  // em telas estreitas). Precisa estar aqui em cima, ANTES do `if (!token)`
+  // abaixo: hooks não podem ficar depois de um return condicional, senão o
+  // número de hooks muda entre renders e o React quebra (erro #310).
+  const ADMIN_BAR_HEIGHT = 56;
+  const adminBarRef = useRef<HTMLElement>(null);
+  const [adminBarHeight, setAdminBarHeight] = useState(ADMIN_BAR_HEIGHT);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (adminBarRef.current) {
+        const measured = adminBarRef.current.getBoundingClientRect().height;
+        if (measured > 0) setAdminBarHeight(measured);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isMobile, editMode]);
+
   const sectionToTab: Record<string, Tab> = {
     hero: 'site',
     photos: 'fotos',
@@ -1156,24 +1176,6 @@ export default function AdminDashboard() {
       label: 'Depoimentos',
     },
   ];
-  const ADMIN_BAR_HEIGHT = 56;
-  const adminBarRef = useRef<HTMLElement>(null);
-  const [adminBarHeight, setAdminBarHeight] = useState(ADMIN_BAR_HEIGHT);
-
-  // Mede a altura real da barra do admin (ela quebra em 2 linhas em telas
-  // estreitas), pra empurrar o site pra baixo na medida certa em vez de usar
-  // um número fixo que descola do conteúdo assim que o texto/botões mudam.
-  useLayoutEffect(() => {
-    const measure = () => {
-      if (adminBarRef.current) {
-        const measured = adminBarRef.current.getBoundingClientRect().height;
-        if (measured > 0) setAdminBarHeight(measured);
-      }
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [isMobile, editMode]);
 
   return (
       <div style={styles.pageBackground}>
