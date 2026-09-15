@@ -130,6 +130,33 @@ type LandingPageProps = {
     topOffset?: number;
 };
 
+// Revela um bloco suavemente quando ele entra na viewport (usado nas seções
+// abaixo da dobra: faixa de confiança, benefícios, etc). Dispara uma vez só.
+function useInView<T extends HTMLElement>(threshold = 0.15) {
+    const ref = React.useRef<T | null>(null);
+    const [inView, setInView] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        if (typeof IntersectionObserver === 'undefined') {
+            setInView(true);
+            return;
+        }
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setInView(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+    return [ref, inView] as const;
+}
+
 function EditPencil({ label, onClick, style }: { label: string; onClick: () => void; style?: React.CSSProperties }) {
     return (
         <button
@@ -247,6 +274,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-btn-secondary { transition: transform .35s cubic-bezier(.2,.8,.2,1), background-color .35s ease; }
       .myl-btn-secondary:hover { transform: translateY(-2px); background-color: rgba(45,21,55,0.05); }
 
+      .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
+      .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
+
       @media (prefers-reduced-motion: reduce) {
         .myl-fade-up, .myl-fade-in, .myl-float, .myl-scroll-cue { animation: none !important; opacity: 1 !important; transform: none !important; }
       }
@@ -277,6 +307,19 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         setHeroParallax({ x, y });
     };
     const resetHeroParallax = () => setHeroParallax({ x: 0, y: 0 });
+
+    const [trustBarRef, trustBarInView] = useInView<HTMLElement>();
+    const [indicationsRef, indicationsInView] = useInView<HTMLDivElement>();
+    const [aboutRef, aboutInView] = useInView<HTMLElement>();
+    const [aboutTilt, setAboutTilt] = useState({ x: 0, y: 0 });
+    const handleAboutMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isMobile) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+        const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        setAboutTilt({ x, y });
+    };
+    const resetAboutTilt = () => setAboutTilt({ x: 0, y: 0 });
 
     const defaultPhotos = [
         { id: '1', title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
@@ -749,12 +792,20 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </section>
 
             {/* Faixa de Benefícios */}
-            <section style={{ ...styles.benefitsBar, position: 'relative' as const }}>
+            <section ref={trustBarRef} style={{ ...styles.benefitsBar, position: 'relative' as const }}>
                 {editable && <EditPencil label="Benefícios" onClick={() => editSection('benefits')} />}
                 {siteSettings.benefitsItems.map((item, index) => (
-                    <div key={index} style={styles.benefitItem}>
-                        {item.icon} <strong>{item.text}</strong>
-                    </div>
+                    <React.Fragment key={index}>
+                        <div
+                            className={trustBarInView ? 'myl-fade-up' : ''}
+                            style={{ ...styles.benefitItem, opacity: trustBarInView ? undefined : 0, animationDelay: `${index * 0.12}s` }}
+                        >
+                            {item.icon} <strong>{item.text}</strong>
+                        </div>
+                        {index < siteSettings.benefitsItems.length - 1 && (
+                            <span style={{ width: '1px', height: '18px', background: 'linear-gradient(to bottom, transparent, rgba(250,249,246,0.35), transparent)' }} />
+                        )}
+                    </React.Fragment>
                 ))}
             </section>
 
@@ -764,9 +815,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 <div style={styles.sectionHeader}>
                     <h2 style={styles.sectionTitle}>{siteSettings.indicationsSectionTitle}</h2>
                 </div>
-                <div style={styles.indicationsGrid}>
+                <div ref={indicationsRef} style={styles.indicationsGrid}>
                     {siteSettings.indicationsItems.map((item, index) => (
-                        <div key={index} style={styles.indicationCard}>
+                        <div
+                            key={index}
+                            className={`myl-card-hover${indicationsInView ? ' myl-fade-up' : ''}`}
+                            style={{ ...styles.indicationCard, opacity: indicationsInView ? undefined : 0, animationDelay: `${index * 0.12}s` }}
+                        >
                             <div style={styles.indicationIcon}>{item.icon}</div>
                             <h4 style={styles.indicationTitle}>{item.title}</h4>
                             <p style={styles.indicationText}>{item.text}</p>
@@ -776,13 +831,39 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </section>
 
             {/* About Section */}
-            <section id="sobre" style={{ ...styles.aboutSection, position: 'relative' as const }}>
+            <section id="sobre" ref={aboutRef} style={{ ...styles.aboutSection, position: 'relative' as const }}>
                 {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
-                <div style={styles.aboutGrid}>
-                    <div style={styles.aboutPhotos}>
-                        <img src={siteSettings.aboutPhotoUrl} alt="Maria Yasmim Lopes" style={styles.aboutPhotoMain} />
+                <div style={{ ...styles.aboutGridEditorial, gridTemplateColumns: isMobile ? '1fr' : styles.aboutGridEditorial.gridTemplateColumns, gap: isMobile ? '24px' : '0px' }}>
+                    <div
+                        style={{ ...styles.aboutPhotoWrap, perspective: '1200px' }}
+                        onMouseMove={handleAboutMouseMove}
+                        onMouseLeave={resetAboutTilt}
+                    >
+                        <img
+                            src={siteSettings.aboutPhotoUrl}
+                            alt="Maria Yasmim Lopes"
+                            className={aboutInView ? 'myl-fade-up' : ''}
+                            style={{
+                                ...styles.aboutPhotoEditorial,
+                                height: isMobile ? '380px' : styles.aboutPhotoEditorial.height,
+                                opacity: aboutInView ? undefined : 0,
+                                transform: `perspective(1200px) rotateX(${aboutTilt.y * -3}deg) rotateY(${aboutTilt.x * 3}deg)`,
+                                transition: 'transform 0.2s ease-out',
+                            }}
+                        />
                     </div>
-                    <div style={styles.aboutText}>
+
+                    <div
+                        className={aboutInView ? 'myl-fade-up' : ''}
+                        style={{
+                            ...styles.aboutTextEditorial,
+                            gridColumn: isMobile ? '1 / 2' : styles.aboutTextEditorial.gridColumn,
+                            marginLeft: isMobile ? 0 : styles.aboutTextEditorial.marginLeft,
+                            padding: isMobile ? '28px 24px' : styles.aboutTextEditorial.padding,
+                            opacity: aboutInView ? undefined : 0,
+                            animationDelay: '0.15s',
+                        }}
+                    >
                         <span style={styles.badge}>{siteSettings.aboutBadgeText}</span>
                         <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
                         {aboutParagraphs.map((paragraph, index) => (
@@ -790,6 +871,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                 {paragraph}
                             </p>
                         ))}
+                        <div style={styles.aboutChipsRow}>
+                            <span style={styles.aboutChip}>{siteSettings.aboutBadgeText}</span>
+                            <span style={styles.aboutChip}>Atendimento personalizado</span>
+                            <span style={styles.aboutChip}>Taboão da Serra • SP</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1237,6 +1323,14 @@ const styles = {
     aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '60px', alignItems: 'center' },
     aboutPhotos: { flex: '1 1 400px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
     aboutPhotoMain: { width: '100%', height: '550px', objectFit: 'cover' as const, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,0.1)' },
+    // Composição editorial assimétrica (item 7 do redesign): foto grande com o
+    // texto avançando por cima dela, em vez de duas colunas simétricas.
+    aboutGridEditorial: { display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(280px, 0.85fr)', alignItems: 'start', gap: '0px' },
+    aboutPhotoWrap: { gridColumn: '1 / 2', gridRow: '1 / 2' },
+    aboutPhotoEditorial: { width: '100%', height: '640px', objectFit: 'cover' as const, borderRadius: '28px', boxShadow: '0 25px 55px rgba(45,21,55,0.22)', display: 'block' },
+    aboutTextEditorial: { gridColumn: '2 / 3', gridRow: '1 / 2', alignSelf: 'center', backgroundColor: '#FAF9F6', borderRadius: '24px', padding: '44px 38px', marginLeft: '-70px', boxShadow: '0 20px 50px rgba(45,21,55,0.12)', border: '1px solid #F0E4F5', zIndex: 2, position: 'relative' as const },
+    aboutChipsRow: { display: 'flex', flexWrap: 'wrap' as const, gap: '10px', marginTop: '22px' },
+    aboutChip: { fontSize: '12px', fontWeight: '600', color: '#4A155E', backgroundColor: '#F3E6F8', padding: '7px 14px', borderRadius: '20px', letterSpacing: '0.3px' },
     aboutText: { flex: '1 1 400px' },
     aboutTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '20px', fontFamily: "'Playfair Display', serif" },
     aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.8, marginBottom: '16px' },
