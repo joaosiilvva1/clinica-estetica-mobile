@@ -890,24 +890,43 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             {/* About Section */}
             <section id="sobre" ref={aboutRef} style={{ ...styles.aboutSection, position: 'relative' as const }}>
                 {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
-                <div style={{ ...styles.aboutGridEditorial, gridTemplateColumns: isMobile ? '1fr' : styles.aboutGridEditorial.gridTemplateColumns, gap: isMobile ? '24px' : '0px' }}>
+                <div style={{
+                    ...styles.aboutGridEditorial,
+                    gridTemplateColumns: isMobile ? '1fr' : styles.aboutGridEditorial.gridTemplateColumns,
+                    // No desktop a linha precisa poder "esticar": é o que dá espaço para a
+                    // foto ficar grudada (sticky) enquanto o texto, mais alto, rola ao lado dela.
+                    alignItems: isMobile ? 'start' : 'stretch',
+                    gap: isMobile ? '24px' : '0px',
+                }}>
                     <div
                         ref={aboutPhotoRef}
                         style={{ ...styles.aboutPhotoWrap, perspective: '1200px' }}
                         onMouseMove={handleAboutMouseMove}
                         onMouseLeave={resetAboutTilt}
                     >
-                        <img
-                            src={siteSettings.aboutPhotoUrl}
-                            alt="Maria Yasmim Lopes"
+                        {/* Mecanismo "Apple": no desktop a foto fica pinada (position: sticky) dentro
+                            da própria coluna enquanto o texto ao lado — mais alto — continua rolando.
+                            Ela só solta quando a coluna de texto termina de passar. No mobile isso não
+                            faz sentido (tela pequena, sem espaço de rolagem sobrando), então cai pra
+                            estático, empilhado normalmente. */}
+                        <div
                             style={{
-                                ...styles.aboutPhotoEditorial,
-                                height: isMobile ? '380px' : styles.aboutPhotoEditorial.height,
-                                opacity: scrollLerp(aboutScrollProgress, 0.4, 1),
-                                transform: `perspective(1200px) rotateX(${aboutTilt.y * -3}deg) rotateY(${aboutTilt.x * 3}deg) scale(${scrollLerp(aboutScrollProgress, 0.92, 1)})`,
-                                transition: 'transform 0.2s ease-out',
+                                position: isMobile ? 'static' as const : 'sticky' as const,
+                                top: isMobile ? undefined : 110,
                             }}
-                        />
+                        >
+                            <img
+                                src={siteSettings.aboutPhotoUrl}
+                                alt="Maria Yasmim Lopes"
+                                style={{
+                                    ...styles.aboutPhotoEditorial,
+                                    height: isMobile ? '380px' : styles.aboutPhotoEditorial.height,
+                                    opacity: scrollLerp(aboutScrollProgress, 0.4, 1),
+                                    transform: `perspective(1200px) rotateX(${aboutTilt.y * -3}deg) rotateY(${aboutTilt.x * 3}deg) scale(${scrollLerp(aboutScrollProgress, 0.92, 1)})`,
+                                    transition: 'transform 0.2s ease-out',
+                                }}
+                            />
+                        </div>
                     </div>
 
                     <div
@@ -916,7 +935,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             ...styles.aboutTextEditorial,
                             gridColumn: isMobile ? '1 / 2' : styles.aboutTextEditorial.gridColumn,
                             gridRow: isMobile ? '2 / 3' : styles.aboutTextEditorial.gridRow,
+                            alignSelf: isMobile ? styles.aboutTextEditorial.alignSelf : 'start',
                             marginLeft: isMobile ? 0 : styles.aboutTextEditorial.marginLeft,
+                            marginTop: isMobile ? 0 : '60px',
                             padding: isMobile ? '28px 24px' : styles.aboutTextEditorial.padding,
                             opacity: aboutInView ? undefined : 0,
                             animationDelay: '0.15s',
@@ -933,6 +954,25 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <span style={styles.aboutChip}>{siteSettings.aboutBadgeText}</span>
                             <span style={styles.aboutChip}>Atendimento personalizado</span>
                             <span style={styles.aboutChip}>Taboão da Serra • SP</span>
+                        </div>
+
+                        {/* Bloco extra só pra dar altura à coluna de texto — é essa diferença de
+                            altura entre as duas colunas que faz a foto ter espaço pra "prender" e
+                            depois soltar suavemente ao final do scroll. */}
+                        <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column' as const, gap: '18px' }}>
+                            {[
+                                { icon: '🎓', title: 'Formação sólida', text: 'Cursos e atualizações constantes em estética facial avançada.' },
+                                { icon: '🧴', title: 'Produtos selecionados', text: 'Dermocosméticos de alta performance, escolhidos protocolo a protocolo.' },
+                                { icon: '💬', title: 'Escuta de verdade', text: 'Cada atendimento parte do que a sua pele precisa, não de um pacote fechado.' },
+                            ].map((item, index) => (
+                                <div key={index} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                                    <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: 700, color: '#2D1537', fontSize: '15px' }}>{item.title}</p>
+                                        <p style={{ margin: '4px 0 0 0', color: '#6D5D75', fontSize: '14px', lineHeight: 1.5 }}>{item.text}</p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
