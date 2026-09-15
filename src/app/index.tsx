@@ -888,92 +888,88 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </section>
 
             {/* About Section */}
-            <section id="sobre" ref={aboutRef} style={{ ...styles.aboutSection, position: 'relative' as const }}>
+            {/* Mesmo mecanismo "foto presa + texto desliza por cima", mas com o visual
+                recuado/arredondado do site (como as outras seções) em vez de ocupar a tela
+                toda de ponta a ponta. Funciona igual em qualquer tamanho de tela: a foto e
+                o texto ficam empilhados no fluxo normal do documento (não em colunas lado a
+                lado), o texto vem logo depois com margem negativa por cima da foto — é essa
+                altura extra do texto que dá "corda" pro scroll antes da foto soltar. */}
+            <section id="sobre" ref={aboutRef} style={{ position: 'relative' as const, maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '60px 20px 20px' : '90px 20px 20px' }}>
                 {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
-                <div style={{
-                    ...styles.aboutGridEditorial,
-                    gridTemplateColumns: isMobile ? '1fr' : styles.aboutGridEditorial.gridTemplateColumns,
-                    // No desktop a linha precisa poder "esticar": é o que dá espaço para a
-                    // foto ficar grudada (sticky) enquanto o texto, mais alto, rola ao lado dela.
-                    alignItems: isMobile ? 'start' : 'stretch',
-                    gap: isMobile ? '24px' : '0px',
-                }}>
-                    <div
-                        ref={aboutPhotoRef}
-                        style={{ ...styles.aboutPhotoWrap, perspective: '1200px' }}
-                        onMouseMove={handleAboutMouseMove}
-                        onMouseLeave={resetAboutTilt}
-                    >
-                        {/* Mecanismo "Apple": no desktop a foto fica pinada (position: sticky) dentro
-                            da própria coluna enquanto o texto ao lado — mais alto — continua rolando.
-                            Ela só solta quando a coluna de texto termina de passar. No mobile isso não
-                            faz sentido (tela pequena, sem espaço de rolagem sobrando), então cai pra
-                            estático, empilhado normalmente. */}
-                        <div
-                            style={{
-                                position: isMobile ? 'static' as const : 'sticky' as const,
-                                top: isMobile ? undefined : 110,
-                            }}
-                        >
-                            <img
-                                src={siteSettings.aboutPhotoUrl}
-                                alt="Maria Yasmim Lopes"
-                                style={{
-                                    ...styles.aboutPhotoEditorial,
-                                    height: isMobile ? '380px' : styles.aboutPhotoEditorial.height,
-                                    opacity: scrollLerp(aboutScrollProgress, 0.4, 1),
-                                    transform: `perspective(1200px) rotateX(${aboutTilt.y * -3}deg) rotateY(${aboutTilt.x * 3}deg) scale(${scrollLerp(aboutScrollProgress, 0.92, 1)})`,
-                                    transition: 'transform 0.2s ease-out',
-                                }}
-                            />
-                        </div>
+
+                <div
+                    ref={aboutPhotoRef}
+                    style={{
+                        position: 'sticky' as const,
+                        top: isMobile ? 84 : 100,
+                        zIndex: 1,
+                    }}
+                    onMouseMove={handleAboutMouseMove}
+                    onMouseLeave={resetAboutTilt}
+                >
+                    <img
+                        src={siteSettings.aboutPhotoUrl}
+                        alt="Maria Yasmim Lopes"
+                        style={{
+                            width: '100%',
+                            height: isMobile ? '420px' : '620px',
+                            objectFit: 'cover' as const,
+                            borderRadius: '28px',
+                            boxShadow: '0 25px 55px rgba(45,21,55,0.22)',
+                            display: 'block',
+                            opacity: scrollLerp(aboutScrollProgress, 0.55, 1),
+                            transform: `scale(1.02) rotateX(${aboutTilt.y * -2}deg) rotateY(${aboutTilt.x * 2}deg)`,
+                            transition: 'transform 0.2s ease-out',
+                        }}
+                    />
+                </div>
+
+                <div
+                    className={aboutInView ? 'myl-fade-up' : ''}
+                    style={{
+                        position: 'relative' as const,
+                        zIndex: 2,
+                        marginTop: isMobile ? '-70px' : '-120px',
+                        marginLeft: isMobile ? 0 : '60px',
+                        backgroundColor: '#FAF9F6',
+                        borderRadius: '24px',
+                        padding: isMobile ? '28px 24px' : '44px 44px 30px',
+                        boxShadow: '0 20px 50px rgba(45,21,55,0.14)',
+                        border: '1px solid #F0E4F5',
+                        opacity: aboutInView ? undefined : 0,
+                        animationDelay: '0.15s',
+                    }}
+                >
+                    <span style={styles.badge}>{siteSettings.aboutBadgeText}</span>
+                    <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
+                    {aboutParagraphs.map((paragraph, index) => (
+                        <p key={index} style={styles.aboutParagraph}>
+                            {paragraph}
+                        </p>
+                    ))}
+                    <div style={styles.aboutChipsRow}>
+                        <span style={styles.aboutChip}>{siteSettings.aboutBadgeText}</span>
+                        <span style={styles.aboutChip}>Atendimento personalizado</span>
+                        <span style={styles.aboutChip}>Taboão da Serra • SP</span>
                     </div>
 
-                    <div
-                        className={aboutInView ? 'myl-fade-up' : ''}
-                        style={{
-                            ...styles.aboutTextEditorial,
-                            gridColumn: isMobile ? '1 / 2' : styles.aboutTextEditorial.gridColumn,
-                            gridRow: isMobile ? '2 / 3' : styles.aboutTextEditorial.gridRow,
-                            alignSelf: isMobile ? styles.aboutTextEditorial.alignSelf : 'start',
-                            marginLeft: isMobile ? 0 : styles.aboutTextEditorial.marginLeft,
-                            marginTop: isMobile ? 0 : '60px',
-                            padding: isMobile ? '28px 24px' : styles.aboutTextEditorial.padding,
-                            opacity: aboutInView ? undefined : 0,
-                            animationDelay: '0.15s',
-                        }}
-                    >
-                        <span style={styles.badge}>{siteSettings.aboutBadgeText}</span>
-                        <h2 style={styles.aboutTitle}>Maria Yasmim Lopes</h2>
-                        {aboutParagraphs.map((paragraph, index) => (
-                            <p key={index} style={styles.aboutParagraph}>
-                                {paragraph}
-                            </p>
-                        ))}
-                        <div style={styles.aboutChipsRow}>
-                            <span style={styles.aboutChip}>{siteSettings.aboutBadgeText}</span>
-                            <span style={styles.aboutChip}>Atendimento personalizado</span>
-                            <span style={styles.aboutChip}>Taboão da Serra • SP</span>
-                        </div>
-
-                        {/* Bloco extra só pra dar altura à coluna de texto — é essa diferença de
-                            altura entre as duas colunas que faz a foto ter espaço pra "prender" e
-                            depois soltar suavemente ao final do scroll. */}
-                        <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column' as const, gap: '18px' }}>
-                            {[
-                                { icon: '🎓', title: 'Formação sólida', text: 'Cursos e atualizações constantes em estética facial avançada.' },
-                                { icon: '🧴', title: 'Produtos selecionados', text: 'Dermocosméticos de alta performance, escolhidos protocolo a protocolo.' },
-                                { icon: '💬', title: 'Escuta de verdade', text: 'Cada atendimento parte do que a sua pele precisa, não de um pacote fechado.' },
-                            ].map((item, index) => (
-                                <div key={index} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                                    <span style={{ fontSize: '20px' }}>{item.icon}</span>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: 700, color: '#2D1537', fontSize: '15px' }}>{item.title}</p>
-                                        <p style={{ margin: '4px 0 0 0', color: '#6D5D75', fontSize: '14px', lineHeight: 1.5 }}>{item.text}</p>
-                                    </div>
+                    {/* Blocos extras: é essa altura a mais no card de texto que dá "espaço de
+                        rolagem" pra foto ficar presa por mais tempo antes de soltar. */}
+                    <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column' as const, gap: '18px' }}>
+                        {[
+                            { icon: '🎓', title: 'Formação sólida', text: 'Cursos e atualizações constantes em estética facial avançada.' },
+                            { icon: '🧴', title: 'Produtos selecionados', text: 'Dermocosméticos de alta performance, escolhidos protocolo a protocolo.' },
+                            { icon: '💬', title: 'Escuta de verdade', text: 'Cada atendimento parte do que a sua pele precisa, não de um pacote fechado.' },
+                            { icon: '🛡️', title: 'Biossegurança', text: 'Protocolos rigorosos de higiene em cada etapa do atendimento.' },
+                        ].map((item, index) => (
+                            <div key={index} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                                <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                                <div>
+                                    <p style={{ margin: 0, fontWeight: 700, color: '#2D1537', fontSize: '15px' }}>{item.title}</p>
+                                    <p style={{ margin: '4px 0 0 0', color: '#6D5D75', fontSize: '14px', lineHeight: 1.5 }}>{item.text}</p>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
