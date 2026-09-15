@@ -176,6 +176,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [lastWhatsappLink, setLastWhatsappLink] = useState<string | null>(null);
     const [whatsappBlocked, setWhatsappBlocked] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
     const [openFaq, setOpenFaq] = useState<number | null>(null);
     const [dateError, setDateError] = useState<string | null>(null);
     const [chatOpen, setChatOpen] = useState(false);
@@ -224,14 +226,57 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         document.head.appendChild(linkFont);
 
         const style = document.createElement('style');
-        style.innerHTML = `html { scroll-behavior: smooth; }`;
+        style.innerHTML = `
+      html { scroll-behavior: smooth; }
+
+      @keyframes mylFadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes mylFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes mylFloat { 0%, 100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-16px) translateX(6px); } }
+      @keyframes mylScrollCue { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(8px); opacity: 1; } }
+
+      .myl-fade-up { opacity: 0; animation: mylFadeUp 0.9s cubic-bezier(.16,.84,.44,1) forwards; }
+      .myl-fade-in { opacity: 0; animation: mylFadeIn 1.1s ease forwards; }
+      .myl-float { animation: mylFloat 9s ease-in-out infinite; }
+      .myl-scroll-cue { animation: mylScrollCue 2s ease-in-out infinite; }
+
+      .myl-navbar { transition: background-color .4s ease, box-shadow .4s ease, backdrop-filter .4s ease, border-color .4s ease; }
+      .myl-navbar.myl-scrolled { background-color: rgba(250,249,246,0.82) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 8px 30px rgba(45,21,55,0.1); border-bottom-color: rgba(232,215,241,0.6) !important; }
+
+      .myl-btn-primary { transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+      .myl-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 26px rgba(74,21,94,0.35); }
+      .myl-btn-secondary { transition: transform .35s cubic-bezier(.2,.8,.2,1), background-color .35s ease; }
+      .myl-btn-secondary:hover { transform: translateY(-2px); background-color: rgba(45,21,55,0.05); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .myl-fade-up, .myl-fade-in, .myl-float, .myl-scroll-cue { animation: none !important; opacity: 1 !important; transform: none !important; }
+      }
+    `;
         document.head.appendChild(style);
 
         const checkWidth = () => setIsMobile(window.innerWidth < 720);
         checkWidth();
         window.addEventListener('resize', checkWidth);
-        return () => window.removeEventListener('resize', checkWidth);
+
+        const onScroll = () => setIsScrolled(window.scrollY > 24);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('resize', checkWidth);
+            window.removeEventListener('scroll', onScroll);
+        };
     }, []);
+
+    // Parallax bem sutil do hero: só reage ao mouse em telas maiores (desktop),
+    // no touch não faz sentido e no mobile o brief pede pra desativar esse tipo de efeito.
+    const handleHeroMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+        if (isMobile) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+        const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        setHeroParallax({ x, y });
+    };
+    const resetHeroParallax = () => setHeroParallax({ x: 0, y: 0 });
 
     const defaultPhotos = [
         { id: '1', title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
@@ -590,8 +635,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             </a>
 
-            {/* Header Fixo e Limpo */}
-            <header style={{ ...styles.header, top: topOffset }}>
+            {/* Header Fixo — transparente no topo, ganha vidro fosco ao rolar */}
+            <header className={`myl-navbar${isScrolled ? ' myl-scrolled' : ''}`} style={{ ...styles.header, top: topOffset }}>
                 <div style={styles.headerContent}>
                     <a href="#inicio" style={styles.logoContainer}>
                         <img src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
@@ -610,7 +655,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </nav>
                     )}
                     {!editable && (
-                        <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
+                        <a href="#agendamento" className="myl-btn-primary" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
                             {isMobile ? 'Agendar' : '📱 Agendar Avaliação'}
                         </a>
                     )}
@@ -618,10 +663,19 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </header>
 
             {/* Hero Section */}
-            <section style={{ ...styles.hero, position: 'relative' as const }}>
+            <section
+                style={{ ...styles.hero, position: 'relative' as const, overflow: 'hidden' }}
+                onMouseMove={handleHeroMouseMove}
+                onMouseLeave={resetHeroParallax}
+            >
                 {editable && <EditPencil label="Início (título e texto)" onClick={() => editSection('hero')} />}
+
+                {/* Elementos decorativos flutuando bem devagar, só de fundo */}
+                <div className="myl-float" style={{ position: 'absolute', top: '8%', left: '-6%', width: '260px', height: '260px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,120,0.25), transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' as const }} />
+                <div className="myl-float" style={{ position: 'absolute', bottom: '4%', right: '-4%', width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(162,89,196,0.18), transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' as const, animationDelay: '2.5s' }} />
+
                 <div style={styles.heroGrid}>
-                    <div style={styles.heroTextCol}>
+                    <div className="myl-fade-up" style={styles.heroTextCol}>
                         <span style={styles.eyebrow}>{siteSettings.heroEyebrow}</span>
                         <h1 style={styles.heroTitle}>{siteSettings.heroTitle}</h1>
                         <p style={styles.heroText}>
@@ -629,10 +683,10 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </p>
 
                         <div style={styles.heroActions}>
-                            <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" style={styles.primaryActionButton}>
+                            <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" className="myl-btn-primary" style={styles.primaryActionButton}>
                                 Agendar via WhatsApp
                             </a>
-                            <a href="#tratamentos" style={styles.secondaryActionButton}>
+                            <a href="#tratamentos" className="myl-btn-secondary" style={styles.secondaryActionButton}>
                                 Ver Tratamentos
                             </a>
                         </div>
@@ -647,7 +701,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </div>
                     </div>
 
-                    <div style={{ ...styles.heroPhotoCol, position: 'relative' as const }}>
+                    <div className="myl-fade-up" style={{ ...styles.heroPhotoCol, position: 'relative' as const, animationDelay: '0.15s' }}>
                         {editable && (
                             <EditPencil
                                 label="Fotos"
@@ -655,7 +709,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                 style={{ top: -12, right: -12 }}
                             />
                         )}
-                        <div style={styles.carouselContainer}>
+                        <div
+                            style={{
+                                ...styles.carouselContainer,
+                                transform: `translate(${heroParallax.x * 8}px, ${heroParallax.y * 8}px)`,
+                                transition: 'transform 0.25s ease-out',
+                            }}
+                        >
                             <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
                             <div style={styles.carouselSlide}>
                                 <img src={photos[currentSlide].url} alt={photos[currentSlide].title} style={styles.carouselImage} />
@@ -676,6 +736,16 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </div>
                     </div>
                 </div>
+
+                {!isMobile && (
+                    <div
+                        className="myl-scroll-cue"
+                        style={{ position: 'absolute', bottom: '18px', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px', color: '#8A6A94', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' as const, pointerEvents: 'none' as const }}
+                    >
+                        <span>role</span>
+                        <span style={{ width: '1px', height: '26px', backgroundColor: '#C9A6D6' }} />
+                    </div>
+                )}
             </section>
 
             {/* Faixa de Benefícios */}
@@ -1118,7 +1188,7 @@ const styles = {
     chatInput: { flex: 1, padding: '10px', border: '1px solid #D8C4E2', borderRadius: '20px', outline: 'none' },
     chatSend: { border: 'none', backgroundColor: '#A259C4', color: '#FFF', borderRadius: '18px', padding: '0 14px', cursor: 'pointer' },
     floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
-    header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: '#FAF9F6', borderBottom: '1px solid #E8D7F1', zIndex: 1000, padding: '12px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+    header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'transparent', borderBottom: '1px solid transparent', zIndex: 1000, padding: '16px 20px' },
     headerContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     logoContainer: { display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' as const },
     logoCircle: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#A259C4', objectFit: 'cover' as const },
