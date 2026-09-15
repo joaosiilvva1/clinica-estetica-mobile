@@ -609,9 +609,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <a href="#contato" style={styles.navLink}>Contato</a>
                         </nav>
                     )}
-                    <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
-                        {isMobile ? 'Agendar' : '📱 Agendar Avaliação'}
-                    </a>
+                    {!editable && (
+                        <a href="#agendamento" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
+                            {isMobile ? 'Agendar' : '📱 Agendar Avaliação'}
+                        </a>
+                    )}
                 </div>
             </header>
 
