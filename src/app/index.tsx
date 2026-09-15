@@ -157,6 +157,57 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
     return [ref, inView] as const;
 }
 
+// Estilo "Apple" de rolagem: em vez de disparar uma animação uma única vez
+// (como o useInView acima), este hook devolve um progresso contínuo de 0 a 1
+// enquanto o elemento atravessa a tela. Isso permite amarrar escala/opacidade
+// diretamente à posição do scroll, dando a sensação de controle direto — o
+// mesmo mecanismo usado nas páginas de produto da Apple (ex: AirPods Pro).
+function useScrollProgress<T extends HTMLElement>() {
+    const ref = React.useRef<T | null>(null);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        let ticking = false;
+        const measure = () => {
+            const rect = el.getBoundingClientRect();
+            const vh = window.innerHeight || 1;
+            // 0  -> elemento ainda não tocou a base da tela (chegando por baixo)
+            // 1  -> elemento já percorreu toda a viewport (saindo por cima)
+            const total = rect.height + vh;
+            const traveled = vh - rect.top;
+            const p = Math.min(1, Math.max(0, traveled / total));
+            setProgress(p);
+            ticking = false;
+        };
+
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(measure);
+        };
+
+        measure();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        return () => {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
+        };
+    }, []);
+
+    return [ref, progress] as const;
+}
+
+// Interpola entre "from" e "to" conforme o progresso (0 a 1), suavizado com
+// uma curva ease-out simples para não parecer linear/mecânico.
+function scrollLerp(progress: number, from: number, to: number) {
+    const eased = 1 - Math.pow(1 - progress, 2);
+    return from + (to - from) * eased;
+}
+
 function EditPencil({ label, onClick, style }: { label: string; onClick: () => void; style?: React.CSSProperties }) {
     return (
         <button
@@ -308,9 +359,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     };
     const resetHeroParallax = () => setHeroParallax({ x: 0, y: 0 });
 
+    const [heroMediaRef, heroScrollProgress] = useScrollProgress<HTMLDivElement>();
     const [trustBarRef, trustBarInView] = useInView<HTMLElement>();
     const [indicationsRef, indicationsInView] = useInView<HTMLDivElement>();
     const [aboutRef, aboutInView] = useInView<HTMLElement>();
+    const [aboutPhotoRef, aboutScrollProgress] = useScrollProgress<HTMLDivElement>();
     const [aboutTilt, setAboutTilt] = useState({ x: 0, y: 0 });
     const handleAboutMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (isMobile) return;
@@ -744,7 +797,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </div>
                     </div>
 
-                    <div className="myl-fade-up" style={{ ...styles.heroPhotoCol, position: 'relative' as const, animationDelay: '0.15s' }}>
+                    <div ref={heroMediaRef} className="myl-fade-up" style={{ ...styles.heroPhotoCol, position: 'relative' as const, animationDelay: '0.15s' }}>
                         {editable && (
                             <EditPencil
                                 label="Fotos"
@@ -755,7 +808,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         <div
                             style={{
                                 ...styles.carouselContainer,
-                                transform: `translate(${heroParallax.x * 8}px, ${heroParallax.y * 8}px)`,
+                                // Mecanismo estilo Apple: a foto entra ligeiramente maior e desfocada
+                                // de escala/opacidade, e se "assenta" suavemente conforme o scroll avança —
+                                // continuamente amarrado à posição da tela, não um gatilho único.
+                                transform: `translate(${heroParallax.x * 8}px, ${heroParallax.y * 8 + scrollLerp(heroScrollProgress, 26, 0)}px) scale(${scrollLerp(heroScrollProgress, 0.94, 1)})`,
+                                opacity: scrollLerp(heroScrollProgress, 0.55, 1),
                                 transition: 'transform 0.25s ease-out',
                             }}
                         >
@@ -835,6 +892,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
                 <div style={{ ...styles.aboutGridEditorial, gridTemplateColumns: isMobile ? '1fr' : styles.aboutGridEditorial.gridTemplateColumns, gap: isMobile ? '24px' : '0px' }}>
                     <div
+                        ref={aboutPhotoRef}
                         style={{ ...styles.aboutPhotoWrap, perspective: '1200px' }}
                         onMouseMove={handleAboutMouseMove}
                         onMouseLeave={resetAboutTilt}
@@ -842,12 +900,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         <img
                             src={siteSettings.aboutPhotoUrl}
                             alt="Maria Yasmim Lopes"
-                            className={aboutInView ? 'myl-fade-up' : ''}
                             style={{
                                 ...styles.aboutPhotoEditorial,
                                 height: isMobile ? '380px' : styles.aboutPhotoEditorial.height,
-                                opacity: aboutInView ? undefined : 0,
-                                transform: `perspective(1200px) rotateX(${aboutTilt.y * -3}deg) rotateY(${aboutTilt.x * 3}deg)`,
+                                opacity: scrollLerp(aboutScrollProgress, 0.4, 1),
+                                transform: `perspective(1200px) rotateX(${aboutTilt.y * -3}deg) rotateY(${aboutTilt.x * 3}deg) scale(${scrollLerp(aboutScrollProgress, 0.92, 1)})`,
                                 transition: 'transform 0.2s ease-out',
                             }}
                         />
@@ -858,6 +915,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         style={{
                             ...styles.aboutTextEditorial,
                             gridColumn: isMobile ? '1 / 2' : styles.aboutTextEditorial.gridColumn,
+                            gridRow: isMobile ? '2 / 3' : styles.aboutTextEditorial.gridRow,
                             marginLeft: isMobile ? 0 : styles.aboutTextEditorial.marginLeft,
                             padding: isMobile ? '28px 24px' : styles.aboutTextEditorial.padding,
                             opacity: aboutInView ? undefined : 0,
