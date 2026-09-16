@@ -162,8 +162,7 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
 // enquanto o elemento atravessa a tela. Isso permite amarrar escala/opacidade
 // diretamente à posição do scroll, dando a sensação de controle direto — o
 // mesmo mecanismo usado nas páginas de produto da Apple (ex: AirPods Pro).
-function useScrollProgress<T extends HTMLElement>() {
-    const ref = React.useRef<T | null>(null);
+function useScrollProgress<T extends HTMLElement>() {    const ref = React.useRef<T | null>(null);
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
@@ -206,6 +205,48 @@ function useScrollProgress<T extends HTMLElement>() {
 function scrollLerp(progress: number, from: number, to: number) {
     const eased = 1 - Math.pow(1 - progress, 2);
     return from + (to - from) * eased;
+}
+
+// Seção "sticky" que troca de slide (imagem + texto) conforme o usuário rola,
+// em vez de destravar assim que aparece. O wrapper tem uma altura maior que a
+// viewport (via CSS, `--myl-sticky-vh`) para dar "corda" ao scroll; dentro dele,
+// um bloco com position:sticky permanece fixo na tela enquanto o progresso do
+// wrapper decide qual dos `count` slides está ativo no momento.
+function useStickySlides<T extends HTMLElement>(count: number) {
+    const ref = React.useRef<T | null>(null);
+    const [active, setActive] = useState(0);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el || count <= 0) return;
+
+        let ticking = false;
+        const measure = () => {
+            const rect = el.getBoundingClientRect();
+            const vh = window.innerHeight || 1;
+            const total = rect.height - vh;
+            const progress = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+            const idx = Math.min(count - 1, Math.floor(progress * count));
+            setActive(idx);
+            ticking = false;
+        };
+
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(measure);
+        };
+
+        measure();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        return () => {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
+        };
+    }, [count]);
+
+    return [ref, active] as const;
 }
 
 function EditPencil({ label, onClick, style }: { label: string; onClick: () => void; style?: React.CSSProperties }) {
@@ -328,6 +369,14 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
       .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
 
+      @keyframes mylSlideIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+      .myl-sticky-slide { display: none; }
+      .myl-sticky-slide.myl-active { display: block; animation: mylSlideIn .7s cubic-bezier(.16,.84,.44,1); }
+      .myl-sticky-media img { transition: opacity .7s ease, transform 1.2s ease; }
+      .myl-sticky-progress i { width: 34px; height: 2px; display: block; position: relative; overflow: hidden; }
+      .myl-sticky-progress i span { position: absolute; inset: 0; transform: scaleX(0); transform-origin: left; transition: transform .5s ease; }
+      .myl-sticky-progress i.myl-done span { transform: scaleX(1); }
+
       @media (prefers-reduced-motion: reduce) {
         .myl-fade-up, .myl-fade-in, .myl-float, .myl-scroll-cue { animation: none !important; opacity: 1 !important; transform: none !important; }
       }
@@ -361,9 +410,10 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
     const [heroMediaRef, heroScrollProgress] = useScrollProgress<HTMLDivElement>();
     const [trustBarRef, trustBarInView] = useInView<HTMLElement>();
-    const [indicationsRef, indicationsInView] = useInView<HTMLDivElement>();
     const [aboutRef, aboutInView] = useInView<HTMLElement>();
     const [aboutPhotoRef, aboutScrollProgress] = useScrollProgress<HTMLDivElement>();
+    const [indicationsStickyRef, indicationsActiveIdx] = useStickySlides<HTMLDivElement>(siteSettings.indicationsItems.length);
+    const [treatmentsStickyRef, treatmentsActiveIdx] = useStickySlides<HTMLDivElement>(treatments.length);
     const [aboutTilt, setAboutTilt] = useState({ x: 0, y: 0 });
     const handleAboutMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (isMobile) return;
@@ -866,24 +916,70 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 ))}
             </section>
 
-            {/* Indicações */}
-            <section style={{ ...styles.indicationsSection, position: 'relative' as const }}>
+            {/* Indicações — agora em formato "sticky storytelling": a seção fica presa
+                na tela enquanto os 4 benefícios se revezam conforme o scroll avança,
+                em vez de aparecerem todos juntos numa grade. */}
+            <section style={{ position: 'relative' as const, background: '#2D1537' }}>
                 {editable && <EditPencil label="Indicações" onClick={() => editSection('indications')} />}
-                <div style={styles.sectionHeader}>
-                    <h2 style={styles.sectionTitle}>{siteSettings.indicationsSectionTitle}</h2>
-                </div>
-                <div ref={indicationsRef} style={styles.indicationsGrid}>
-                    {siteSettings.indicationsItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className={`myl-card-hover${indicationsInView ? ' myl-fade-up' : ''}`}
-                            style={{ ...styles.indicationCard, opacity: indicationsInView ? undefined : 0, animationDelay: `${index * 0.12}s` }}
-                        >
-                            <div style={styles.indicationIcon}>{item.icon}</div>
-                            <h4 style={styles.indicationTitle}>{item.title}</h4>
-                            <p style={styles.indicationText}>{item.text}</p>
+                <div ref={indicationsStickyRef} style={{ position: 'relative' as const, height: isMobile ? '210vh' : '220vh' }}>
+                    <div style={{ position: 'sticky' as const, top: 0, height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                        <div style={{
+                            width: '100%', maxWidth: '1180px', margin: '0 auto', padding: isMobile ? '0 24px' : '0 6vw',
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? '1fr' : '.62fr .88fr .7fr',
+                            gap: isMobile ? '22px' : '4vw',
+                            alignItems: 'center',
+                        }}>
+                            {!isMobile && (
+                                <div>
+                                    <div style={{ color: 'rgba(250,249,246,0.5)', fontSize: '12px', letterSpacing: '3px', fontWeight: 700, textTransform: 'uppercase' as const }}>
+                                        {siteSettings.indicationsSectionTitle}
+                                    </div>
+                                    <div className="myl-sticky-progress" style={{ display: 'flex', gap: '8px', marginTop: '40px' }}>
+                                        {siteSettings.indicationsItems.map((_, i) => (
+                                            <i key={i} className={i <= indicationsActiveIdx ? 'myl-done' : ''} style={{ backgroundColor: 'rgba(250,249,246,0.25)' }}>
+                                                <span style={{ backgroundColor: '#D4AF78' }} />
+                                            </i>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <div>
+                                {siteSettings.indicationsItems.map((item, i) => (
+                                    <div key={i} className={`myl-sticky-slide${i === indicationsActiveIdx ? ' myl-active' : ''}`}>
+                                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '52px' : '84px', color: 'rgba(250,249,246,0.16)', fontWeight: 600, lineHeight: 1, marginBottom: '4px' }}>
+                                            {String(i + 1).padStart(2, '0')}
+                                        </div>
+                                        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '27px' : '44px', color: '#FAF9F6', fontWeight: 600, lineHeight: 1.1, marginBottom: '16px' }}>
+                                            {item.title}
+                                        </h3>
+                                        <p style={{ color: 'rgba(250,249,246,0.65)', fontSize: '15.5px', lineHeight: 1.75, maxWidth: '400px' }}>
+                                            {item.text}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="myl-sticky-media" style={{ position: 'relative' as const, aspectRatio: isMobile ? '16/10' : '3/4', borderRadius: '22px', overflow: 'hidden' }}>
+                                {siteSettings.indicationsItems.map((item, i) => {
+                                    const src = photos.length ? photos[i % photos.length].url : undefined;
+                                    if (!src) return null;
+                                    return (
+                                        <img
+                                            key={i}
+                                            src={src}
+                                            alt={item.title}
+                                            style={{
+                                                position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                                                opacity: i === indicationsActiveIdx ? 1 : 0,
+                                                transform: i === indicationsActiveIdx ? 'scale(1.06)' : 'scale(1)',
+                                            }}
+                                        />
+                                    );
+                                })}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 40%, rgba(45,21,55,0.5))', pointerEvents: 'none' as const }} />
+                            </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
             </section>
 
@@ -974,30 +1070,85 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
             </section>
 
-            {/* Treatments Section */}
-            <section id="tratamentos" style={{ ...styles.section, position: 'relative' as const }}>
+            {/* Treatments Section — storytelling sticky: cada tratamento ocupa a tela
+                inteira, trocando de foto/número/título/descrição conforme o scroll. */}
+            <section id="tratamentos" style={{ position: 'relative' as const, backgroundColor: '#FAF9F6' }}>
                 {editable && <EditPencil label="Tratamentos" onClick={() => editSection('treatments')} />}
-                <div style={styles.sectionHeader}>
+                <div style={{ padding: isMobile ? '90px 24px 40px' : '16vh 6vw 8vh', textAlign: 'center' as const }}>
                     <span style={styles.eyebrowCentered}>{siteSettings.treatmentsEyebrow}</span>
                     <h2 style={styles.sectionTitle}>{siteSettings.treatmentsSectionTitle}</h2>
                     <p style={styles.sectionSubtitle}>{siteSettings.treatmentsSectionSubtitle}</p>
                 </div>
-                <div style={styles.grid}>
-                    {treatments.map((item, index) => (
-                        <div key={item.id} style={styles.card}>
-                            <div style={styles.cardIconCircle}>{['🧖‍♀️', '💧', '✨'][index % 3]}</div>
-                            <h3 style={styles.cardTitle}>{item.name}</h3>
-                            <p style={styles.cardText}>{item.description}</p>
-                            <button
-                                onClick={() => handleSelectTreatmentAndBook(item.id)}
-                                style={styles.cardSelectButton}
-                            >
-                                Saiba mais
-                            </button>
+
+                <div ref={treatmentsStickyRef} style={{ position: 'relative' as const, height: isMobile ? '190vh' : '200vh' }}>
+                    <div style={{ position: 'sticky' as const, top: 0, height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                        <div style={{
+                            width: '100%', maxWidth: '1240px', margin: '0 auto', padding: isMobile ? '0 24px' : '0 6vw',
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? '1fr' : '1.05fr .95fr',
+                            gap: isMobile ? '22px' : '5vw',
+                            alignItems: 'center',
+                        }}>
+                            <div className="myl-sticky-media" style={{ position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '26px', overflow: 'hidden', boxShadow: '0 40px 80px -20px rgba(45,21,55,0.28)' }}>
+                                {treatments.map((item, i) => {
+                                    const src = photos.length ? photos[i % photos.length].url : undefined;
+                                    if (!src) return null;
+                                    return (
+                                        <img
+                                            key={item.id}
+                                            src={src}
+                                            alt={item.name}
+                                            style={{
+                                                position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                                                opacity: i === treatmentsActiveIdx ? 1 : 0,
+                                                transform: i === treatmentsActiveIdx ? 'scale(1)' : 'scale(1.08)',
+                                            }}
+                                        />
+                                    );
+                                })}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.3))', pointerEvents: 'none' as const }} />
+                            </div>
+                            <div>
+                                {treatments.map((item, i) => (
+                                    <div key={item.id} className={`myl-sticky-slide${i === treatmentsActiveIdx ? ' myl-active' : ''}`}>
+                                        <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const, color: '#A259C4', marginBottom: '6px', display: 'block' }}>
+                                            {siteSettings.treatmentsEyebrow}
+                                        </span>
+                                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '48px' : '96px', color: 'rgba(45,21,55,0.08)', fontWeight: 600, lineHeight: 1, marginBottom: '4px' }}>
+                                            {String(i + 1).padStart(2, '0')}
+                                        </div>
+                                        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '27px' : '50px', color: '#2D1537', fontWeight: 600, lineHeight: 1.1, marginBottom: '18px' }}>
+                                            {item.name}
+                                        </h3>
+                                        <p style={{ color: '#5A4A60', fontSize: '16px', lineHeight: 1.75, maxWidth: '420px', marginBottom: '22px' }}>
+                                            {item.description}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '22px', marginBottom: '28px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
+                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>R$ {item.price}</b>
+                                            </span>
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
+                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>{item.durationMinutes} min</b>
+                                            </span>
+                                        </div>
+                                        <button onClick={() => handleSelectTreatmentAndBook(item.id)} className="myl-btn-primary" style={styles.primaryActionButton}>
+                                            Agendar este tratamento
+                                        </button>
+                                    </div>
+                                ))}
+                                <div className="myl-sticky-progress" style={{ display: 'flex', gap: '8px', marginTop: '38px' }}>
+                                    {treatments.map((_, i) => (
+                                        <i key={i} className={i <= treatmentsActiveIdx ? 'myl-done' : ''} style={{ backgroundColor: 'rgba(45,21,55,0.12)' }}>
+                                            <span style={{ backgroundColor: '#A259C4' }} />
+                                        </i>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
             </section>
+
 
             {/* Localização Atualizada */}
             <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
