@@ -922,7 +922,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             <section style={{ position: 'relative' as const, background: '#2D1537' }}>
                 {editable && <EditPencil label="Indicações" onClick={() => editSection('indications')} />}
                 <div ref={indicationsStickyRef} style={{ position: 'relative' as const, height: isMobile ? '210vh' : '220vh' }}>
-                    <div style={{ position: 'sticky' as const, top: 0, height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                    <div style={{ position: 'sticky' as const, top: 0, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '54px 0' }}>
                         <div style={{
                             width: '100%', maxWidth: '1180px', margin: '0 auto', padding: isMobile ? '0 24px' : '0 6vw',
                             display: 'grid',
@@ -1081,7 +1081,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
 
                 <div ref={treatmentsStickyRef} style={{ position: 'relative' as const, height: isMobile ? '190vh' : '200vh' }}>
-                    <div style={{ position: 'sticky' as const, top: 0, height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                    <div style={{ position: 'sticky' as const, top: 0, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '54px 0' }}>
                         <div style={{
                             width: '100%', maxWidth: '1240px', margin: '0 auto', padding: isMobile ? '0 24px' : '0 6vw',
                             display: 'grid',
