@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
 
 type TrustItem = { icon: string; text: string };
 type BenefitItem = { icon: string; text: string };
@@ -207,14 +207,18 @@ function scrollLerp(progress: number, from: number, to: number) {
     return from + (to - from) * eased;
 }
 
-// Seção "sticky" que troca de slide (imagem + texto) conforme o usuário rola,
-// em vez de destravar assim que aparece. O wrapper tem uma altura maior que a
-// viewport (via CSS, `--myl-sticky-vh`) para dar "corda" ao scroll; dentro dele,
-// um bloco com position:sticky permanece fixo na tela enquanto o progresso do
-// wrapper decide qual dos `count` slides está ativo no momento.
-function useStickySlides<T extends HTMLElement>(count: number) {
+// Seção que "prende" o bloco (imagem + texto) na tela enquanto o usuário rola
+// por uma faixa mais alta que a viewport, trocando de slide conforme o
+// progresso. Usamos position:fixed controlado por JS em vez de position:sticky
+// porque, neste projeto (Expo Router Web), pode existir um contêiner de scroll
+// aninhado que quebra o comportamento nativo do sticky — e o scroll pode
+// acontecer nesse contêiner em vez da janela. Por isso escutamos o scroll em
+// fase de captura no `document`, que pega o evento não importa em qual
+// elemento ele realmente ocorreu.
+function useStickyPin<T extends HTMLElement>(count: number) {
     const ref = React.useRef<T | null>(null);
     const [active, setActive] = useState(0);
+    const [pinned, setPinned] = useState(false);
 
     useEffect(() => {
         const el = ref.current;
@@ -228,6 +232,7 @@ function useStickySlides<T extends HTMLElement>(count: number) {
             const progress = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
             const idx = Math.min(count - 1, Math.floor(progress * count));
             setActive(idx);
+            setPinned(rect.top <= 4 && rect.bottom > 0);
             ticking = false;
         };
 
@@ -240,13 +245,15 @@ function useStickySlides<T extends HTMLElement>(count: number) {
         measure();
         window.addEventListener('scroll', onScroll, { passive: true });
         window.addEventListener('resize', onScroll);
+        document.addEventListener('scroll', onScroll, { passive: true, capture: true });
         return () => {
             window.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', onScroll);
+            document.removeEventListener('scroll', onScroll, true);
         };
     }, [count]);
 
-    return [ref, active] as const;
+    return [ref, active, pinned] as const;
 }
 
 function EditPencil({ label, onClick, style }: { label: string; onClick: () => void; style?: React.CSSProperties }) {
@@ -412,8 +419,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [trustBarRef, trustBarInView] = useInView<HTMLElement>();
     const [aboutRef, aboutInView] = useInView<HTMLElement>();
     const [aboutPhotoRef, aboutScrollProgress] = useScrollProgress<HTMLDivElement>();
-    const [indicationsStickyRef, indicationsActiveIdx] = useStickySlides<HTMLDivElement>(siteSettings.indicationsItems.length);
-    const [treatmentsStickyRef, treatmentsActiveIdx] = useStickySlides<HTMLDivElement>(treatments.length);
+    const [indicationsStickyRef, indicationsActiveIdx, indicationsPinned] = useStickyPin<HTMLDivElement>(siteSettings.indicationsItems.length);
+    const [treatmentsStickyRef, treatmentsActiveIdx, treatmentsPinned] = useStickyPin<HTMLDivElement>(treatments.length);
     const [aboutTilt, setAboutTilt] = useState({ x: 0, y: 0 });
     const handleAboutMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (isMobile) return;
@@ -922,7 +929,15 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             <section style={{ position: 'relative' as const, background: '#2D1537' }}>
                 {editable && <EditPencil label="Indicações" onClick={() => editSection('indications')} />}
                 <div ref={indicationsStickyRef} style={{ position: 'relative' as const, height: isMobile ? '210vh' : '220vh' }}>
-                    <div style={{ position: 'sticky' as const, top: 0, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '54px 0' }}>
+                    <div style={{
+                        position: 'fixed' as const, top: 0, left: 0, right: 0, minHeight: '100vh',
+                        display: 'flex', alignItems: 'center', padding: '54px 0',
+                        backgroundColor: '#2D1537',
+                        opacity: indicationsPinned ? 1 : 0,
+                        pointerEvents: indicationsPinned ? ('auto' as const) : ('none' as const),
+                        zIndex: 5,
+                        transition: 'opacity 0.25s ease',
+                    }}>
                         <div style={{
                             width: '100%', maxWidth: '1180px', margin: '0 auto', padding: isMobile ? '0 24px' : '0 6vw',
                             display: 'grid',
@@ -1081,7 +1096,15 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
 
                 <div ref={treatmentsStickyRef} style={{ position: 'relative' as const, height: isMobile ? '190vh' : '200vh' }}>
-                    <div style={{ position: 'sticky' as const, top: 0, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '54px 0' }}>
+                    <div style={{
+                        position: 'fixed' as const, top: 0, left: 0, right: 0, minHeight: '100vh',
+                        display: 'flex', alignItems: 'center', padding: '54px 0',
+                        backgroundColor: '#FAF9F6',
+                        opacity: treatmentsPinned ? 1 : 0,
+                        pointerEvents: treatmentsPinned ? ('auto' as const) : ('none' as const),
+                        zIndex: 5,
+                        transition: 'opacity 0.25s ease',
+                    }}>
                         <div style={{
                             width: '100%', maxWidth: '1240px', margin: '0 auto', padding: isMobile ? '0 24px' : '0 6vw',
                             display: 'grid',
