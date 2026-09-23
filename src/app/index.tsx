@@ -327,11 +327,14 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
       .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
 
+      .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
+      @media (prefers-reduced-motion: reduce) { .myl-booking-button { transition: none !important; transform: none !important; } }
       .myl-booking-button:focus-visible { outline: 3px solid #4A155E; outline-offset: 4px; }
       @media (max-width: 800px) {
         .myl-booking-grid { grid-template-columns: minmax(0, 1fr) !important; }
-        .myl-booking-photo { min-height: 0 !important; height: clamp(320px, 85vw, 520px); }
-        .myl-booking-content { padding: 36px 24px !important; }
+        .myl-booking-grid { padding: 28px 20px !important; gap: 32px !important; border-radius: 30px !important; }
+        .myl-booking-photo { width: 100%; max-width: 400px; margin: 0 auto; }
+        .myl-booking-content { padding: 0 4px 8px !important; }
       }
 
       @media (max-width: 720px) {
@@ -956,8 +959,10 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
             {/* Agendamento manual pelo WhatsApp */}
             <section id="agendamento" aria-labelledby="booking-title" style={{ ...styles.bookingSection, scrollMarginTop: topOffset + 100 }}>
+                <div aria-hidden="true" style={styles.bookingGlow} />
                 <div className="myl-booking-grid" style={styles.bookingGrid}>
                     <div className="myl-booking-photo" style={styles.bookingPhotoWrap}>
+                        <div aria-hidden="true" style={styles.bookingPhotoOutline} />
                         <img
                             src="/foto12.jpeg"
                             alt="Cuidado facial com máscara e faixa lilás na clínica Maria Yasmim Lopes Estética"
@@ -967,18 +972,20 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             height={1280}
                             style={styles.bookingPhoto}
                         />
+                        <div style={styles.bookingPhotoBadge}><span aria-hidden="true">✧</span> Cuidado em cada detalhe</div>
                     </div>
                     <div className="myl-booking-content" style={styles.bookingContent}>
-                        <span style={styles.eyebrow}>AGENDAMENTO</span>
+                        <span style={styles.bookingEyebrow}>AGENDAMENTO <span aria-hidden="true" style={{ width: 36, height: 1, backgroundColor: '#B997CD' }} /></span>
                         <h2 id="booking-title" style={styles.bookingTitle}>Seu momento de cuidado começa aqui.</h2>
                         <p style={styles.bookingDescription}>
                             Tratamentos faciais pensados para cuidar da sua pele com atenção, conforto e atendimento personalizado.
                         </p>
                         <ul style={styles.bookingDetails}>
-                            <li style={styles.bookingDetail}><span aria-hidden="true">📍</span> Taboão da Serra</li>
-                            <li style={styles.bookingDetail}><span aria-hidden="true">◷</span> Atendimento com hora marcada</li>
+                            <li style={styles.bookingDetail}><span style={styles.bookingIcon}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg></span> Taboão da Serra</li>
+                            <li style={styles.bookingDetail}><span style={styles.bookingIcon}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></span> Atendimento com hora marcada</li>
                         </ul>
-                        <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" className="myl-btn-primary myl-booking-button" style={styles.bookingButton}>
+                        <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" className="myl-booking-button" style={styles.bookingButton}>
+                            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M21 11.5a9 9 0 0 1-13.3 7.9L3 21l1.5-4.6A9 9 0 1 1 21 11.5Z" /><path d="M8 7.5c-.8 1.5.2 3.8 2 5.6s4.1 2.8 5.6 2l1-1.5-2.5-1.4-1 1c-1.4-.5-2.5-1.6-3-3l1-1L9.5 6.8Z" /></svg>
                             Agendar pelo WhatsApp
                         </a>
                         <p style={styles.bookingNote}>Combine seu horário diretamente com a Maria pelo WhatsApp.</p>
@@ -1185,17 +1192,22 @@ const styles = {
     locationInfo: { flex: '1 1 300px', padding: '40px' },
     locationAddressText: { fontSize: '15px', color: '#5A4A60', lineHeight: 1.6, marginBottom: '20px' },
     locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
-    bookingSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
-    bookingGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', borderRadius: '28px', overflow: 'hidden', background: 'linear-gradient(135deg, #FAF9F6, #F3E6F8)', border: '1px solid #E8D7F1', boxShadow: '0 18px 48px rgba(45,21,55,0.08)' },
-    bookingPhotoWrap: { position: 'relative' as const, minHeight: '620px' },
-    bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block' },
-    bookingContent: { display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(32px, 4vw, 64px)', minWidth: 0 },
-    bookingTitle: { fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px, 3.4vw, 46px)', fontWeight: '500', lineHeight: 1.16, color: '#2D1537', margin: '0 0 24px' },
-    bookingDescription: { fontSize: '16px', lineHeight: 1.8, color: '#5A4A60', margin: '0 0 28px' },
-    bookingDetails: { listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column' as const, gap: '14px', color: '#4A3B50', fontSize: '14px', lineHeight: 1.6 },
-    bookingDetail: { display: 'flex', alignItems: 'center', gap: '10px' },
-    bookingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' as const, width: '100%', minHeight: '58px', padding: '17px 20px', borderRadius: '30px', backgroundColor: '#7A3E96', color: '#FFF', textDecoration: 'none', fontSize: '15px', fontWeight: '600', lineHeight: 1.5, textAlign: 'center' as const, boxShadow: '0 6px 18px rgba(122,62,150,0.2)' },
-    bookingNote: { fontSize: '12px', lineHeight: 1.7, color: '#6D5D75', margin: '16px 0 0' },
+    bookingSection: { position: 'relative' as const, isolation: 'isolate' as const, padding: '90px 20px', maxWidth: '1200px', margin: '0 auto' },
+    bookingGlow: { position: 'absolute' as const, inset: '20px 0', zIndex: -1, borderRadius: '50%', background: 'radial-gradient(ellipse at 20% 45%, rgba(205,166,224,.36), transparent 62%), radial-gradient(ellipse at 90% 80%, rgba(229,207,185,.3), transparent 55%)', pointerEvents: 'none' as const },
+    bookingGrid: { position: 'relative' as const, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', gap: 'clamp(32px, 5vw, 76px)', padding: 'clamp(32px, 5vw, 64px)', borderRadius: '40px', background: 'linear-gradient(120deg, rgba(255,255,255,.64), rgba(242,229,249,.6))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.9)', boxShadow: '0 28px 70px -24px rgba(77,35,96,.23), inset 0 0 0 1px rgba(232,215,241,.35)' },
+    bookingPhotoWrap: { position: 'relative' as const, aspectRatio: '1 / 1.12', minWidth: 0 },
+    bookingPhotoOutline: { position: 'absolute' as const, inset: '9px -10px -9px 10px', border: '1px solid rgba(162,89,196,.35)', borderRadius: '46% 54% 42% 58% / 54% 40% 60% 46%', transform: 'rotate(-5deg)' },
+    bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block', borderRadius: '46% 54% 42% 58% / 54% 40% 60% 46%', boxShadow: '0 16px 38px rgba(58,28,70,.16)' },
+    bookingPhotoBadge: { position: 'absolute' as const, bottom: '5%', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' as const, padding: '13px 18px', borderRadius: '24px', backgroundColor: 'rgba(255,255,255,.88)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.95)', color: '#583466', fontSize: '11px', letterSpacing: '.5px', boxShadow: '0 6px 22px rgba(45,21,55,.1)' },
+    bookingContent: { display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'flex-start', minWidth: 0 },
+    bookingEyebrow: { display: 'flex', alignItems: 'center', gap: '14px', color: '#805197', fontSize: '11px', fontWeight: '600', letterSpacing: '3px', marginBottom: '22px' },
+    bookingTitle: { fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px, 3.6vw, 48px)', fontWeight: '500', lineHeight: 1.15, letterSpacing: '-.8px', color: '#2D1537', margin: '0 0 22px' },
+    bookingDescription: { fontSize: '15px', lineHeight: 1.85, color: '#65566C', margin: '0 0 26px' },
+    bookingDetails: { listStyle: 'none', padding: 0, margin: '0 0 30px', display: 'flex', flexDirection: 'column' as const, gap: '12px', color: '#4A3B50', fontSize: '13px', lineHeight: 1.6 },
+    bookingDetail: { display: 'flex', alignItems: 'center', gap: '12px' },
+    bookingIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', flexShrink: 0, borderRadius: '50%', color: '#87569F', backgroundColor: 'rgba(255,255,255,.6)', border: '1px solid rgba(183,148,200,.24)' },
+    bookingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxSizing: 'border-box' as const, width: '100%', minHeight: '60px', padding: '16px 18px', borderRadius: '32px', background: 'linear-gradient(110deg, #9144B8, #7733A0)', color: '#FFF', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: 1.5, textAlign: 'center' as const, boxShadow: '0 8px 24px rgba(137,62,181,.25), inset 0 1px 0 rgba(255,255,255,.2)', transition: 'transform .25s ease, box-shadow .25s ease' },
+    bookingNote: { fontSize: '11px', lineHeight: 1.8, color: '#73627C', margin: '16px 0 0', textAlign: 'center' as const, width: '100%' },
     gallerySection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
     galleryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginTop: '30px' },
     galleryImage: { width: '100%', height: '250px', objectFit: 'cover' as const, borderRadius: '18px', boxShadow: '0 8px 20px rgba(45,21,55,0.08)', backgroundColor: '#F3E6F8' },
