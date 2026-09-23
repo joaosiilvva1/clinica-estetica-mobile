@@ -1,4 +1,4 @@
-export const CHAT_TIMEOUT_MS = 150000;
+export const CHAT_TIMEOUT_MS = 180000;
 
 export type ClinicService = {
     name: string;

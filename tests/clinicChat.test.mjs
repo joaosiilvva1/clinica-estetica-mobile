@@ -46,7 +46,7 @@ test('perguntas rápidas oferecem ação clicável para WhatsApp e explicações
   assert.match(getQuickChatReply('Cuidados depois do procedimento', info).text, /FPS 30 ou mais/);
   assert.match(getQuickChatReply('Estou grávida, posso fazer?', info).text, /gravidez/);
   assert.equal(getQuickChatReply('Qual tratamento devo fazer?', info), null);
-  assert.equal(CHAT_TIMEOUT_MS, 150000);
+  assert.equal(CHAT_TIMEOUT_MS, 180000);
 });
 test('chat valida sucesso, falhas HTTP, fallback legado e resposta vazia', async (t) => {
   let body = { reply: 'Resposta válida' }; let status = 200;
