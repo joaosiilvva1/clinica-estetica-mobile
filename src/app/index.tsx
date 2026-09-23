@@ -418,9 +418,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         { id: '5', title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
         { id: '6', title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
         { id: '7', title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
-        { id: '8', title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
+        { id: '8', title: 'Técnica de Cuidado Facial', url: '/foto8.jpg.jpeg' },
         { id: '9', title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
-        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
+        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' },
+        { id: '11', title: 'Detalhes do Procedimento', url: '/foto11.jpg' },
+        { id: '12', title: 'Atendimento Facial', url: '/foto12.jpg' },
+        { id: '13', title: 'Cuidado Personalizado', url: '/foto13.jpg' },
     ];
 
     const [photos, setPhotos] = useState(defaultPhotos);
@@ -454,13 +457,19 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             .then((res) => res.json())
             .then((data) => {
                 if (Array.isArray(data) && data.length > 0) {
-                    setPhotos(
-                        data.map((p: any) => ({
-                            id: p.id,
-                            title: p.title || '',
-                            url: p.url,
-                        }))
-                    );
+                    const apiPhotos = data.map((p: any) => ({
+                        id: p.id,
+                        title: p.title || '',
+                        url: p.url,
+                    }));
+
+                    // Mantém as fotos cadastradas no painel e adiciona as novas
+                    // fotos locais que ainda não existirem no banco.
+                    const mergedPhotos = [...apiPhotos, ...defaultPhotos].filter((photo, index, all) => {
+                        return all.findIndex((item) => item.url === photo.url) === index;
+                    });
+
+                    setPhotos(mergedPhotos);
                 }
             })
             .catch(() => {});
@@ -1265,12 +1274,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
                 <div style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
                     {[
-                        { src: '/foto3.jpg.jpeg', alt: 'Atendimento de estética facial' },
-                        { src: '/foto4.jpg.jpeg', alt: 'Cuidados estéticos faciais' },
-                        { src: '/antes-depois-1-antes.jpg', alt: 'Registro antes do procedimento' },
-                        { src: '/antes-depois-1-depois.jpg', alt: 'Registro depois do procedimento' },
-                        { src: '/foto7.jpg.jpeg', alt: 'Cuidado personalizado' },
-                        { src: '/foto8.jpg.jpeg', alt: 'Tratamento facial' },
+                        { src: '/foto11.jpg', alt: 'Detalhe do procedimento facial' },
+                        { src: '/foto12.jpg', alt: 'Atendimento estético facial' },
+                        { src: '/foto13.jpg', alt: 'Cuidado facial personalizado' },
+                        { src: '/foto6.jpg.jpeg', alt: 'Aplicação de cuidados faciais' },
+                        { src: '/foto7.jpg.jpeg', alt: 'Tratamento facial' },
+                        { src: '/foto9.jpg.jpeg', alt: 'Momento de cuidado estético' },
                     ].map((image, index) => (
                         <img
                             key={image.src}
@@ -1483,4 +1492,5 @@ const styles = {
     footerContact: { fontSize: '15px', color: '#D4A5E0', lineHeight: 1.7 },
     footerInstagramLink: { color: '#FFF', textDecoration: 'none', fontWeight: 'bold' },
     footerBottom: { maxWidth: '1200px', margin: '30px auto 0 auto', textAlign: 'center' as const, fontSize: '13px', color: '#A259C4' }
-};
+};git add src/app/index.tsx
+git commit -m "feat: fotos novas"
