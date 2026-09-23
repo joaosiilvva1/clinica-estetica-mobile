@@ -63,7 +63,7 @@ export default function AdminLogin() {
       <div style={styles.wrapper}>
         <form onSubmit={handleSubmit} style={styles.card}>
           <img
-              src="/logo.jpg.jpeg"
+              src="/logo-maria-yasmim-estetica-taboao-da-serra.jpg"
               alt="Logo Maria Yasmim Lopes"
               style={styles.logo}
           />
@@ -184,4 +184,3 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: 8,
   },
 };
-

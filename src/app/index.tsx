@@ -80,9 +80,9 @@ const defaultSiteSettings: SiteSettings = {
         'R. Izaura da Silva Camargo, 27\nJardim Sao Paulo, Taboão da Serra - SP\nCEP: 06767-310',
     whatsapp: '5511916224612',
     openingHoursText:
-        'Domingos e Segundas com hora marcada para garantir sua exclusividade.',
+        'Atendimento com hora marcada aos domingos e segundas, em uma agenda planejada para oferecer atenção individualizada, conforto e cuidado em cada sessão.',
     instagramUrl: 'https://www.instagram.com/yasmimlopes_estetica/',
-    logoUrl: '/logo.jpg.jpeg',
+    logoUrl: '/logo-maria-yasmim-estetica-taboao-da-serra.jpg',
     heroEyebrow: 'Realce sua beleza natural',
     heroTitle: 'Sua melhor versão começa aqui',
     heroSubtitle:
@@ -105,7 +105,7 @@ const defaultSiteSettings: SiteSettings = {
         { icon: '💆‍♀️', title: 'Hidratação e Viço (Glow)', text: 'Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.' },
     ],
     aboutBadgeText: 'Sua Esteticista',
-    aboutPhotoUrl: '/fotosobre.jpg.jpeg',
+    aboutPhotoUrl: '/maria-yasmim-esteticista-taboao-da-serra.jpg',
     treatmentsEyebrow: 'Nossos tratamentos',
     treatmentsSectionTitle: 'Cuidados para realçar sua beleza',
     treatmentsSectionSubtitle: 'Procedimentos faciais personalizados para suas necessidades',
@@ -404,19 +404,19 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const resetAboutTilt = () => setAboutTilt({ x: 0, y: 0 });
 
     const defaultPhotos = [
-        { id: '1', title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
-        { id: '2', title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
-        { id: '3', title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
-        { id: '4', title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
-        { id: '5', title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
-        { id: '6', title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
-        { id: '7', title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
-        { id: '8', title: 'Técnica de Cuidado Facial', url: '/foto8.jpg.jpeg' },
-        { id: '9', title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
-        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' },
-        { id: '11', title: 'Detalhes do Procedimento', url: '/foto11.jpeg' },
-        { id: '12', title: 'Atendimento Facial', url: '/foto12.jpeg' },
-        { id: '13', title: 'Cuidado Personalizado', url: '/foto13.jpeg' },
+        { id: '1', title: 'Limpeza de pele para acne', url: '/limpeza-de-pele-acne-taboao-da-serra.jpg' },
+        { id: '2', title: 'Atendimento estético facial', url: '/atendimento-estetico-facial-taboao-da-serra.jpg' },
+        { id: '3', title: 'Cuidado facial personalizado', url: '/cuidado-facial-personalizado-taboao-da-serra.jpg' },
+        { id: '4', title: 'Tratamento facial na clínica', url: '/tratamento-facial-na-clinica-taboao-da-serra.jpg' },
+        { id: '5', title: 'Cuidado com a pele', url: '/cuidado-com-a-pele-atendimento-estetico.jpg' },
+        { id: '6', title: 'Máscara facial em atendimento estético', url: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg' },
+        { id: '7', title: 'Aplicação de máscara facial', url: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg' },
+        { id: '8', title: 'Cuidado facial personalizado', url: '/cuidado-facial-em-clinica-taboao-da-serra.jpg' },
+        { id: '9', title: 'Detalhe de tratamento facial', url: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg' },
+        { id: '10', title: 'Cuidado com a pele em atendimento facial', url: '/pele-durante-atendimento-facial-taboao-da-serra.jpg' },
+        { id: '11', title: 'Detalhe de cuidado facial', url: '/detalhe-cuidado-facial-taboao-da-serra.jpg' },
+        { id: '12', title: 'Atendimento estético personalizado', url: '/atendimento-estetico-com-hora-marcada-taboao-da-serra.jpg' },
+        { id: '13', title: 'Cuidado facial personalizado', url: '/procedimento-facial-personalizado-taboao-da-serra.jpg' },
     ];
 
     const [photos, setPhotos] = useState(defaultPhotos);
@@ -983,7 +983,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 <div className="myl-booking-grid" style={styles.bookingGrid}>
                     <div className="myl-booking-photo" style={styles.bookingPhotoWrap}>
                         <img
-                            src="/foto12.jpeg"
+                            src="/atendimento-estetico-com-hora-marcada-taboao-da-serra.jpg"
                             alt="Cuidado facial com máscara e faixa lilás na clínica Maria Yasmim Lopes Estética"
                             loading="lazy"
                             decoding="async"
@@ -1016,16 +1016,16 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 <div style={styles.sectionHeader}>
                     <span style={styles.eyebrowCentered}>Conheça nosso trabalho</span>
                     <h2 style={styles.sectionTitle}>Estética, cuidado e resultados em cada detalhe</h2>
-                    <p style={styles.sectionSubtitle}>Acompanhe mais conteúdos e novidades no Instagram da clínica.</p>
+                    <p style={styles.sectionSubtitle}>Veja registros de atendimentos e cuidados faciais da clínica. No Instagram, acompanhe novas publicações e novidades.</p>
                 </div>
                 <div style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
                     {[
-                        { src: '/foto11.jpeg', alt: 'Detalhe do procedimento facial' },
-                        { src: '/foto12.jpeg', alt: 'Atendimento estético facial' },
-                        { src: '/foto13.jpeg', alt: 'Cuidado facial personalizado' },
-                        { src: '/foto6.jpg.jpeg', alt: 'Aplicação de cuidados faciais' },
-                        { src: '/foto7.jpg.jpeg', alt: 'Tratamento facial' },
-                        { src: '/foto9.jpg.jpeg', alt: 'Momento de cuidado estético' },
+                        { src: '/detalhe-cuidado-facial-taboao-da-serra.jpg', alt: 'Detalhe de cuidado facial durante atendimento' },
+                        { src: '/cuidado-facial-em-clinica-taboao-da-serra.jpg', alt: 'Cliente recebendo atendimento estético facial' },
+                        { src: '/procedimento-facial-personalizado-taboao-da-serra.jpg', alt: 'Cuidado facial personalizado na clínica' },
+                        { src: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg', alt: 'Máscara facial preparada para atendimento estético' },
+                        { src: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg', alt: 'Aplicação de cuidados faciais durante atendimento' },
+                        { src: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg', alt: 'Detalhe de tratamento facial personalizado' },
                     ].map((image, index) => (
                         <img
                             key={image.src}
@@ -1036,7 +1036,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             onError={(event) => {
                                 const imageElement = event.currentTarget;
                                 imageElement.onerror = null;
-                                imageElement.src = '/foto6.jpg.jpeg';
+                                imageElement.src = '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg';
                             }}
                             style={{ ...styles.galleryImage, height: isMobile ? '180px' : '250px', animationDelay: `${index * 0.05}s` }}
                         />
@@ -1050,7 +1050,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         className="myl-btn-primary"
                         style={styles.primaryActionButton}
                     >
-                        Ver Instagram {instagramHandle}
+                        Abrir perfil no Instagram {instagramHandle}
                     </a>
                 </div>
             </section>
