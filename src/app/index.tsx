@@ -26,8 +26,6 @@ type SiteSettings = {
     treatmentsSectionSubtitle: string;
     locationSectionTitle: string;
     locationSectionSubtitle: string;
-    bookingSectionTitle: string;
-    bookingSectionSubtitle: string;
     faqSectionTitle: string;
     faqSectionSubtitle: string;
     faqItems: FaqItem[];
@@ -112,8 +110,6 @@ const defaultSiteSettings: SiteSettings = {
     treatmentsSectionSubtitle: 'Procedimentos faciais personalizados para suas necessidades',
     locationSectionTitle: 'Onde Estamos',
     locationSectionSubtitle: 'Sua clínica de estética bem pertinho de você em Taboão da Serra.',
-    bookingSectionTitle: 'Agende seu Atendimento',
-    bookingSectionSubtitle: 'Preencha seus dados para solicitar o horário. Depois do envio, você poderá confirmar os detalhes pelo WhatsApp.',
     faqSectionTitle: 'Perguntas Frequentes',
     faqSectionSubtitle: 'Tire suas principais dúvidas sobre os nossos tratamentos.',
     faqItems: defaultFaqItems,
@@ -270,34 +266,16 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const editSection = (section: EditSectionKey) => onEditSection?.(section);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
-    const [formData, setFormData] = useState({
-        name: '',
-        whatsapp: '',
-        treatmentId: '',
-        date: '',
-        time: ''
-    });
-    const [formSubmitted, setFormSubmitted] = useState(false);
-    const [lastWhatsappLink, setLastWhatsappLink] = useState<string | null>(null);
-    const [whatsappBlocked, setWhatsappBlocked] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
     const [openFaq, setOpenFaq] = useState<number | null>(null);
-    const [dateError, setDateError] = useState<string | null>(null);
     const [chatOpen, setChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
     const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
         { role: 'assistant', text: 'Olá! 👋 Sou a assistente virtual da Maria Yasmim Lopes Estética. Como posso ajudar?' }
     ]);
-
-    const availableTimeSlots = [
-        '09:00', '11:00', '14:00', '16:00', '18:00'
-    ];
-
-    const [professionalId, setProfessionalId] = useState<string | null>(null);
-    const [professionalLoadFailed, setProfessionalLoadFailed] = useState(false);
 
     const defaultTreatments = [
         { id: '1', name: 'Limpeza de Pele Profunda', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 120, durationMinutes: 60 },
@@ -308,12 +286,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [treatments, setTreatments] = useState<
         { id: string; name: string; description: string; price: number; durationMinutes: number }[]
     >(defaultTreatments);
-
-    const [freeSlots, setFreeSlots] = useState<string[]>([]);
-    const [slotsLoading, setSlotsLoading] = useState(false);
-    const [bookingError, setBookingError] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState(false);
-    const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
 
     useEffect(() => {
         document.title = 'Maria Yasmim Lopes | Especialista em Limpeza de Pele em Taboão da Serra';
@@ -354,6 +326,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
       .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
       .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
+
+      .myl-booking-button:focus-visible { outline: 3px solid #4A155E; outline-offset: 4px; }
+      @media (max-width: 800px) {
+        .myl-booking-grid { grid-template-columns: minmax(0, 1fr) !important; }
+        .myl-booking-photo { min-height: 0 !important; height: clamp(320px, 85vw, 520px); }
+        .myl-booking-content { padding: 36px 24px !important; }
+      }
 
       @media (max-width: 720px) {
         .myl-mobile-action { width: 100%; justify-content: center; }
@@ -502,8 +481,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         treatmentsSectionSubtitle: str(data.treatmentsSectionSubtitle, prev.treatmentsSectionSubtitle),
                         locationSectionTitle: str(data.locationSectionTitle, prev.locationSectionTitle),
                         locationSectionSubtitle: str(data.locationSectionSubtitle, prev.locationSectionSubtitle),
-                        bookingSectionTitle: str(data.bookingSectionTitle, prev.bookingSectionTitle),
-                        bookingSectionSubtitle: str(data.bookingSectionSubtitle, prev.bookingSectionSubtitle),
                         faqSectionTitle: str(data.faqSectionTitle, prev.faqSectionTitle),
                         faqSectionSubtitle: str(data.faqSectionSubtitle, prev.faqSectionSubtitle),
                         faqItems: mergeFaqItems(parseJsonArray<FaqItem>(data.faqItemsJson, prev.faqItems)),
@@ -515,55 +492,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             })
             .catch(() => {});
 
-        // A instância free do Render "dorme" com inatividade: a primeira requisição depois
-        // disso pode levar até ~50s ou falhar por timeout enquanto o serviço acorda. Por isso
-        // tentamos algumas vezes com espera crescente antes de desistir — nunca inventamos um
-        // id de profissional falso, porque isso só adia o erro real pra hora de agendar.
-        const loadProfessional = (attempt = 1) => {
-            fetch(`${API_BASE_URL}/api/professionals/public`)
-                .then((res) => res.json())
-                .then((data) => {
-                    const id = data?.[0]?.id;
-                    if (id) {
-                        setProfessionalId(id);
-                        setProfessionalLoadFailed(false);
-                    } else if (attempt < 4) {
-                        setTimeout(() => loadProfessional(attempt + 1), attempt * 4000);
-                    } else {
-                        setProfessionalLoadFailed(true);
-                    }
-                })
-                .catch(() => {
-                    if (attempt < 4) {
-                        setTimeout(() => loadProfessional(attempt + 1), attempt * 4000);
-                    } else {
-                        setProfessionalLoadFailed(true);
-                    }
-                });
-        };
-        loadProfessional();
     }, []);
-
-    useEffect(() => {
-        if (!formData.date || !formData.treatmentId || !professionalId || dateError) {
-            setFreeSlots([]);
-            return;
-        }
-        setSlotsLoading(true);
-        setBookingError(null);
-        fetch(
-            `${API_BASE_URL}/api/appointments/public/available-slots?professionalId=${professionalId}&treatmentId=${formData.treatmentId}&date=${formData.date}`
-        )
-            .then((res) => {
-                if (!res.ok) throw new Error();
-                return res.json();
-            })
-            .then((data: string[]) => setFreeSlots(data))
-            .catch(() => {
-                setFreeSlots(availableTimeSlots.map(t => `${formData.date}T${t}:00-03:00`));
-            })
-            .finally(() => setSlotsLoading(false));
-    }, [formData.date, formData.treatmentId, professionalId, slotsRefreshKey, dateError]);
 
     const sendChatMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -603,115 +532,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         }
     };
 
-    const slotToEpochMs = (dateStr: string, timeStr: string) =>
-        new Date(`${dateStr}T${timeStr}:00-03:00`).getTime();
-
-    const freeSlotsMs = new Set(freeSlots.map((iso) => new Date(iso).getTime()));
-
-    const handleFormChange = (field: keyof typeof formData) => (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    const scrollToBooking = () => {
+        document.getElementById('agendamento')?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedDate = e.target.value;
-        if (!selectedDate) {
-            setFormData((prev) => ({ ...prev, date: '', time: '' }));
-            setDateError(null);
-            return;
-        }
-
-        // Salva a data independentemente do dia, para não bugar o celular
-        setFormData((prev) => ({ ...prev, date: selectedDate, time: '' }));
-
-        const [year, month, day] = selectedDate.split('-');
-        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-        const dayOfWeek = dateObj.getDay();
-
-        if (dayOfWeek !== 0 && dayOfWeek !== 1) {
-            setDateError('Atendimentos apenas aos Domingos e Segundas. Por favor, escolha outra data.');
-        } else {
-            setDateError(null);
-        }
-    };
-
-    const handleSelectTreatmentAndBook = (treatmentId: string) => {
-        setFormData((prev) => ({ ...prev, treatmentId }));
-        const bookingSection = document.getElementById('agendamento');
-        if (bookingSection) {
-            bookingSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    const handleBookingSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setBookingError(null);
-
-        if (!professionalId) {
-            alert(
-                'Ainda estamos carregando os dados da clínica (o servidor pode estar ' +
-                'acordando após um período parado). Aguarde alguns segundos e tente novamente.'
-            );
-            return;
-        }
-
-        setSubmitting(true);
-
-        try {
-            const scheduledAt = `${formData.date}T${formData.time}:00-03:00`;
-            const response = await fetch(`${API_BASE_URL}/api/appointments/public`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    clientName: formData.name,
-                    clientWhatsapp: formData.whatsapp.replace(/\D/g, ''),
-                    professionalId: professionalId,
-                    treatmentId: formData.treatmentId,
-                    scheduledAt
-                }),
-            });
-
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(errText || 'Não foi possível concluir o agendamento no servidor.');
-            }
-
-            setFormSubmitted(true);
-
-            // Avisa a Maria no WhatsApp com os dados do agendamento. Como isso roda depois de um
-            // await, alguns navegadores bloqueiam a abertura automática (não é mais um clique
-            // "direto"); por isso guardamos o link e também deixamos um botão manual na tela de
-            // sucesso como fallback garantido.
-            const treatmentName = treatments.find(t => t.id === formData.treatmentId)?.name ?? 'Tratamento';
-            const [year, month, day] = formData.date.split('-');
-            const whatsappMessage =
-                `Novo agendamento recebido!\n\n` +
-                `Cliente: ${formData.name}\n` +
-                `WhatsApp: ${formData.whatsapp}\n` +
-                `Tratamento: ${treatmentName}\n` +
-                `Data: ${day}/${month}/${year} às ${formData.time}`;
-            const link = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappMessage)}`;
-            setLastWhatsappLink(link);
-
-            const popup = window.open(link, '_blank');
-            if (!popup) {
-                setWhatsappBlocked(true);
-            }
-        } catch (error: any) {
-            console.error("Erro no agendamento:", error);
-            const msg = error.message === 'Failed to fetch'
-                ? 'Erro de conexão ou CORS bloqueado no backend.'
-                : error.message;
-            setBookingError(msg);
-            alert(`Ops! Algo deu errado ao tentar agendar:\n\n${msg}\n\nVerifique as configurações de CORS no seu Spring Boot.`);
-            setSlotsRefreshKey((k) => k + 1);
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const todayStr = new Date().toISOString().split('T')[0];
+    const bookingWhatsAppLink = 'https://wa.me/5511916224612?text=' +
+        encodeURIComponent('Olá Maria, vi o site e gostaria de agendar um horário.');
 
     const toggleFaq = (index: number) => {
         setOpenFaq(openFaq === index ? null : index);
@@ -1069,7 +895,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                                 <b style={{ color: '#2D1537', fontWeight: 700 }}>{item.durationMinutes} min</b>
                                             </span>
                                         </div>
-                                        <button onClick={() => handleSelectTreatmentAndBook(item.id)} className="myl-btn-primary" style={styles.primaryActionButton}>
+                                        <button onClick={scrollToBooking} className="myl-btn-primary" style={styles.primaryActionButton}>
                                             Agendar este tratamento
                                         </button>
                                     </div>
@@ -1128,152 +954,36 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
             </section>
 
-            {/* Booking Section */}
-            <section id="agendamento" style={styles.bookingSection}>
-                <div style={styles.sectionHeader}>
-                    <h2 style={styles.sectionTitle}>{siteSettings.bookingSectionTitle}</h2>
-                    <p style={styles.sectionSubtitle}>
-                        {siteSettings.bookingSectionSubtitle}
-                    </p>
-                </div>
-
-                {formSubmitted ? (
-                    <div style={styles.bookingSuccess}>
-                        <h3 style={{ color: '#3D1A4C', fontFamily: "'Playfair Display', serif", marginBottom: '10px' }}>Agendamento Realizado com Sucesso! 💜</h3>
-                        <p style={styles.bookingSuccessText}>
-                            Seus dados foram salvos e enviados para a nossa equipe. Entraremos em contato em breve para confirmar os detalhes.
-                        </p>
-
-                        {lastWhatsappLink && (
-                            <a
-                                href={lastWhatsappLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ ...styles.primaryButton, display: 'inline-block', marginBottom: '14px' }}
-                            >
-                                {whatsappBlocked ? 'Avisar Maria no WhatsApp' : 'Reenviar aviso no WhatsApp'}
-                            </a>
-                        )}
-
-                        <br />
-                        <button onClick={() => setFormSubmitted(false)} style={styles.bookingResetLink}>
-                            Fazer novo agendamento
-                        </button>
+            {/* Agendamento manual pelo WhatsApp */}
+            <section id="agendamento" aria-labelledby="booking-title" style={{ ...styles.bookingSection, scrollMarginTop: topOffset + 100 }}>
+                <div className="myl-booking-grid" style={styles.bookingGrid}>
+                    <div className="myl-booking-photo" style={styles.bookingPhotoWrap}>
+                        <img
+                            src="/foto12.jpeg"
+                            alt="Cuidado facial com máscara e faixa lilás na clínica Maria Yasmim Lopes Estética"
+                            loading="lazy"
+                            decoding="async"
+                            width={960}
+                            height={1280}
+                            style={styles.bookingPhoto}
+                        />
                     </div>
-                ) : (
-                    <form onSubmit={handleBookingSubmit} style={styles.bookingForm}>
-
-                        <div style={styles.scarcityAlert}>
-                            ✨ <strong>Atenção:</strong> Atendimentos exclusivos aos Domingos e Segundas. Vagas limitadas.
-                        </div>
-
-                        {professionalLoadFailed && (
-                            <div style={styles.scarcityAlert}>
-                                ⚠️ Não conseguimos carregar os dados da clínica agora. Recarregue a
-                                página em alguns instantes — o servidor pode estar iniciando após um
-                                período sem uso.
-                            </div>
-                        )}
-
-                        <input
-                            type="text"
-                            placeholder="Seu nome"
-                            required
-                            value={formData.name}
-                            onChange={handleFormChange('name')}
-                            style={styles.bookingInput}
-                        />
-                        <input
-                            type="tel"
-                            placeholder="Seu WhatsApp (com DDD)"
-                            required
-                            value={formData.whatsapp}
-                            onChange={handleFormChange('whatsapp')}
-                            style={styles.bookingInput}
-                        />
-                        <select
-                            required
-                            value={formData.treatmentId}
-                            onChange={handleFormChange('treatmentId')}
-                            style={styles.bookingInput}
-                        >
-                            <option value="" disabled>Selecione o tratamento desejado</option>
-                            {treatments.map((t) => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
-                            ))}
-                        </select>
-
-                        <div style={styles.fieldGroup}>
-                            <label style={styles.fieldLabel}>Selecione a data:</label>
-                            <input
-                                type="date"
-                                required
-                                min={todayStr}
-                                value={formData.date}
-                                onChange={handleDateChange}
-                                style={styles.bookingInput}
-                            />
-                            {/* Se a data for inválida (terça a sábado), mostra o texto em vermelho e desabilita o resto */}
-                            {dateError && <p style={styles.bookingErrorText}>{dateError}</p>}
-                        </div>
-
-                        {!formData.treatmentId && formData.date && !dateError && (
-                            <p style={styles.bookingErrorText}>Escolha o tratamento antes de ver os horários.</p>
-                        )}
-
-                        {formData.date && formData.treatmentId && !dateError && (
-                            <div style={styles.fieldGroup}>
-                                <label style={styles.fieldLabel}>Selecione o horário disponível:</label>
-                                {slotsLoading ? (
-                                    <p style={styles.sectionSubtitle}>Carregando horários...</p>
-                                ) : (
-                                    <div style={styles.timeSlotsGrid}>
-                                        {availableTimeSlots.map((slot) => {
-                                            const isBusy = freeSlots.length > 0 && !freeSlotsMs.has(slotToEpochMs(formData.date, slot));
-                                            const isSelected = formData.time === slot;
-
-                                            return (
-                                                <button
-                                                    key={slot}
-                                                    type="button"
-                                                    disabled={isBusy}
-                                                    onClick={() => setFormData((p) => ({ ...p, time: slot }))}
-                                                    style={{
-                                                        ...styles.slotButton,
-                                                        ...(isBusy ? styles.slotBusy : {}),
-                                                        ...(isSelected ? styles.slotSelected : {})
-                                                    }}
-                                                >
-                                                    {slot} {isBusy ? '(Ocupado)' : ''}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {bookingError && <p style={styles.bookingErrorText}>{bookingError}</p>}
-
-                        <button
-                            type="submit"
-                            onClick={(e) => {
-                                if (!formData.time) {
-                                    e.preventDefault();
-                                    alert('Por favor, clique em um dos horários disponíveis antes de confirmar o agendamento.');
-                                }
-                            }}
-                            disabled={submitting || !!dateError}
-                            style={{
-                                ...styles.bookingSubmitButton,
-                                opacity: (submitting || !!dateError) ? 0.6 : 1,
-                                cursor: (submitting || !!dateError) ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            {submitting ? 'Enviando agendamento...' : 'Confirmar Agendamento'}
-                        </button>
-                    </form>
-                )}
+                    <div className="myl-booking-content" style={styles.bookingContent}>
+                        <span style={styles.eyebrow}>AGENDAMENTO</span>
+                        <h2 id="booking-title" style={styles.bookingTitle}>Seu momento de cuidado começa aqui.</h2>
+                        <p style={styles.bookingDescription}>
+                            Tratamentos faciais pensados para cuidar da sua pele com atenção, conforto e atendimento personalizado.
+                        </p>
+                        <ul style={styles.bookingDetails}>
+                            <li style={styles.bookingDetail}><span aria-hidden="true">📍</span> Taboão da Serra</li>
+                            <li style={styles.bookingDetail}><span aria-hidden="true">◷</span> Atendimento com hora marcada</li>
+                        </ul>
+                        <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" className="myl-btn-primary myl-booking-button" style={styles.bookingButton}>
+                            Agendar pelo WhatsApp
+                        </a>
+                        <p style={styles.bookingNote}>Combine seu horário diretamente com a Maria pelo WhatsApp.</p>
+                    </div>
+                </div>
             </section>
 
             {/* Galeria / Instagram */}
@@ -1475,21 +1185,17 @@ const styles = {
     locationInfo: { flex: '1 1 300px', padding: '40px' },
     locationAddressText: { fontSize: '15px', color: '#5A4A60', lineHeight: 1.6, marginBottom: '20px' },
     locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
-    bookingSection: { padding: '80px 20px', maxWidth: '650px', margin: '0 auto' },
-    bookingForm: { display: 'flex', flexDirection: 'column' as const, gap: '16px', backgroundColor: '#FFF', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
-    scarcityAlert: { backgroundColor: '#FFF3E0', color: '#E65100', padding: '15px', borderRadius: '10px', fontSize: '14px', lineHeight: 1.5, borderLeft: '4px solid #FF9800', marginBottom: '10px' },
-    bookingInput: { padding: '15px 18px', borderRadius: '10px', border: '1px solid #D4A5E0', fontSize: '15px', fontFamily: 'inherit', color: '#2D1537', backgroundColor: '#FAF9F6', width: '100%', boxSizing: 'border-box' as const, transition: 'border-color 0.2s' },
-    fieldGroup: { display: 'flex', flexDirection: 'column' as const, gap: '8px', textAlign: 'left' as const },
-    fieldLabel: { fontSize: '14px', fontWeight: '600', color: '#2D1537' },
-    timeSlotsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', marginTop: '5px' },
-    slotButton: { padding: '12px', borderRadius: '8px', border: '1px solid #A259C4', backgroundColor: '#FFF', color: '#A259C4', fontWeight: 'bold' as const, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' },
-    slotBusy: { backgroundColor: '#F0F0F0', borderColor: '#DDD', color: '#A0A0A0', cursor: 'not-allowed', textDecoration: 'line-through' },
-    slotSelected: { backgroundColor: '#A259C4', color: '#FFF' },
-    bookingSubmitButton: { backgroundColor: '#2D1537', color: '#FFF', padding: '16px 30px', borderRadius: '30px', border: 'none', fontWeight: 'bold', fontSize: '16px', marginTop: '10px', boxShadow: '0 4px 12px rgba(45,21,55,0.2)' },
-    bookingSuccess: { textAlign: 'center' as const, backgroundColor: '#F3E6F8', borderRadius: '16px', padding: '30px' },
-    bookingSuccessText: { fontSize: '16px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
-    bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
-    bookingResetLink: { background: 'none', border: 'none', color: '#A259C4', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' },
+    bookingSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
+    bookingGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', borderRadius: '28px', overflow: 'hidden', background: 'linear-gradient(135deg, #FAF9F6, #F3E6F8)', border: '1px solid #E8D7F1', boxShadow: '0 18px 48px rgba(45,21,55,0.08)' },
+    bookingPhotoWrap: { position: 'relative' as const, minHeight: '620px' },
+    bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block' },
+    bookingContent: { display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(32px, 4vw, 64px)', minWidth: 0 },
+    bookingTitle: { fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px, 3.4vw, 46px)', fontWeight: '500', lineHeight: 1.16, color: '#2D1537', margin: '0 0 24px' },
+    bookingDescription: { fontSize: '16px', lineHeight: 1.8, color: '#5A4A60', margin: '0 0 28px' },
+    bookingDetails: { listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column' as const, gap: '14px', color: '#4A3B50', fontSize: '14px', lineHeight: 1.6 },
+    bookingDetail: { display: 'flex', alignItems: 'center', gap: '10px' },
+    bookingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' as const, width: '100%', minHeight: '58px', padding: '17px 20px', borderRadius: '30px', backgroundColor: '#7A3E96', color: '#FFF', textDecoration: 'none', fontSize: '15px', fontWeight: '600', lineHeight: 1.5, textAlign: 'center' as const, boxShadow: '0 6px 18px rgba(122,62,150,0.2)' },
+    bookingNote: { fontSize: '12px', lineHeight: 1.7, color: '#6D5D75', margin: '16px 0 0' },
     gallerySection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
     galleryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginTop: '30px' },
     galleryImage: { width: '100%', height: '250px', objectFit: 'cover' as const, borderRadius: '18px', boxShadow: '0 8px 20px rgba(45,21,55,0.08)', backgroundColor: '#F3E6F8' },
