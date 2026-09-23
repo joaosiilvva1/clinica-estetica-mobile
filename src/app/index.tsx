@@ -275,6 +275,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [openFaq, setOpenFaq] = useState<number | null>(null);
     const [chatOpen, setChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
+    const [showChatSuggestions, setShowChatSuggestions] = useState(true);
     const [chatLoading, setChatLoading] = useState(false);
     const [chatElapsed, setChatElapsed] = useState(0);
     const [chatError, setChatError] = useState<string | null>(null);
@@ -514,7 +515,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
     useEffect(() => {
         chatBottom.current?.scrollIntoView({ block: 'nearest' });
-    }, [chatMessages, chatLoading, chatError, chatOpen]);
+    }, [chatMessages, chatLoading, chatError, chatOpen, showChatSuggestions]);
 
     const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
     const buildWhatsAppLink = (message = 'Olá Maria, vi o site e gostaria de agendar uma avaliação.') =>
@@ -525,6 +526,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         e?.preventDefault();
         const message = question.trim();
         if (!message || chatRequest.current) return;
+        setShowChatSuggestions(false);
         if (!retry) setChatMessages(prev => [...prev, { role: 'user', text: message }]);
         setChatInput('');
         setChatError(null);
@@ -1107,22 +1109,26 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         {chatError && <div role="alert" style={styles.chatBotMessage}>{chatError}<br /><button type="button" onClick={() => sendChatMessage(undefined, lastChatQuestion, true)} style={styles.chatTextButton}>Tentar novamente</button></div>}
                         <div ref={chatBottom} />
                     </div>
-                    <div style={styles.chatQuickActions}>
-                        {[
-                            { label: 'Agendar', question: 'Como faço para agendar?' },
-                            { label: 'Limpeza de pele', question: 'O que é a limpeza de pele?' },
-                            { label: 'Massagem facial', question: 'O que é a massagem facial?' },
-                            { label: 'Hidratação', question: 'Como funciona a hidratação facial?' },
-                            { label: 'Preparo', question: 'Como me preparo antes do procedimento?' },
-                            { label: 'Pós-procedimento', question: 'Quais cuidados ter depois do procedimento?' },
-                            { label: 'Valores e duração', question: 'Quais são os valores e a duração?' },
-                            { label: 'Localização', question: 'Onde fica a clínica?' },
-                            { label: 'Horários', question: 'Quais são os horários de atendimento?' },
-                        ].map(({ label, question }) => <button key={label} type="button" disabled={chatLoading} onClick={() => sendChatMessage(undefined, question)} style={{ ...styles.chatQuickButton, opacity: chatLoading ? .5 : 1 }}>{label}</button>)}
-                    </div>
-                    <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" style={styles.chatWhatsapp}>Falar com a Maria pelo WhatsApp ↗</a>
+                    {showChatSuggestions && (
+                        <>
+                            <div role="group" aria-label="Perguntas rápidas" style={styles.chatQuickActions}>
+                                {[
+                                    { label: 'Agendar', question: 'Como faço para agendar?' },
+                                    { label: 'Limpeza de pele', question: 'O que é a limpeza de pele?' },
+                                    { label: 'Massagem facial', question: 'O que é a massagem facial?' },
+                                    { label: 'Hidratação', question: 'Como funciona a hidratação facial?' },
+                                    { label: 'Preparo', question: 'Como me preparo antes do procedimento?' },
+                                    { label: 'Pós-procedimento', question: 'Quais cuidados ter depois do procedimento?' },
+                                    { label: 'Valores e duração', question: 'Quais são os valores e a duração?' },
+                                    { label: 'Localização', question: 'Onde fica a clínica?' },
+                                    { label: 'Horários', question: 'Quais são os horários de atendimento?' },
+                                ].map(({ label, question }) => <button key={label} type="button" disabled={chatLoading} onClick={() => sendChatMessage(undefined, question)} style={{ ...styles.chatQuickButton, opacity: chatLoading ? .5 : 1 }}>{label}</button>)}
+                            </div>
+                            <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" style={styles.chatWhatsapp}>Falar com a Maria pelo WhatsApp ↗</a>
+                        </>
+                    )}
                     <form onSubmit={sendChatMessage} style={styles.chatForm}>
-                        <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} aria-label="Sua mensagem" maxLength={1500} placeholder="Digite sua mensagem..." style={styles.chatInput} />
+                        <input value={chatInput} onFocus={() => setShowChatSuggestions(true)} onPointerDown={() => setShowChatSuggestions(true)} onChange={(e) => { setChatInput(e.target.value); if (e.target.value) setShowChatSuggestions(true); }} aria-label="Sua mensagem" maxLength={1500} placeholder="Digite sua mensagem..." style={styles.chatInput} />
                         <button type="submit" disabled={chatLoading || !chatInput.trim()} style={{ ...styles.chatSend, opacity: chatLoading || !chatInput.trim() ? .5 : 1 }}>Enviar</button>
                     </form>
                 </div>
