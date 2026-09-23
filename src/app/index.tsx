@@ -421,9 +421,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         { id: '8', title: 'Técnica de Cuidado Facial', url: '/foto8.jpg.jpeg' },
         { id: '9', title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
         { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' },
-        { id: '11', title: 'Detalhes do Procedimento', url: '/foto11.jpg' },
-        { id: '12', title: 'Atendimento Facial', url: '/foto12.jpg' },
-        { id: '13', title: 'Cuidado Personalizado', url: '/foto13.jpg' },
+        { id: '11', title: 'Detalhes do Procedimento', url: '/foto11.jpeg' },
+        { id: '12', title: 'Atendimento Facial', url: '/foto12.jpeg' },
+        { id: '13', title: 'Cuidado Personalizado', url: '/foto13.jpeg' },
     ];
 
     const [photos, setPhotos] = useState(defaultPhotos);
@@ -826,7 +826,18 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         >
                             <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
                             <div style={styles.carouselSlide}>
-                                <img src={photos[currentSlide].url} alt={photos[currentSlide].title} loading={currentSlide === 0 ? 'eager' : 'lazy'} decoding="async" style={styles.carouselImage} />
+                                <img
+                                    src={photos[currentSlide].url}
+                                    alt={photos[currentSlide].title}
+                                    loading={currentSlide === 0 ? 'eager' : 'lazy'}
+                                    decoding="async"
+                                    onError={(event) => {
+                                        const image = event.currentTarget;
+                                        image.onerror = null;
+                                        image.src = defaultPhotos[0].url;
+                                    }}
+                                    style={styles.carouselImage}
+                                />
                             </div>
                             <button onClick={nextSlide} style={styles.carouselBtnRight} aria-label="Próxima foto">&#10095;</button>
                             <div style={styles.dotsContainer}>
@@ -1274,9 +1285,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
                 <div style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
                     {[
-                        { src: '/foto11.jpg', alt: 'Detalhe do procedimento facial' },
-                        { src: '/foto12.jpg', alt: 'Atendimento estético facial' },
-                        { src: '/foto13.jpg', alt: 'Cuidado facial personalizado' },
+                        { src: '/foto11.jpeg', alt: 'Detalhe do procedimento facial' },
+                        { src: '/foto12.jpeg', alt: 'Atendimento estético facial' },
+                        { src: '/foto13.jpeg', alt: 'Cuidado facial personalizado' },
                         { src: '/foto6.jpg.jpeg', alt: 'Aplicação de cuidados faciais' },
                         { src: '/foto7.jpg.jpeg', alt: 'Tratamento facial' },
                         { src: '/foto9.jpg.jpeg', alt: 'Momento de cuidado estético' },
@@ -1287,6 +1298,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             alt={image.alt}
                             loading="lazy"
                             decoding="async"
+                            onError={(event) => {
+                                const imageElement = event.currentTarget;
+                                imageElement.onerror = null;
+                                imageElement.src = '/foto6.jpg.jpeg';
+                            }}
                             style={{ ...styles.galleryImage, height: isMobile ? '180px' : '250px', animationDelay: `${index * 0.05}s` }}
                         />
                     ))}
