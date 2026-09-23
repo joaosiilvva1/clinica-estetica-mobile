@@ -1,4 +1,4 @@
-export const CHAT_TIMEOUT_MS = 90000;
+export const CHAT_TIMEOUT_MS = 150000;
 
 export type ClinicService = {
     name: string;
@@ -39,6 +39,9 @@ const normalize = (message: string) => message
     .trim();
 
 const hasAny = (text: string, words: string[]) => words.some((word) => text.includes(word));
+const asksAboutSkinCleaning = (text: string) =>
+    hasAny(text, ['limpeza', 'cravos', 'comedoes', 'limpeza profunda']) ||
+    (/\blimp[a-z]*\b/.test(text) && /\b(pele|facial|rosto)\b/.test(text));
 
 const actionFor = (
     info: ClinicInfo,
@@ -92,7 +95,7 @@ export function getQuickChatReply(message: string, info: ClinicInfo): QuickChatR
         };
     }
 
-    if (hasAny(question, ['limpeza de pele', 'cravos', 'comedoes', 'limpeza profunda'])) {
+    if (asksAboutSkinCleaning(question)) {
         const service = relatedService('limpeza');
         const description = service?.description || 'A limpeza de pele é um cuidado estético voltado à higienização e à remoção de impurezas superficiais e comedões quando apropriado.';
         return {

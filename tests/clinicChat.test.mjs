@@ -22,6 +22,8 @@ test('perguntas rápidas oferecem ação clicável para WhatsApp e explicações
   assert.match(cleaning.text, /cravos e células mortas/);
   assert.match(cleaning.text, /não é um tratamento médico para acne/);
   assert.match(cleaning.source.href, /aad.org/);
+  assert.match(getQuickChatReply('Limpeza de pele', info).text, /cravos e células mortas/);
+  assert.match(getQuickChatReply('Quero fazer uma limpesa facial', info).text, /cravos e células mortas/);
 
   const massage = getQuickChatReply('Massagem facial', info);
   assert.match(massage.text, /conforto e ao relaxamento/);
@@ -44,7 +46,7 @@ test('perguntas rápidas oferecem ação clicável para WhatsApp e explicações
   assert.match(getQuickChatReply('Cuidados depois do procedimento', info).text, /FPS 30 ou mais/);
   assert.match(getQuickChatReply('Estou grávida, posso fazer?', info).text, /gravidez/);
   assert.equal(getQuickChatReply('Qual tratamento devo fazer?', info), null);
-  assert.equal(CHAT_TIMEOUT_MS, 90000);
+  assert.equal(CHAT_TIMEOUT_MS, 150000);
 });
 test('chat valida sucesso, falhas HTTP, fallback legado e resposta vazia', async (t) => {
   let body = { reply: 'Resposta válida' }; let status = 200;
