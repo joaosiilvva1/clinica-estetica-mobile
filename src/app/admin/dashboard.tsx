@@ -16,13 +16,6 @@ type Appointment = {
   notes?: string;
 };
 
-type Testimonial = {
-  id: number;
-  clientName: string;
-  rating: number;
-  comment: string;
-};
-
 type Treatment = {
   id: string;
   name: string;
@@ -60,6 +53,31 @@ type BenefitItem = { icon: string; text: string };
 type IndicationItem = { icon: string; title: string; text: string };
 type FaqItem = { question: string; answer: string };
 
+const defaultFaqItems: FaqItem[] = [
+  { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
+  { question: 'De quanto em quanto tempo devo fazer a limpeza de pele?', answer: 'A frequência ideal varia conforme a necessidade da sua pele. Na avaliação, a Maria orienta o intervalo mais adequado para o seu caso.' },
+  { question: 'Os produtos utilizados dão alergia?', answer: 'Os produtos e protocolos são escolhidos de acordo com as necessidades de cada pele. Caso você tenha alergias ou sensibilidades conhecidas, informe isso no agendamento.' },
+  { question: 'Gestante pode fazer limpeza de pele?', answer: 'Alguns cuidados podem ser adaptados durante a gestação. Antes do procedimento, informe a equipe para confirmar quais produtos e técnicas são adequados para você.' },
+  { question: 'Quais formas de pagamento são aceitas?', answer: 'Consulte as formas de pagamento disponíveis diretamente pelo WhatsApp da clínica.' },
+  { question: 'Como funciona o cancelamento ou a remarcação?', answer: 'Para cancelar ou remarcar seu horário, entre em contato pelo WhatsApp da clínica assim que possível para que a equipe possa orientar você.' },
+  { question: 'O que acontece se eu me atrasar?', answer: 'Em caso de atraso, avise pelo WhatsApp. Dependendo do tempo disponível no dia, o atendimento poderá precisar ser ajustado ou remarcado.' },
+  { question: 'O que devo fazer antes do procedimento?', answer: 'As orientações podem variar conforme o tratamento. Depois do agendamento, a equipe pode orientar os cuidados específicos para o seu atendimento.' },
+  { question: 'Quanto tempo dura cada tratamento?', answer: 'A duração aproximada aparece na descrição de cada tratamento. Ela pode variar conforme o protocolo e as necessidades da pele.' },
+  { question: 'Preciso fazer avaliação antes?', answer: 'Nem todo tratamento exige uma avaliação separada. Em caso de dúvida sobre o procedimento mais indicado, fale com a Maria pelo WhatsApp antes do agendamento.' },
+  { question: 'Onde fica a clínica?', answer: 'Estamos na R. Izaura da Silva Camargo, 27, Jardim São Paulo, Taboão da Serra - SP.' },
+];
+
+const mergeFaqItems = (items: FaqItem[]): FaqItem[] => {
+  const existingQuestions = new Set(items.map((item) => item.question.trim().toLowerCase()));
+  return [
+    ...items,
+    ...defaultFaqItems.filter((item) => !existingQuestions.has(item.question.trim().toLowerCase())),
+  ];
+};
+
+const normalizeAssetUrl = (url: string): string =>
+    url.replace(/\.jpg\.jpeg(?=($|\?))/i, '.webp');
+
 type SiteSettingsForm = {
   aboutText: string;
   address: string;
@@ -83,8 +101,6 @@ type SiteSettingsForm = {
   locationSectionSubtitle: string;
   bookingSectionTitle: string;
   bookingSectionSubtitle: string;
-  testimonialsSectionTitle: string;
-  testimonialsSectionSubtitle: string;
   faqSectionTitle: string;
   faqSectionSubtitle: string;
   faqItems: FaqItem[];
@@ -109,7 +125,7 @@ function parseJsonArray<T>(json: string | null | undefined, fallback: T[]): T[] 
 const stringifyOrNull = (items: unknown[]) =>
     items.length > 0 ? JSON.stringify(items) : null;
 
-type Tab = 'agenda' | 'tratamentos' | 'fotos' | 'site' | 'depoimentos';
+type Tab = 'agenda' | 'tratamentos' | 'fotos' | 'site';
 
 const statusLabel: Record<Appointment['status'], string> = {
   PENDING: 'Pendente',
@@ -147,16 +163,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-  // Depoimentos
-  const [pendingTestimonials, setPendingTestimonials] = useState<Testimonial[]>(
-      []
-  );
-  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
-  const [testimonialsError, setTestimonialsError] = useState<string | null>(
-      null
-  );
-  const [moderatingId, setModeratingId] = useState<number | null>(null);
 
   // Tratamentos
   const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -347,127 +353,6 @@ export default function AdminDashboard() {
         minute: '2-digit',
         timeZone: 'America/Sao_Paulo',
       });
-
-  // =========================
-  // DEPOIMENTOS
-  // =========================
-
-  const loadPendingTestimonials = useCallback(async () => {
-    if (!token) return;
-
-    setTestimonialsLoading(true);
-    setTestimonialsError(null);
-
-    try {
-      const res = await fetch(
-          `${API_BASE_URL}/api/admin/testimonials/pending`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-      );
-
-      if (res.status === 401 || res.status === 403) {
-        handleLogout();
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error();
-      }
-
-      const data: Testimonial[] = await res.json();
-
-      setPendingTestimonials(data);
-    } catch {
-      setTestimonialsError(
-          'Não foi possível carregar os depoimentos pendentes.'
-      );
-    } finally {
-      setTestimonialsLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (tab === 'depoimentos') {
-      loadPendingTestimonials();
-    }
-  }, [tab, loadPendingTestimonials]);
-
-  const approveTestimonial = async (id: number) => {
-    if (!token) return;
-
-    setModeratingId(id);
-
-    try {
-      const res = await fetch(
-          `${API_BASE_URL}/api/admin/testimonials/${id}/approve`,
-          {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-      );
-
-      if (res.status === 401 || res.status === 403) {
-        handleLogout();
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error();
-      }
-
-      setPendingTestimonials((prev) =>
-          prev.filter((testimonial) => testimonial.id !== id)
-      );
-    } catch {
-      setTestimonialsError(
-          'Não foi possível aprovar esse depoimento.'
-      );
-    } finally {
-      setModeratingId(null);
-    }
-  };
-
-  const rejectTestimonial = async (id: number) => {
-    if (!token) return;
-
-    setModeratingId(id);
-
-    try {
-      const res = await fetch(
-          `${API_BASE_URL}/api/admin/testimonials/${id}`,
-          {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-      );
-
-      if (res.status === 401 || res.status === 403) {
-        handleLogout();
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error();
-      }
-
-      setPendingTestimonials((prev) =>
-          prev.filter((testimonial) => testimonial.id !== id)
-      );
-    } catch {
-      setTestimonialsError(
-          'Não foi possível rejeitar esse depoimento.'
-      );
-    } finally {
-      setModeratingId(null);
-    }
-  };
 
   // =========================
   // TRATAMENTOS
@@ -926,7 +811,7 @@ export default function AdminDashboard() {
         whatsapp: data.whatsapp ?? '',
         openingHoursText: data.openingHoursText ?? '',
         instagramUrl: data.instagramUrl ?? '',
-        logoUrl: data.logoUrl ?? '',
+        logoUrl: normalizeAssetUrl(data.logoUrl ?? ''),
         heroEyebrow: data.heroEyebrow ?? '',
         heroTitle: data.heroTitle ?? '',
         heroSubtitle: data.heroSubtitle ?? '',
@@ -935,7 +820,7 @@ export default function AdminDashboard() {
         indicationsSectionTitle: data.indicationsSectionTitle ?? '',
         indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, []),
         aboutBadgeText: data.aboutBadgeText ?? '',
-        aboutPhotoUrl: data.aboutPhotoUrl ?? '',
+        aboutPhotoUrl: normalizeAssetUrl(data.aboutPhotoUrl ?? ''),
         treatmentsEyebrow: data.treatmentsEyebrow ?? '',
         treatmentsSectionTitle: data.treatmentsSectionTitle ?? '',
         treatmentsSectionSubtitle: data.treatmentsSectionSubtitle ?? '',
@@ -943,11 +828,9 @@ export default function AdminDashboard() {
         locationSectionSubtitle: data.locationSectionSubtitle ?? '',
         bookingSectionTitle: data.bookingSectionTitle ?? '',
         bookingSectionSubtitle: data.bookingSectionSubtitle ?? '',
-        testimonialsSectionTitle: data.testimonialsSectionTitle ?? '',
-        testimonialsSectionSubtitle: data.testimonialsSectionSubtitle ?? '',
         faqSectionTitle: data.faqSectionTitle ?? '',
         faqSectionSubtitle: data.faqSectionSubtitle ?? '',
-        faqItems: parseJsonArray<FaqItem>(data.faqItemsJson, []),
+        faqItems: mergeFaqItems(parseJsonArray<FaqItem>(data.faqItemsJson, defaultFaqItems)),
         footerTagline: data.footerTagline ?? '',
         footerContactEmail: data.footerContactEmail ?? '',
         footerCopyrightText: data.footerCopyrightText ?? '',
@@ -981,7 +864,7 @@ export default function AdminDashboard() {
         whatsapp: siteForm.whatsapp,
         openingHoursText: siteForm.openingHoursText,
         instagramUrl: siteForm.instagramUrl,
-        logoUrl: siteForm.logoUrl,
+        logoUrl: normalizeAssetUrl(siteForm.logoUrl),
         heroEyebrow: siteForm.heroEyebrow,
         heroTitle: siteForm.heroTitle,
         heroSubtitle: siteForm.heroSubtitle,
@@ -990,7 +873,7 @@ export default function AdminDashboard() {
         indicationsSectionTitle: siteForm.indicationsSectionTitle,
         indicationsItemsJson: stringifyOrNull(siteForm.indicationsItems),
         aboutBadgeText: siteForm.aboutBadgeText,
-        aboutPhotoUrl: siteForm.aboutPhotoUrl,
+        aboutPhotoUrl: normalizeAssetUrl(siteForm.aboutPhotoUrl),
         treatmentsEyebrow: siteForm.treatmentsEyebrow,
         treatmentsSectionTitle: siteForm.treatmentsSectionTitle,
         treatmentsSectionSubtitle: siteForm.treatmentsSectionSubtitle,
@@ -998,8 +881,6 @@ export default function AdminDashboard() {
         locationSectionSubtitle: siteForm.locationSectionSubtitle,
         bookingSectionTitle: siteForm.bookingSectionTitle,
         bookingSectionSubtitle: siteForm.bookingSectionSubtitle,
-        testimonialsSectionTitle: siteForm.testimonialsSectionTitle,
-        testimonialsSectionSubtitle: siteForm.testimonialsSectionSubtitle,
         faqSectionTitle: siteForm.faqSectionTitle,
         faqSectionSubtitle: siteForm.faqSectionSubtitle,
         faqItemsJson: stringifyOrNull(siteForm.faqItems),
@@ -1034,7 +915,7 @@ export default function AdminDashboard() {
         whatsapp: data.whatsapp ?? '',
         openingHoursText: data.openingHoursText ?? '',
         instagramUrl: data.instagramUrl ?? '',
-        logoUrl: data.logoUrl ?? '',
+        logoUrl: normalizeAssetUrl(data.logoUrl ?? ''),
         heroEyebrow: data.heroEyebrow ?? '',
         heroTitle: data.heroTitle ?? '',
         heroSubtitle: data.heroSubtitle ?? '',
@@ -1043,7 +924,7 @@ export default function AdminDashboard() {
         indicationsSectionTitle: data.indicationsSectionTitle ?? '',
         indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, []),
         aboutBadgeText: data.aboutBadgeText ?? '',
-        aboutPhotoUrl: data.aboutPhotoUrl ?? '',
+        aboutPhotoUrl: normalizeAssetUrl(data.aboutPhotoUrl ?? ''),
         treatmentsEyebrow: data.treatmentsEyebrow ?? '',
         treatmentsSectionTitle: data.treatmentsSectionTitle ?? '',
         treatmentsSectionSubtitle: data.treatmentsSectionSubtitle ?? '',
@@ -1051,11 +932,9 @@ export default function AdminDashboard() {
         locationSectionSubtitle: data.locationSectionSubtitle ?? '',
         bookingSectionTitle: data.bookingSectionTitle ?? '',
         bookingSectionSubtitle: data.bookingSectionSubtitle ?? '',
-        testimonialsSectionTitle: data.testimonialsSectionTitle ?? '',
-        testimonialsSectionSubtitle: data.testimonialsSectionSubtitle ?? '',
         faqSectionTitle: data.faqSectionTitle ?? '',
         faqSectionSubtitle: data.faqSectionSubtitle ?? '',
-        faqItems: parseJsonArray<FaqItem>(data.faqItemsJson, []),
+        faqItems: mergeFaqItems(parseJsonArray<FaqItem>(data.faqItemsJson, defaultFaqItems)),
         footerTagline: data.footerTagline ?? '',
         footerContactEmail: data.footerContactEmail ?? '',
         footerCopyrightText: data.footerCopyrightText ?? '',
@@ -1130,7 +1009,6 @@ export default function AdminDashboard() {
     about: 'site',
     treatments: 'tratamentos',
     location: 'site',
-    testimonials: 'depoimentos',
     faq: 'site',
     footer: 'site',
   };
@@ -1171,10 +1049,6 @@ export default function AdminDashboard() {
       key: 'site',
       label: 'Site',
     },
-    {
-      key: 'depoimentos',
-      label: 'Depoimentos',
-    },
   ];
 
   return (
@@ -1188,7 +1062,7 @@ export default function AdminDashboard() {
               }}
           >
             <div style={styles.adminBarBrand}>
-              <img src="/logo.jpg.jpeg" alt="Logo Maria Yasmim Lopes" style={styles.adminBarLogo} />
+              <img src="/logo.webp" alt="Logo Maria Yasmim Lopes" style={styles.adminBarLogo} />
               <span style={styles.logoTextBlock}>
                 <span style={styles.adminBarTitle}>Maria Yasmim Lopes</span>
                 {/* Some no modo estreito: era o segundo maior motivo do wrap
@@ -1925,7 +1799,7 @@ export default function AdminDashboard() {
                               value={siteForm.logoUrl}
                               onChange={(event) => setSiteForm({ ...siteForm, logoUrl: event.target.value })}
                               style={styles.input}
-                              placeholder="/logo.jpg.jpeg"
+                              placeholder="/logo.webp"
                           />
 
                           {/* --- Hero (topo do site) --- */}
@@ -2219,28 +2093,6 @@ export default function AdminDashboard() {
                               style={styles.input}
                           />
 
-                          {/* --- Depoimentos (cabeçalho) --- */}
-                          <h3 style={styles.formTitle}>Seção "Depoimentos" (cabeçalho)</h3>
-                          <p style={styles.helperText}>
-                            Os depoimentos em si são aprovados na aba "Depoimentos".
-                          </p>
-
-                          <label style={styles.label}>Título da seção</label>
-                          <input
-                              type="text"
-                              value={siteForm.testimonialsSectionTitle}
-                              onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionTitle: event.target.value })}
-                              style={styles.input}
-                          />
-
-                          <label style={styles.label}>Subtítulo da seção</label>
-                          <input
-                              type="text"
-                              value={siteForm.testimonialsSectionSubtitle}
-                              onChange={(event) => setSiteForm({ ...siteForm, testimonialsSectionSubtitle: event.target.value })}
-                              style={styles.input}
-                          />
-
                           {/* --- FAQ --- */}
                           <h3 style={styles.formTitle}>Perguntas Frequentes</h3>
 
@@ -2377,114 +2229,6 @@ export default function AdminDashboard() {
                   </section>
               )}
 
-              {/* =========================
-          DEPOIMENTOS
-      ========================= */}
-
-              {tab === 'depoimentos' && (
-                  <section>
-                    {testimonialsError && (
-                        <div style={styles.errorBox}>
-                          {testimonialsError}
-                        </div>
-                    )}
-
-                    {testimonialsLoading ? (
-                        <p style={styles.info}>
-                          Carregando...
-                        </p>
-                    ) : pendingTestimonials.length === 0 ? (
-                        <p style={styles.info}>
-                          Nenhum depoimento aguardando
-                          aprovação.
-                        </p>
-                    ) : (
-                        <div
-                            style={{
-                              ...styles.list,
-                              ...(isMobile
-                                  ? {}
-                                  : styles.listGrid),
-                            }}
-                        >
-                          {pendingTestimonials.map(
-                              (testimonial) => (
-                                  <div
-                                      key={testimonial.id}
-                                      style={styles.card}
-                                  >
-                                    <div style={styles.cardTop}>
-                                      <strong style={styles.time}>
-                                        {
-                                          testimonial.clientName
-                                        }
-                                      </strong>
-
-                                      <span style={styles.time}>
-                        {'⭐'.repeat(
-                            testimonial.rating
-                        )}
-                      </span>
-                                    </div>
-
-                                    <p style={styles.detail}>
-                                      {testimonial.comment}
-                                    </p>
-
-                                    <div style={styles.actions}>
-                                      <button
-                                          onClick={() =>
-                                              approveTestimonial(
-                                                  testimonial.id
-                                              )
-                                          }
-                                          disabled={
-                                              moderatingId ===
-                                              testimonial.id
-                                          }
-                                          style={{
-                                            ...styles.actionButton,
-                                            borderColor:
-                                                '#2E7D32',
-                                            color: '#2E7D32',
-                                          }}
-                                      >
-                                        {moderatingId ===
-                                        testimonial.id
-                                            ? '...'
-                                            : 'Aprovar'}
-                                      </button>
-
-                                      <button
-                                          onClick={() =>
-                                              rejectTestimonial(
-                                                  testimonial.id
-                                              )
-                                          }
-                                          disabled={
-                                              moderatingId ===
-                                              testimonial.id
-                                          }
-                                          style={{
-                                            ...styles.actionButton,
-                                            borderColor:
-                                                '#B3261E',
-                                            color: '#B3261E',
-                                          }}
-                                      >
-                                        {moderatingId ===
-                                        testimonial.id
-                                            ? '...'
-                                            : 'Rejeitar'}
-                                      </button>
-                                    </div>
-                                  </div>
-                              )
-                          )}
-                        </div>
-                    )}
-                  </section>
-              )}
             </div>
           </div>
         </aside>
