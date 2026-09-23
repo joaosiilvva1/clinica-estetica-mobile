@@ -28,8 +28,6 @@ type SiteSettings = {
     locationSectionSubtitle: string;
     bookingSectionTitle: string;
     bookingSectionSubtitle: string;
-    testimonialsSectionTitle: string;
-    testimonialsSectionSubtitle: string;
     faqSectionTitle: string;
     faqSectionSubtitle: string;
     faqItems: FaqItem[];
@@ -51,6 +49,32 @@ function parseJsonArray<T>(json: string | null | undefined, fallback: T[]): T[] 
     }
 }
 
+function normalizeAssetUrl(url: string): string {
+    return url.replace(/\.jpg\.jpeg(?=($|\?))/i, '.webp');
+}
+
+const defaultFaqItems: FaqItem[] = [
+    { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
+    { question: 'De quanto em quanto tempo devo fazer a limpeza de pele?', answer: 'A frequência ideal varia conforme a necessidade da sua pele. Na avaliação, a Maria orienta o intervalo mais adequado para o seu caso.' },
+    { question: 'Os produtos utilizados dão alergia?', answer: 'Os produtos e protocolos são escolhidos de acordo com as necessidades de cada pele. Caso você tenha alergias ou sensibilidades conhecidas, informe isso no agendamento.' },
+    { question: 'Gestante pode fazer limpeza de pele?', answer: 'Alguns cuidados podem ser adaptados durante a gestação. Antes do procedimento, informe a equipe para confirmar quais produtos e técnicas são adequados para você.' },
+    { question: 'Quais formas de pagamento são aceitas?', answer: 'Consulte as formas de pagamento disponíveis diretamente pelo WhatsApp da clínica.' },
+    { question: 'Como funciona o cancelamento ou a remarcação?', answer: 'Para cancelar ou remarcar seu horário, entre em contato pelo WhatsApp da clínica assim que possível para que a equipe possa orientar você.' },
+    { question: 'O que acontece se eu me atrasar?', answer: 'Em caso de atraso, avise pelo WhatsApp. Dependendo do tempo disponível no dia, o atendimento poderá precisar ser ajustado ou remarcado.' },
+    { question: 'Preciso fazer alguma preparação antes do procedimento?', answer: 'As orientações podem variar conforme o tratamento. Depois do agendamento, a equipe pode orientar os cuidados específicos para o seu atendimento.' },
+    { question: 'Quanto tempo dura cada tratamento?', answer: 'A duração aproximada aparece na descrição de cada tratamento. Ela pode variar conforme o protocolo e as necessidades da pele.' },
+    { question: 'Preciso fazer avaliação antes?', answer: 'Nem todo tratamento exige uma avaliação separada. Em caso de dúvida sobre o procedimento mais indicado, fale com a Maria pelo WhatsApp antes do agendamento.' },
+    { question: 'Onde fica a clínica?', answer: 'Estamos na R. Izaura da Silva Camargo, 27, Jardim São Paulo, Taboão da Serra - SP. Na seção Onde Estamos você também pode abrir a rota no Google Maps.' },
+];
+
+function mergeFaqItems(items: FaqItem[]): FaqItem[] {
+    const existingQuestions = new Set(items.map((item) => item.question.trim().toLowerCase()));
+    return [
+        ...items,
+        ...defaultFaqItems.filter((item) => !existingQuestions.has(item.question.trim().toLowerCase())),
+    ];
+}
+
 const defaultSiteSettings: SiteSettings = {
     aboutText:
         'Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.\n' +
@@ -62,20 +86,20 @@ const defaultSiteSettings: SiteSettings = {
     openingHoursText:
         'Domingos e Segundas com hora marcada para garantir sua exclusividade.',
     instagramUrl: 'https://www.instagram.com/yasmimlopes_estetica/',
-    logoUrl: '/logo.jpg.jpeg',
+    logoUrl: '/logo.webp',
     heroEyebrow: 'Realce sua beleza natural',
     heroTitle: 'Sua melhor versão começa aqui',
     heroSubtitle:
-        'Tratamentos faciais personalizados para realçar sua beleza natural com segurança, acolhimento e resultados reais.',
+        'Tratamentos faciais personalizados em Taboão da Serra, com atendimento acolhedor, protocolos cuidadosos e foco nas necessidades da sua pele.',
     heroTrustItems: [
         { icon: '🛡️', text: 'Procedimentos seguros' },
         { icon: '🤝', text: 'Atendimento personalizado' },
-        { icon: '⭐', text: 'Resultados comprovados' },
+        { icon: '✨', text: 'Protocolos personalizados' },
     ],
     benefitsItems: [
         { icon: '⭐', text: 'Atendimento Exclusivo e Personalizado' },
         { icon: '🛡️', text: 'Dermocosméticos de Alta Qualidade' },
-        { icon: '💬', text: 'Agendamento Direto com Confirmação Automática' },
+        { icon: '💬', text: 'Agendamento online e confirmação via WhatsApp' },
     ],
     indicationsSectionTitle: 'Nossos tratamentos são ideais para quem busca:',
     indicationsItems: [
@@ -85,24 +109,17 @@ const defaultSiteSettings: SiteSettings = {
         { icon: '💆‍♀️', title: 'Hidratação e Viço (Glow)', text: 'Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.' },
     ],
     aboutBadgeText: 'Sua Esteticista',
-    aboutPhotoUrl: '/fotosobre.jpg.jpeg',
+    aboutPhotoUrl: '/fotosobre.webp',
     treatmentsEyebrow: 'Nossos tratamentos',
     treatmentsSectionTitle: 'Cuidados para realçar sua beleza',
     treatmentsSectionSubtitle: 'Procedimentos faciais personalizados para suas necessidades',
     locationSectionTitle: 'Onde Estamos',
     locationSectionSubtitle: 'Sua clínica de estética bem pertinho de você em Taboão da Serra.',
     bookingSectionTitle: 'Agende seu Atendimento',
-    bookingSectionSubtitle: 'Preencha seus dados para registrar o horário diretamente na clínica.',
-    testimonialsSectionTitle: 'Depoimentos Reais',
-    testimonialsSectionSubtitle: 'Veja o que nossas clientes dizem sobre a experiência.',
+    bookingSectionSubtitle: 'Preencha seus dados para solicitar o horário. Depois do envio, você poderá confirmar os detalhes pelo WhatsApp.',
     faqSectionTitle: 'Perguntas Frequentes',
     faqSectionSubtitle: 'Tire suas principais dúvidas sobre os nossos tratamentos.',
-    faqItems: [
-        { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
-        { question: 'De quanto em quanto tempo devo fazer a limpeza de pele?', answer: 'O ideal é realizar o procedimento a cada 30 ou 40 dias, acompanhando o ciclo natural de renovação celular da sua pele, mantendo-a sempre viçosa e saudável.' },
-        { question: 'Os produtos utilizados dão alergia?', answer: 'Trabalhamos exclusivamente com dermocosméticos de alta qualidade e hipoalergênicos, garantindo segurança e eficácia em cada protocolo.' },
-        { question: 'Gestante pode fazer limpeza de pele?', answer: 'Sim! Com as devidas adaptações de produtos, as gestantes podem e devem cuidar da pele, além de aproveitarem nossos protocolos de relaxamento facial.' },
-    ],
+    faqItems: defaultFaqItems,
     footerTagline: 'Excelência, tecnologia e amor em cada detalhe do cuidado estético na região de Taboão da Serra.',
     footerContactEmail: 'contato@mariayasmimestetica.com.br',
     footerCopyrightText: '© 2026 Maria Yasmim Lopes Estética. Todos os direitos reservados.',
@@ -116,7 +133,6 @@ type EditSectionKey =
     | 'about'
     | 'treatments'
     | 'location'
-    | 'testimonials'
     | 'faq'
     | 'footer';
 
@@ -342,6 +358,17 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
       .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
 
+      @media (max-width: 720px) {
+        .myl-mobile-action { width: 100%; justify-content: center; }
+      }
+
+      @media (max-width: 760px) {
+        .myl-navbar nav { gap: 14px !important; }
+      }
+
+      @media (max-width: 700px) {
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .myl-fade-up, .myl-fade-in, .myl-float, .myl-scroll-cue { animation: none !important; opacity: 1 !important; transform: none !important; }
       }
@@ -387,16 +414,16 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const resetAboutTilt = () => setAboutTilt({ x: 0, y: 0 });
 
     const defaultPhotos = [
-        { id: '1', title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
-        { id: '2', title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
-        { id: '3', title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
-        { id: '4', title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
-        { id: '5', title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
-        { id: '6', title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
-        { id: '7', title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
-        { id: '8', title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
-        { id: '9', title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
-        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
+        { id: '1', title: 'Cuidado e Confiança', url: '/foto1.webp' },
+        { id: '2', title: 'Beleza Natural', url: '/foto2.webp' },
+        { id: '3', title: 'Limpeza de Pele Profunda', url: '/foto3.webp' },
+        { id: '4', title: 'Rejuvenescimento Facial', url: '/foto4.webp' },
+        { id: '5', title: 'Hidratação e Glow', url: '/foto5.webp' },
+        { id: '6', title: 'Tratamento Especializado', url: '/foto6.webp' },
+        { id: '7', title: 'Cuidado Personalizado', url: '/foto7.webp' },
+        { id: '8', title: 'Resultados Reais', url: '/foto8.webp' },
+        { id: '9', title: 'Técnica Refinada', url: '/foto9.webp' },
+        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.webp' }
     ];
 
     const [photos, setPhotos] = useState(defaultPhotos);
@@ -434,7 +461,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         data.map((p: any) => ({
                             id: p.id,
                             title: p.title || '',
-                            url: p.url,
+                            url: normalizeAssetUrl(p.url),
                         }))
                     );
                 }
@@ -454,7 +481,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         whatsapp: str(data.whatsapp, prev.whatsapp),
                         openingHoursText: str(data.openingHoursText, prev.openingHoursText),
                         instagramUrl: str(data.instagramUrl, prev.instagramUrl),
-                        logoUrl: str(data.logoUrl, prev.logoUrl),
+                        logoUrl: normalizeAssetUrl(str(data.logoUrl, prev.logoUrl)),
                         heroEyebrow: str(data.heroEyebrow, prev.heroEyebrow),
                         heroTitle: str(data.heroTitle, prev.heroTitle),
                         heroSubtitle: str(data.heroSubtitle, prev.heroSubtitle),
@@ -463,7 +490,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         indicationsSectionTitle: str(data.indicationsSectionTitle, prev.indicationsSectionTitle),
                         indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, prev.indicationsItems),
                         aboutBadgeText: str(data.aboutBadgeText, prev.aboutBadgeText),
-                        aboutPhotoUrl: str(data.aboutPhotoUrl, prev.aboutPhotoUrl),
+                        aboutPhotoUrl: normalizeAssetUrl(str(data.aboutPhotoUrl, prev.aboutPhotoUrl)),
                         treatmentsEyebrow: str(data.treatmentsEyebrow, prev.treatmentsEyebrow),
                         treatmentsSectionTitle: str(data.treatmentsSectionTitle, prev.treatmentsSectionTitle),
                         treatmentsSectionSubtitle: str(data.treatmentsSectionSubtitle, prev.treatmentsSectionSubtitle),
@@ -471,11 +498,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         locationSectionSubtitle: str(data.locationSectionSubtitle, prev.locationSectionSubtitle),
                         bookingSectionTitle: str(data.bookingSectionTitle, prev.bookingSectionTitle),
                         bookingSectionSubtitle: str(data.bookingSectionSubtitle, prev.bookingSectionSubtitle),
-                        testimonialsSectionTitle: str(data.testimonialsSectionTitle, prev.testimonialsSectionTitle),
-                        testimonialsSectionSubtitle: str(data.testimonialsSectionSubtitle, prev.testimonialsSectionSubtitle),
                         faqSectionTitle: str(data.faqSectionTitle, prev.faqSectionTitle),
                         faqSectionSubtitle: str(data.faqSectionSubtitle, prev.faqSectionSubtitle),
-                        faqItems: parseJsonArray<FaqItem>(data.faqItemsJson, prev.faqItems),
+                        faqItems: mergeFaqItems(parseJsonArray<FaqItem>(data.faqItemsJson, prev.faqItems)),
                         footerTagline: str(data.footerTagline, prev.footerTagline),
                         footerContactEmail: str(data.footerContactEmail, prev.footerContactEmail),
                         footerCopyrightText: str(data.footerCopyrightText, prev.footerCopyrightText),
@@ -680,43 +705,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         }
     };
 
-    const [testimonials, setTestimonials] = useState<
-        { id: string; clientName: string; rating: number; comment: string }[]
-    >([]);
-
-    useEffect(() => {
-        fetch(`${API_BASE_URL}/api/testimonials/public`)
-            .then((res) => res.json())
-            .then((data) => setTestimonials(data))
-            .catch(() => {});
-    }, []);
-
-    const [testimonialForm, setTestimonialForm] = useState({ clientName: '', rating: 5, comment: '' });
-    const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
-    const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
-    const [testimonialError, setTestimonialError] = useState<string | null>(null);
-
-    const handleTestimonialSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!testimonialForm.clientName.trim() || !testimonialForm.comment.trim()) return;
-        setTestimonialSubmitting(true);
-        setTestimonialError(null);
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/testimonials/public`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(testimonialForm),
-            });
-            if (!res.ok) throw new Error();
-            setTestimonialSubmitted(true);
-            setTestimonialForm({ clientName: '', rating: 5, comment: '' });
-        } catch {
-            setTestimonialError('Não foi possível enviar seu depoimento agora. Tente novamente em instantes.');
-        } finally {
-            setTestimonialSubmitting(false);
-        }
-    };
-
     const todayStr = new Date().toISOString().split('T')[0];
 
     const toggleFaq = (index: number) => {
@@ -724,6 +712,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     };
 
     const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
+    const buildWhatsAppLink = (message = 'Olá Maria, vi o site e gostaria de agendar uma avaliação.') =>
+        `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(message)}`;
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}`;
     const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
     const addressLines = siteSettings.address.split('\n').filter((l) => l.trim());
     const instagramHandle = (() => {
@@ -739,7 +730,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         <div id="inicio" style={styles.container}>
 
             {/* Botão Flutuante do WhatsApp */}
-            <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" style={styles.floatingWhatsApp}>
+            <a href={buildWhatsAppLink()} target="_blank" rel="noreferrer" aria-label="Falar com a Maria pelo WhatsApp" style={styles.floatingWhatsApp}>
                 <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             </a>
 
@@ -747,7 +738,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             <header className={`myl-navbar${isScrolled ? ' myl-scrolled' : ''}`} style={{ ...styles.header, top: topOffset }}>
                 <div style={styles.headerContent}>
                     <a href="#inicio" style={styles.logoContainer}>
-                        <img src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" style={styles.logoCircle} />
+                        <img src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" loading="eager" decoding="async" style={styles.logoCircle} />
                         <span style={styles.logoTextBlock}>
                 <span style={{ ...styles.logoText, fontSize: isMobile ? '13px' : '18px' }}>Maria Yasmim Lopes</span>
                 <span style={styles.logoSubtext}>Estética</span>
@@ -758,7 +749,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <a href="#inicio" style={styles.navLink}>Início</a>
                             <a href="#sobre" style={styles.navLink}>Sobre</a>
                             <a href="#tratamentos" style={styles.navLink}>Tratamentos</a>
-                            <a href="#depoimentos" style={styles.navLink}>Depoimentos</a>
                             <a href="#contato" style={styles.navLink}>Contato</a>
                         </nav>
                     )}
@@ -791,7 +781,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </p>
 
                         <div style={styles.heroActions}>
-                            <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" className="myl-btn-primary" style={styles.primaryActionButton}>
+                            <a href={buildWhatsAppLink()} target="_blank" rel="noreferrer" className="myl-btn-primary" style={styles.primaryActionButton}>
                                 Agendar via WhatsApp
                             </a>
                             <a href="#tratamentos" className="myl-btn-secondary" style={styles.secondaryActionButton}>
@@ -830,7 +820,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         >
                             <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
                             <div style={styles.carouselSlide}>
-                                <img src={photos[currentSlide].url} alt={photos[currentSlide].title} style={styles.carouselImage} />
+                                <img src={photos[currentSlide].url} alt={photos[currentSlide].title} loading={currentSlide === 0 ? 'eager' : 'lazy'} decoding="async" style={styles.carouselImage} />
                             </div>
                             <button onClick={nextSlide} style={styles.carouselBtnRight} aria-label="Próxima foto">&#10095;</button>
                             <div style={styles.dotsContainer}>
@@ -1037,7 +1027,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                 >
                                     {src && (
                                         <div style={{ flex: isMobile ? undefined : '0 0 48%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '26px', overflow: 'hidden', boxShadow: '0 40px 80px -20px rgba(45,21,55,0.28)' }}>
-                                            <img src={src} alt={item.name} style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
+                                            <img src={src} alt={item.name} loading="lazy" decoding="async" style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
                                             <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.3))' }} />
                                         </div>
                                     )}
@@ -1097,9 +1087,14 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <strong>Atendimento:</strong><br/>
                             {siteSettings.openingHoursText}
                         </p>
-                        <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, marginTop: '15px', padding: '12px 25px', fontSize: '14px'}}>
-                            Enviar Mensagem
-                        </a>
+                        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '10px', marginTop: '15px' }}>
+                            <a href={buildWhatsAppLink('Olá Maria, encontrei a clínica pelo site e gostaria de tirar uma dúvida.')} target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, padding: '12px 25px', fontSize: '14px'}}>
+                                Falar pelo WhatsApp
+                            </a>
+                            <a href={mapsUrl} target="_blank" rel="noreferrer" style={{...styles.secondaryActionButton, padding: '12px 20px', fontSize: '14px'}}>
+                                Como chegar no Google Maps
+                            </a>
+                        </div>
                     </div>
                     <div style={styles.locationMapWrapper}>
                         <iframe
@@ -1264,102 +1259,42 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 )}
             </section>
 
-            {/* Testimonials Section */}
-            <section id="depoimentos" style={{ ...styles.testimonialsSection, position: 'relative' as const }}>
-                {editable && <EditPencil label="Depoimentos" onClick={() => editSection('testimonials')} />}
+            {/* Galeria / Instagram */}
+            <section id="instagram" style={styles.gallerySection}>
                 <div style={styles.sectionHeader}>
-                    <h2 style={styles.sectionTitle}>{siteSettings.testimonialsSectionTitle}</h2>
-                    <p style={styles.sectionSubtitle}>{siteSettings.testimonialsSectionSubtitle}</p>
+                    <span style={styles.eyebrowCentered}>Conheça nosso trabalho</span>
+                    <h2 style={styles.sectionTitle}>Estética, cuidado e resultados em cada detalhe</h2>
+                    <p style={styles.sectionSubtitle}>Acompanhe mais conteúdos e novidades no Instagram da clínica.</p>
                 </div>
-
-                {testimonials.length > 0 && (
-                    <div style={styles.grid}>
-                        {testimonials.map((t) => (
-                            <div key={t.id} style={styles.googleReviewCard}>
-                                <div style={styles.reviewHeader}>
-                                    <div style={styles.avatar}>
-                                        {t.clientName ? t.clientName.charAt(0).toUpperCase() : 'C'}
-                                    </div>
-                                    <div>
-                                        <h4 style={styles.clientNameGoogle}>{t.clientName}</h4>
-                                        <div style={styles.starsContainer}>
-                                            {'⭐'.repeat(t.rating)}
-                                        </div>
-                                    </div>
-                                </div>
-                                <p style={styles.googleReviewText}>{t.comment}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                <div style={styles.testimonialFormWrapper}>
-                    {testimonialSubmitted ? (
-                        <div style={styles.bookingSuccess}>
-                            <p style={styles.bookingSuccessText}>
-                                Obrigada pelo seu depoimento! Ele foi enviado e vai aparecer aqui assim que for revisado. 💜
-                            </p>
-                            <button
-                                style={styles.bookingResetLink}
-                                onClick={() => setTestimonialSubmitted(false)}
-                            >
-                                Enviar outro depoimento
-                            </button>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleTestimonialSubmit} style={styles.bookingForm}>
-                            <h3 style={styles.cardTitle}>Deixe seu depoimento</h3>
-                            <p style={styles.cardText}>
-                                Conte como foi sua experiência. Seu depoimento passa por uma breve revisão antes de aparecer no site.
-                            </p>
-
-                            <div style={styles.fieldGroup}>
-                                <label style={styles.fieldLabel}>Seu nome</label>
-                                <input
-                                    style={styles.bookingInput}
-                                    type="text"
-                                    value={testimonialForm.clientName}
-                                    onChange={(e) => setTestimonialForm({ ...testimonialForm, clientName: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            <div style={styles.fieldGroup}>
-                                <label style={styles.fieldLabel}>Sua nota</label>
-                                <div style={styles.timeSlotsGrid}>
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                            key={star}
-                                            type="button"
-                                            onClick={() => setTestimonialForm({ ...testimonialForm, rating: star })}
-                                            style={{
-                                                ...styles.slotButton,
-                                                ...(testimonialForm.rating === star ? styles.slotSelected : {}),
-                                            }}
-                                        >
-                                            {'⭐'.repeat(star)}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div style={styles.fieldGroup}>
-                                <label style={styles.fieldLabel}>Seu depoimento</label>
-                                <textarea
-                                    style={{ ...styles.bookingInput, minHeight: '110px', fontFamily: 'inherit', resize: 'vertical' as const }}
-                                    value={testimonialForm.comment}
-                                    onChange={(e) => setTestimonialForm({ ...testimonialForm, comment: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            {testimonialError && <p style={styles.bookingErrorText}>{testimonialError}</p>}
-
-                            <button type="submit" style={styles.bookingSubmitButton} disabled={testimonialSubmitting}>
-                                {testimonialSubmitting ? 'Enviando...' : 'Enviar depoimento'}
-                            </button>
-                        </form>
-                    )}
+                <div style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
+                    {[
+                        { src: '/foto3.webp', alt: 'Atendimento de estética facial' },
+                        { src: '/foto4.webp', alt: 'Cuidados estéticos faciais' },
+                        { src: '/antes-depois-1-antes.webp', alt: 'Registro antes do procedimento' },
+                        { src: '/antes-depois-1-depois.webp', alt: 'Registro depois do procedimento' },
+                        { src: '/foto7.webp', alt: 'Cuidado personalizado' },
+                        { src: '/foto8.webp', alt: 'Tratamento facial' },
+                    ].map((image, index) => (
+                        <img
+                            key={image.src}
+                            src={image.src}
+                            alt={image.alt}
+                            loading="lazy"
+                            decoding="async"
+                            style={{ ...styles.galleryImage, height: isMobile ? '180px' : '250px', animationDelay: `${index * 0.05}s` }}
+                        />
+                    ))}
+                </div>
+                <div style={styles.galleryCta}>
+                    <a
+                        href={siteSettings.instagramUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="myl-btn-primary"
+                        style={styles.primaryActionButton}
+                    >
+                        Ver Instagram {instagramHandle}
+                    </a>
                 </div>
             </section>
 
@@ -1533,14 +1468,10 @@ const styles = {
     bookingSuccessText: { fontSize: '16px', color: '#3D1A4C', lineHeight: 1.6, marginBottom: '16px' },
     bookingErrorText: { fontSize: '14px', color: '#B3261E', marginTop: '4px' },
     bookingResetLink: { background: 'none', border: 'none', color: '#A259C4', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' },
-    testimonialsSection: { padding: '80px 20px', backgroundColor: '#F8F2FB' },
-    testimonialFormWrapper: { maxWidth: '650px', margin: '50px auto 0 auto' },
-    googleReviewCard: { backgroundColor: '#FFF', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' as const, textAlign: 'left' as const },
-    reviewHeader: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' },
-    avatar: { width: '45px', height: '45px', borderRadius: '50%', backgroundColor: '#A259C4', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '20px' },
-    clientNameGoogle: { fontWeight: 'bold', color: '#2D1537', fontSize: '17px', margin: '0 0 5px 0' },
-    starsContainer: { fontSize: '15px' },
-    googleReviewText: { fontSize: '15px', color: '#4A4A4A', lineHeight: 1.7, margin: 0 },
+    gallerySection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
+    galleryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginTop: '30px' },
+    galleryImage: { width: '100%', height: '250px', objectFit: 'cover' as const, borderRadius: '18px', boxShadow: '0 8px 20px rgba(45,21,55,0.08)', backgroundColor: '#F3E6F8' },
+    galleryCta: { display: 'flex', justifyContent: 'center', marginTop: '28px' },
     faqSection: { padding: '80px 20px', maxWidth: '800px', margin: '0 auto' },
     faqContainer: { display: 'flex', flexDirection: 'column' as const, gap: '15px' },
     faqItem: { backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #E8D7F1', padding: '20px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
