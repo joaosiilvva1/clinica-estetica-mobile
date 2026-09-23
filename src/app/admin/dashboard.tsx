@@ -54,14 +54,16 @@ type IndicationItem = { icon: string; title: string; text: string };
 type FaqItem = { question: string; answer: string };
 
 const defaultFaqItems: FaqItem[] = [
-  { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
+  { question: 'A limpeza de pele profunda dói?', answer: 'A sensibilidade varia de pessoa para pessoa. Algumas extrações podem causar incômodo; a Maria conduz as etapas com cuidado e você pode avisá-la se precisar de uma pausa.' },
   { question: 'De quanto em quanto tempo devo fazer a limpeza de pele?', answer: 'A frequência ideal varia conforme a necessidade da sua pele. Na avaliação, a Maria orienta o intervalo mais adequado para o seu caso.' },
-  { question: 'Os produtos utilizados dão alergia?', answer: 'Os produtos e protocolos são escolhidos de acordo com as necessidades de cada pele. Caso você tenha alergias ou sensibilidades conhecidas, informe isso no agendamento.' },
-  { question: 'Gestante pode fazer limpeza de pele?', answer: 'Alguns cuidados podem ser adaptados durante a gestação. Antes do procedimento, informe a equipe para confirmar quais produtos e técnicas são adequados para você.' },
+  { question: 'Os produtos utilizados dão alergia?', answer: 'Algumas peles podem reagir a cosméticos. Avise antes do atendimento sobre alergias, sensibilidades ou ativos em uso para que os produtos e as etapas sejam avaliados com essa informação.' },
+  { question: 'Gestante pode fazer limpeza de pele?', answer: 'Durante a gestação, produtos e etapas precisam ser avaliados individualmente. Avise a Maria antes de agendar e confirme com seu obstetra quais cuidados são adequados. Se não houver confirmação, o procedimento deve ser adiado.' },
+  { question: 'O que está incluído no protocolo de R$ 130?', answer: 'O valor de R$ 130 cobre as três etapas na mesma sessão: limpeza de pele profunda, massagem facial relaxante e hidratação facial Glow. A duração aproximada é de 120 minutos, e as etapas são ajustadas às necessidades da pele no dia.' },
+  { question: 'Como posso agendar um horário?', answer: 'Agende pelo WhatsApp da Maria. Os atendimentos são aos domingos e às segundas-feiras, com hora marcada; consulte a disponibilidade diretamente com ela.' },
   { question: 'Quais formas de pagamento são aceitas?', answer: 'Consulte as formas de pagamento disponíveis diretamente pelo WhatsApp da clínica.' },
   { question: 'Como funciona o cancelamento ou a remarcação?', answer: 'Para cancelar ou remarcar seu horário, entre em contato pelo WhatsApp da clínica assim que possível para que a equipe possa orientar você.' },
   { question: 'O que acontece se eu me atrasar?', answer: 'Em caso de atraso, avise pelo WhatsApp. Dependendo do tempo disponível no dia, o atendimento poderá precisar ser ajustado ou remarcado.' },
-  { question: 'O que devo fazer antes do procedimento?', answer: 'As orientações podem variar conforme o tratamento. Depois do agendamento, a equipe pode orientar os cuidados específicos para o seu atendimento.' },
+  { question: 'Preciso fazer alguma preparação antes do procedimento?', answer: 'As orientações podem variar conforme o tratamento. Depois do agendamento, a equipe pode orientar os cuidados específicos para o seu atendimento.' },
   { question: 'Quanto tempo dura cada tratamento?', answer: 'A duração aproximada aparece na descrição de cada tratamento. Ela pode variar conforme o protocolo e as necessidades da pele.' },
   { question: 'Preciso fazer avaliação antes?', answer: 'Nem todo tratamento exige uma avaliação separada. Em caso de dúvida sobre o procedimento mais indicado, fale com a Maria pelo WhatsApp antes do agendamento.' },
   { question: 'Onde fica a clínica?', answer: 'Estamos na R. Izaura da Silva Camargo, 27, Jardim São Paulo, Taboão da Serra - SP.' },

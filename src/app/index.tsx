@@ -50,14 +50,16 @@ function parseJsonArray<T>(json: string | null | undefined, fallback: T[]): T[] 
 
 
 const defaultFaqItems: FaqItem[] = [
-    { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
+    { question: 'A limpeza de pele profunda dói?', answer: 'A sensibilidade varia de pessoa para pessoa. Algumas extrações podem causar incômodo; a Maria conduz as etapas com cuidado e você pode avisá-la se precisar de uma pausa.' },
     { question: 'De quanto em quanto tempo devo fazer a limpeza de pele?', answer: 'A frequência ideal varia conforme a necessidade da sua pele. Na avaliação, a Maria orienta o intervalo mais adequado para o seu caso.' },
-    { question: 'Os produtos utilizados dão alergia?', answer: 'Os produtos e protocolos são escolhidos de acordo com as necessidades de cada pele. Caso você tenha alergias ou sensibilidades conhecidas, informe isso no agendamento.' },
-    { question: 'Gestante pode fazer limpeza de pele?', answer: 'Alguns cuidados podem ser adaptados durante a gestação. Antes do procedimento, informe a equipe para confirmar quais produtos e técnicas são adequados para você.' },
+    { question: 'Os produtos utilizados dão alergia?', answer: 'Algumas peles podem reagir a cosméticos. Avise antes do atendimento sobre alergias, sensibilidades ou ativos em uso para que os produtos e as etapas sejam avaliados com essa informação.' },
+    { question: 'Gestante pode fazer limpeza de pele?', answer: 'Durante a gestação, produtos e etapas precisam ser avaliados individualmente. Avise a Maria antes de agendar e confirme com seu obstetra quais cuidados são adequados. Se não houver confirmação, o procedimento deve ser adiado.' },
+    { question: 'O que está incluído no protocolo de R$ 130?', answer: 'O valor de R$ 130 cobre as três etapas na mesma sessão: limpeza de pele profunda, massagem facial relaxante e hidratação facial Glow. A duração aproximada é de 120 minutos, e as etapas são ajustadas às necessidades da pele no dia.' },
+    { question: 'Como posso agendar um horário?', answer: 'Agende pelo WhatsApp da Maria. Os atendimentos são aos domingos e às segundas-feiras, com hora marcada; consulte a disponibilidade diretamente com ela.' },
     { question: 'Quais formas de pagamento são aceitas?', answer: 'Consulte as formas de pagamento disponíveis diretamente pelo WhatsApp da clínica.' },
     { question: 'Como funciona o cancelamento ou a remarcação?', answer: 'Para cancelar ou remarcar seu horário, entre em contato pelo WhatsApp da clínica assim que possível para que a equipe possa orientar você.' },
     { question: 'O que acontece se eu me atrasar?', answer: 'Em caso de atraso, avise pelo WhatsApp. Dependendo do tempo disponível no dia, o atendimento poderá precisar ser ajustado ou remarcado.' },
-    { question: 'Preciso fazer alguma preparação antes do procedimento?', answer: 'As orientações podem variar conforme o tratamento. Depois do agendamento, a equipe pode orientar os cuidados específicos para o seu atendimento.' },
+    { question: 'O que devo fazer antes do procedimento?', answer: 'As orientações podem variar conforme o tratamento. Depois do agendamento, a equipe pode orientar os cuidados específicos para o seu atendimento.' },
     { question: 'Quanto tempo dura cada tratamento?', answer: 'A duração aproximada aparece na descrição de cada tratamento. Ela pode variar conforme o protocolo e as necessidades da pele.' },
     { question: 'Preciso fazer avaliação antes?', answer: 'Nem todo tratamento exige uma avaliação separada. Em caso de dúvida sobre o procedimento mais indicado, fale com a Maria pelo WhatsApp antes do agendamento.' },
     { question: 'Onde fica a clínica?', answer: 'Estamos na R. Izaura da Silva Camargo, 27, Jardim São Paulo, Taboão da Serra - SP. Na seção Onde Estamos você também pode abrir a rota no Google Maps.' },
@@ -299,14 +301,14 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     >(defaultTreatments);
 
     useEffect(() => {
-        document.title = 'Maria Yasmim Lopes | Especialista em Limpeza de Pele em Taboão da Serra';
+        document.title = 'Maria Yasmim Lopes Estética | Taboão da Serra';
         let metaDesc = document.querySelector('meta[name="description"]');
         if (!metaDesc) {
             metaDesc = document.createElement('meta');
             metaDesc.setAttribute('name', 'description');
             document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', 'Clínica de estética especializada em limpeza de pele profunda, controle de acne, oleosidade e hidratação facial na região de Taboão da Serra.');
+        metaDesc.setAttribute('content', 'Limpeza de pele profunda, massagem facial e hidratação Glow em Taboão da Serra. Atendimento personalizado com hora marcada.');
 
         const linkFont = document.createElement('link');
         linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
@@ -341,6 +343,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
       @media (prefers-reduced-motion: reduce) { .myl-booking-button { transition: none !important; transform: none !important; } }
       .myl-booking-button:focus-visible { outline: 3px solid #4A155E; outline-offset: 4px; }
+      .myl-floating-whatsapp:focus-visible { outline: 3px solid #2D1537; outline-offset: 4px; }
       @media (max-width: 800px) {
         .myl-booking-grid { grid-template-columns: minmax(0, 1fr) !important; }
         .myl-booking-grid { padding: 28px 20px !important; gap: 32px !important; border-radius: 30px !important; }
@@ -350,6 +353,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
       @media (max-width: 720px) {
         .myl-mobile-action { width: 100%; justify-content: center; }
+        .myl-floating-whatsapp { width: 58px !important; height: 58px !important; right: 16px !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; }
       }
 
       @media (max-width: 760px) {
@@ -586,7 +590,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         <div id="inicio" style={styles.container}>
 
             {/* Botão Flutuante do WhatsApp */}
-            <a href={buildWhatsAppLink()} target="_blank" rel="noreferrer" aria-label="Falar com a Maria pelo WhatsApp" style={styles.floatingWhatsApp}>
+            <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" aria-label="Falar com a Maria pelo WhatsApp" title="Agendar pelo WhatsApp" className="myl-floating-whatsapp" style={styles.floatingWhatsApp}>
                 <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             </a>
 
@@ -911,6 +915,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                         <p style={{ color: '#5A4A60', fontSize: isMobile ? '15px' : '17px', lineHeight: 1.75, maxWidth: '440px', marginBottom: '22px' }}>
                                             {item.description}
                                         </p>
+                                        {item.name.toLowerCase().includes('limpeza de pele profunda') && item.name.toLowerCase().includes('massagem facial') && item.name.toLowerCase().includes('hidratação facial glow') && (
+                                            <p style={{ color: '#5A4A60', backgroundColor: '#F4ECF7', border: '1px solid #E8D7F1', borderRadius: '14px', padding: '13px 16px', fontSize: '14px', lineHeight: 1.65, maxWidth: '440px', margin: '0 0 22px' }}>
+                                                As três etapas estão incluídas no mesmo atendimento e no valor do protocolo completo.
+                                            </p>
+                                        )}
                                         <div style={{ display: 'flex', gap: '22px', marginBottom: '28px' }}>
                                             <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
                                                 <b style={{ color: '#2D1537', fontWeight: 700 }}>R$ {item.price}</b>
