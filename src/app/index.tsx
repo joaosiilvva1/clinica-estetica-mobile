@@ -157,6 +157,20 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
     return [ref, inView] as const;
 }
 
+// Painel que revela seu conteúdo (fade + leve subida) assim que entra na tela,
+// usando o useInView acima — que já é confiável neste projeto porque usa
+// IntersectionObserver (não depende de escutar o evento de scroll, que neste
+// app pode não disparar do jeito esperado). Como é um componente próprio,
+// cada item de uma lista pode chamar o hook sem violar as regras dos hooks.
+function RevealPanel({ children, minHeight }: { children: (inView: boolean) => React.ReactNode; minHeight?: string }) {
+    const [ref, inView] = useInView<HTMLDivElement>(0.18);
+    return (
+        <div ref={ref} style={{ minHeight, display: 'flex', alignItems: 'center' }}>
+            {children(inView)}
+        </div>
+    );
+}
+
 // Estilo "Apple" de rolagem: em vez de disparar uma animação uma única vez
 // (como o useInView acima), este hook devolve um progresso contínuo de 0 a 1
 // enquanto o elemento atravessa a tela. Isso permite amarrar escala/opacidade
@@ -361,9 +375,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
     const [heroMediaRef, heroScrollProgress] = useScrollProgress<HTMLDivElement>();
     const [trustBarRef, trustBarInView] = useInView<HTMLElement>();
-    const [indicationsRef, indicationsInView] = useInView<HTMLDivElement>();
     const [aboutRef, aboutInView] = useInView<HTMLElement>();
-    const [aboutPhotoRef, aboutScrollProgress] = useScrollProgress<HTMLDivElement>();
     const [aboutTilt, setAboutTilt] = useState({ x: 0, y: 0 });
     const handleAboutMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (isMobile) return;
@@ -866,44 +878,65 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 ))}
             </section>
 
-            {/* Indicações */}
-            <section style={{ ...styles.indicationsSection, position: 'relative' as const }}>
+            {/* Indicações — cada benefício é um painel grande que revela (fade + leve
+                subida) conforme entra na tela, alternando foto de lado. Sem sticky/fixed:
+                fluxo normal do documento, então nunca sobrepõe a seção seguinte. */}
+            <section style={{ position: 'relative' as const, backgroundColor: '#2D1537', padding: isMobile ? '70px 0' : '110px 0' }}>
                 {editable && <EditPencil label="Indicações" onClick={() => editSection('indications')} />}
-                <div style={styles.sectionHeader}>
-                    <h2 style={styles.sectionTitle}>{siteSettings.indicationsSectionTitle}</h2>
+                <div style={{ textAlign: 'center' as const, padding: '0 24px', marginBottom: isMobile ? '30px' : '50px' }}>
+                    <span style={{ ...styles.eyebrowCentered, color: '#D4AF78' }}>{siteSettings.indicationsSectionTitle}</span>
                 </div>
-                <div ref={indicationsRef} style={styles.indicationsGrid}>
-                    {siteSettings.indicationsItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className={`myl-card-hover${indicationsInView ? ' myl-fade-up' : ''}`}
-                            style={{ ...styles.indicationCard, opacity: indicationsInView ? undefined : 0, animationDelay: `${index * 0.12}s` }}
-                        >
-                            <div style={styles.indicationIcon}>{item.icon}</div>
-                            <h4 style={styles.indicationTitle}>{item.title}</h4>
-                            <p style={styles.indicationText}>{item.text}</p>
-                        </div>
-                    ))}
-                </div>
+                {siteSettings.indicationsItems.map((item, i) => {
+                    const src = photos.length ? photos[i % photos.length].url : undefined;
+                    const reverse = !isMobile && i % 2 === 1;
+                    return (
+                        <RevealPanel key={i} minHeight={isMobile ? undefined : '72vh'}>
+                            {(inView) => (
+                                <div
+                                    className={inView ? 'myl-fade-up' : ''}
+                                    style={{
+                                        opacity: inView ? undefined : 0,
+                                        width: '100%', maxWidth: '1320px', margin: '0 auto',
+                                        padding: isMobile ? '0 24px' : '0 6vw',
+                                        display: 'flex',
+                                        flexDirection: (isMobile ? 'column' : (reverse ? 'row-reverse' : 'row')) as 'column' | 'row' | 'row-reverse',
+                                        alignItems: 'center',
+                                        gap: isMobile ? '26px' : '6vw',
+                                        marginBottom: isMobile ? '46px' : '0',
+                                    }}
+                                >
+                                    {src && (
+                                        <div style={{ flex: isMobile ? undefined : '0 0 44%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 30px 60px -18px rgba(0,0,0,0.4)' }}>
+                                            <img src={src} alt={item.title} style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
+                                            <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.35))' }} />
+                                        </div>
+                                    )}
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '54px' : '110px', color: 'rgba(250,249,246,0.14)', fontWeight: 600, lineHeight: 1, marginBottom: '6px' }}>
+                                            {String(i + 1).padStart(2, '0')}
+                                        </div>
+                                        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '28px' : '48px', color: '#FAF9F6', fontWeight: 600, lineHeight: 1.12, marginBottom: '16px' }}>
+                                            {item.title}
+                                        </h3>
+                                        <p style={{ color: 'rgba(250,249,246,0.65)', fontSize: isMobile ? '15px' : '17px', lineHeight: 1.75, maxWidth: '440px' }}>
+                                            {item.text}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </RevealPanel>
+                    );
+                })}
             </section>
 
-            {/* About Section */}
-            {/* Mesmo mecanismo "foto presa + texto desliza por cima", mas com o visual
-                recuado/arredondado do site (como as outras seções) em vez de ocupar a tela
-                toda de ponta a ponta. Funciona igual em qualquer tamanho de tela: a foto e
-                o texto ficam empilhados no fluxo normal do documento (não em colunas lado a
-                lado), o texto vem logo depois com margem negativa por cima da foto — é essa
-                altura extra do texto que dá "corda" pro scroll antes da foto soltar. */}
-            <section id="sobre" ref={aboutRef} style={{ position: 'relative' as const, maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '60px 20px 20px' : '90px 20px 20px' }}>
+
+            {/* About Section — composição de foto grande + cartão de texto sobrepondo por
+                cima (sem sticky: aqui isso já causou bugs de sobreposição neste projeto,
+                então a foto fica no fluxo normal e só o cartão sobrepõe com margem negativa). */}
+            <section id="sobre" ref={aboutRef} style={{ position: 'relative' as const, maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '140px 20px 20px' : '150px 20px 20px' }}>
                 {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
 
                 <div
-                    ref={aboutPhotoRef}
-                    style={{
-                        position: 'sticky' as const,
-                        top: isMobile ? 84 : 100,
-                        zIndex: 1,
-                    }}
                     onMouseMove={handleAboutMouseMove}
                     onMouseLeave={resetAboutTilt}
                 >
@@ -917,12 +950,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             borderRadius: '28px',
                             boxShadow: '0 25px 55px rgba(45,21,55,0.22)',
                             display: 'block',
-                            opacity: scrollLerp(aboutScrollProgress, 0.55, 1),
                             transform: `scale(1.02) rotateX(${aboutTilt.y * -2}deg) rotateY(${aboutTilt.x * 2}deg)`,
                             transition: 'transform 0.2s ease-out',
                         }}
                     />
                 </div>
+
 
                 <div
                     className={aboutInView ? 'myl-fade-up' : ''}
@@ -974,30 +1007,72 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
             </section>
 
-            {/* Treatments Section */}
-            <section id="tratamentos" style={{ ...styles.section, position: 'relative' as const }}>
+            {/* Treatments Section — mesmo padrão de painéis empilhados com revelação
+                ao entrar na tela, sem sticky/fixed. */}
+            <section id="tratamentos" style={{ position: 'relative' as const, backgroundColor: '#FAF9F6', padding: isMobile ? '70px 0 40px' : '110px 0 60px' }}>
                 {editable && <EditPencil label="Tratamentos" onClick={() => editSection('treatments')} />}
-                <div style={styles.sectionHeader}>
+                <div style={{ ...styles.sectionHeader, padding: '0 24px' }}>
                     <span style={styles.eyebrowCentered}>{siteSettings.treatmentsEyebrow}</span>
                     <h2 style={styles.sectionTitle}>{siteSettings.treatmentsSectionTitle}</h2>
                     <p style={styles.sectionSubtitle}>{siteSettings.treatmentsSectionSubtitle}</p>
                 </div>
-                <div style={styles.grid}>
-                    {treatments.map((item, index) => (
-                        <div key={item.id} style={styles.card}>
-                            <div style={styles.cardIconCircle}>{['🧖‍♀️', '💧', '✨'][index % 3]}</div>
-                            <h3 style={styles.cardTitle}>{item.name}</h3>
-                            <p style={styles.cardText}>{item.description}</p>
-                            <button
-                                onClick={() => handleSelectTreatmentAndBook(item.id)}
-                                style={styles.cardSelectButton}
-                            >
-                                Saiba mais
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                {treatments.map((item, i) => {
+                    const src = photos.length ? photos[i % photos.length].url : undefined;
+                    const reverse = !isMobile && i % 2 === 1;
+                    return (
+                        <RevealPanel key={item.id} minHeight={isMobile ? undefined : '72vh'}>
+                            {(inView) => (
+                                <div
+                                    className={inView ? 'myl-fade-up' : ''}
+                                    style={{
+                                        opacity: inView ? undefined : 0,
+                                        width: '100%', maxWidth: '1320px', margin: '0 auto',
+                                        padding: isMobile ? '0 24px' : '0 6vw',
+                                        display: 'flex',
+                                        flexDirection: (isMobile ? 'column' : (reverse ? 'row-reverse' : 'row')) as 'column' | 'row' | 'row-reverse',
+                                        alignItems: 'center',
+                                        gap: isMobile ? '26px' : '6vw',
+                                        marginBottom: isMobile ? '46px' : '0',
+                                    }}
+                                >
+                                    {src && (
+                                        <div style={{ flex: isMobile ? undefined : '0 0 48%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '26px', overflow: 'hidden', boxShadow: '0 40px 80px -20px rgba(45,21,55,0.28)' }}>
+                                            <img src={src} alt={item.name} style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
+                                            <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.3))' }} />
+                                        </div>
+                                    )}
+                                    <div style={{ flex: 1 }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const, color: '#A259C4', marginBottom: '6px', display: 'block' }}>
+                                            {siteSettings.treatmentsEyebrow}
+                                        </span>
+                                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '48px' : '100px', color: 'rgba(45,21,55,0.08)', fontWeight: 600, lineHeight: 1, marginBottom: '4px' }}>
+                                            {String(i + 1).padStart(2, '0')}
+                                        </div>
+                                        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? '28px' : '48px', color: '#2D1537', fontWeight: 600, lineHeight: 1.1, marginBottom: '18px' }}>
+                                            {item.name}
+                                        </h3>
+                                        <p style={{ color: '#5A4A60', fontSize: isMobile ? '15px' : '17px', lineHeight: 1.75, maxWidth: '440px', marginBottom: '22px' }}>
+                                            {item.description}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '22px', marginBottom: '28px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
+                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>R$ {item.price}</b>
+                                            </span>
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
+                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>{item.durationMinutes} min</b>
+                                            </span>
+                                        </div>
+                                        <button onClick={() => handleSelectTreatmentAndBook(item.id)} className="myl-btn-primary" style={styles.primaryActionButton}>
+                                            Agendar este tratamento
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </RevealPanel>
+                    );
+                })}
             </section>
+
 
             {/* Localização Atualizada */}
             <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
