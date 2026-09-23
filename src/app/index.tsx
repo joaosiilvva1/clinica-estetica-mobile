@@ -1492,5 +1492,4 @@ const styles = {
     footerContact: { fontSize: '15px', color: '#D4A5E0', lineHeight: 1.7 },
     footerInstagramLink: { color: '#FFF', textDecoration: 'none', fontWeight: 'bold' },
     footerBottom: { maxWidth: '1200px', margin: '30px auto 0 auto', textAlign: 'center' as const, fontSize: '13px', color: '#A259C4' }
-};git add src/app/index.tsx
-git commit -m "feat: fotos novas"
+};
