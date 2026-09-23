@@ -825,7 +825,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             }}
                         >
                             <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
-                            <div style={styles.carouselSlide}>
+                            <div style={{ ...styles.carouselSlide, height: isMobile ? '420px' : '520px' }}>
                                 <img
                                     src={photos[currentSlide].url}
                                     alt={photos[currentSlide].title}
@@ -1426,8 +1426,8 @@ const styles = {
     trustItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#4A3B50' },
     trustIcon: { fontSize: '16px' },
     carouselContainer: { position: 'relative' as const, width: '100%', margin: '0 auto', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(45,21,55,0.2)', backgroundColor: '#2D1537' },
-    carouselSlide: { position: 'relative' as const, width: '100%', aspectRatio: '6 / 5', maxHeight: '560px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
-    carouselImage: { position: 'relative' as const, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center' as const, zIndex: 2 },
+    carouselSlide: { position: 'relative' as const, width: '100%', height: '520px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', backgroundColor: '#F3E6F8' },
+    carouselImage: { position: 'relative' as const, width: '100%', height: '100%', objectFit: 'contain' as const, objectPosition: 'center' as const, zIndex: 2, display: 'block' },
     carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
     carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
     carouselBtnRight: { position: 'absolute' as const, top: '50%', right: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
