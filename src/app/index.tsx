@@ -281,14 +281,17 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const chatBottom = React.useRef<HTMLDivElement | null>(null);
     useEffect(() => () => { chatRequest.current?.abort(); }, []);
 
-    const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
+    const [chatMessages, setChatMessages] = useState<{
+        role: 'user' | 'assistant';
+        text: string;
+        action?: { href: string; label: string };
+        source?: { href: string; label: string };
+    }[]>([
         { role: 'assistant', text: 'Olá! 👋 Sou a assistente virtual da Maria Yasmim Lopes Estética. Como posso ajudar?' }
     ]);
 
     const defaultTreatments = [
-        { id: '1', name: 'Limpeza de Pele Profunda', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 120, durationMinutes: 60 },
-        { id: '2', name: 'Massagem Facial Relaxante', description: 'Estimula a circulação, alivia as tensões do rosto e promove um relaxamento profundo.', price: 90, durationMinutes: 45 },
-        { id: '3', name: 'Hidratação Facial Glow', description: 'Tratamento intensivo para devolver a luminosidade, maciez e umidade natural da pele.', price: 100, durationMinutes: 50 }
+        { id: '1', name: 'Limpeza de Pele Profunda + Massagem Facial Relaxante + Hidratação Facial Glow', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 130, durationMinutes: 120 }
     ];
 
     const [treatments, setTreatments] = useState<
@@ -509,6 +512,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         chatBottom.current?.scrollIntoView({ block: 'nearest' });
     }, [chatMessages, chatLoading, chatError, chatOpen]);
 
+    const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
+    const buildWhatsAppLink = (message = 'Olá Maria, vi o site e gostaria de agendar uma avaliação.') =>
+        `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(message)}`;
+    const bookingWhatsAppLink = buildWhatsAppLink('Olá Maria, vi o site e gostaria de agendar um horário.');
+
     const sendChatMessage = async (e?: React.FormEvent, question = chatInput, retry = false) => {
         e?.preventDefault();
         const message = question.trim();
@@ -517,9 +525,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         setChatInput('');
         setChatError(null);
         setLastChatQuestion(message);
-        const quickReply = getQuickChatReply(message, siteSettings);
+        const quickReply = getQuickChatReply(message, {
+            ...siteSettings,
+            whatsappUrl: bookingWhatsAppLink,
+            treatments,
+        });
         if (quickReply) {
-            setChatMessages(prev => [...prev, { role: 'assistant', text: quickReply }]);
+            setChatMessages(prev => [...prev, { role: 'assistant', ...quickReply }]);
             return;
         }
         const controller = new AbortController();
@@ -555,16 +567,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         document.getElementById('agendamento')?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const bookingWhatsAppLink = 'https://wa.me/5511916224612?text=' +
-        encodeURIComponent('Olá Maria, vi o site e gostaria de agendar um horário.');
-
     const toggleFaq = (index: number) => {
         setOpenFaq(openFaq === index ? null : index);
     };
-
-    const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
-    const buildWhatsAppLink = (message = 'Olá Maria, vi o site e gostaria de agendar uma avaliação.') =>
-        `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(message)}`;
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}`;
     const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
     const addressLines = siteSettings.address.split('\n').filter((l) => l.trim());
@@ -1080,7 +1085,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         <button onClick={() => setChatOpen(false)} aria-label="Fechar assistente" style={styles.chatClose}>×</button>
                     </div>
                     <div role="log" aria-label="Conversa" aria-live="polite" style={styles.chatMessages}>
-                        {chatMessages.map((m, i) => <div key={i} style={m.role === 'user' ? styles.chatUserMessage : styles.chatBotMessage}>{m.text}</div>)}
+                        {chatMessages.map((m, i) => <div key={i} style={m.role === 'user' ? styles.chatUserMessage : styles.chatBotMessage}>
+                            <span>{m.text}</span>
+                            {m.action && <a href={m.action.href} target="_blank" rel="noopener noreferrer" style={styles.chatReplyLink}>{m.action.label} ↗</a>}
+                            {m.source && <a href={m.source.href} target="_blank" rel="noopener noreferrer" style={styles.chatSourceLink}>{m.source.label} ↗</a>}
+                        </div>)}
                         {chatLoading && <div style={styles.chatBotMessage}>
                             <div role="status">{chatElapsed < 15 ? 'Buscando sua resposta…' : 'Ainda aguardando. No primeiro acesso, o serviço pode levar mais tempo para iniciar.'}</div>
                             <div aria-live="off" style={{ fontSize: '12px', marginTop: '8px', color: '#6D5D75' }}>Tempo de espera: {chatElapsed}s · limite de {CHAT_TIMEOUT_MS / 1000}s</div>
@@ -1090,7 +1099,17 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         <div ref={chatBottom} />
                     </div>
                     <div style={styles.chatQuickActions}>
-                        {['Como agendar?', 'Onde fica?', 'Horários'].map(question => <button key={question} type="button" disabled={chatLoading} onClick={() => sendChatMessage(undefined, question)} style={{ ...styles.chatQuickButton, opacity: chatLoading ? .5 : 1 }}>{question}</button>)}
+                        {[
+                            { label: 'Agendar', question: 'Como faço para agendar?' },
+                            { label: 'Limpeza de pele', question: 'O que é a limpeza de pele?' },
+                            { label: 'Massagem facial', question: 'O que é a massagem facial?' },
+                            { label: 'Hidratação', question: 'Como funciona a hidratação facial?' },
+                            { label: 'Preparo', question: 'Como me preparo antes do procedimento?' },
+                            { label: 'Pós-procedimento', question: 'Quais cuidados ter depois do procedimento?' },
+                            { label: 'Valores e duração', question: 'Quais são os valores e a duração?' },
+                            { label: 'Localização', question: 'Onde fica a clínica?' },
+                            { label: 'Horários', question: 'Quais são os horários de atendimento?' },
+                        ].map(({ label, question }) => <button key={label} type="button" disabled={chatLoading} onClick={() => sendChatMessage(undefined, question)} style={{ ...styles.chatQuickButton, opacity: chatLoading ? .5 : 1 }}>{label}</button>)}
                     </div>
                     <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" style={styles.chatWhatsapp}>Falar com a Maria pelo WhatsApp ↗</a>
                     <form onSubmit={sendChatMessage} style={styles.chatForm}>
@@ -1135,7 +1154,9 @@ const styles = {
     chatClose: { background: 'transparent', border: 'none', color: '#FFF', fontSize: '26px', cursor: 'pointer' },
     chatMessages: { flex: 1, minHeight: 0, overflowY: 'auto' as const, padding: '14px', display: 'flex', flexDirection: 'column' as const, gap: '10px', backgroundColor: '#FAF9F6' },
     chatUserMessage: { alignSelf: 'flex-end', backgroundColor: '#A259C4', color: '#FFF', padding: '10px 12px', borderRadius: '14px 14px 3px 14px', maxWidth: '80%', whiteSpace: 'pre-wrap' as const },
-    chatBotMessage: { alignSelf: 'flex-start', backgroundColor: '#EEE8F1', color: '#2D1537', padding: '10px 12px', borderRadius: '14px 14px 14px 3px', maxWidth: '80%', whiteSpace: 'pre-wrap' as const },
+    chatBotMessage: { alignSelf: 'flex-start', backgroundColor: '#EEE8F1', color: '#2D1537', padding: '10px 12px', borderRadius: '14px 14px 14px 3px', maxWidth: '80%', whiteSpace: 'pre-wrap' as const, display: 'flex', flexDirection: 'column' as const, gap: '8px' },
+    chatReplyLink: { alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', minHeight: '40px', marginTop: '3px', padding: '0 14px', borderRadius: '20px', backgroundColor: '#8739A8', color: '#FFF', fontSize: '12px', fontWeight: '600', textDecoration: 'none' },
+    chatSourceLink: { alignSelf: 'flex-start', color: '#644276', fontSize: '11px', lineHeight: 1.5, textDecoration: 'underline', overflowWrap: 'anywhere' as const },
     chatTextButton: { border: 'none', background: 'transparent', color: '#71358F', textDecoration: 'underline', padding: '10px 0', fontFamily: 'inherit', cursor: 'pointer', minHeight: '44px' },
     chatQuickActions: { display: 'flex', gap: '6px', flexWrap: 'wrap' as const, padding: '8px 10px 0' },
     chatQuickButton: { border: '1px solid #E8D7F1', backgroundColor: '#FAF7FC', color: '#603574', borderRadius: '18px', padding: '8px 10px', fontSize: '12px', minHeight: '40px', cursor: 'pointer' },
