@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { requestChatReply, getQuickChatReply, CHAT_TIMEOUT_MS } from '../utils/clinicChat';
 
 type TrustItem = { icon: string; text: string };
 type BenefitItem = { icon: string; text: string };
@@ -273,6 +274,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [chatOpen, setChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
+    const [chatElapsed, setChatElapsed] = useState(0);
+    const [chatError, setChatError] = useState<string | null>(null);
+    const [lastChatQuestion, setLastChatQuestion] = useState('');
+    const chatRequest = React.useRef<AbortController | null>(null);
+    const chatBottom = React.useRef<HTMLDivElement | null>(null);
+    useEffect(() => () => { chatRequest.current?.abort(); }, []);
+
     const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
         { role: 'assistant', text: 'Olá! 👋 Sou a assistente virtual da Maria Yasmim Lopes Estética. Como posso ajudar?' }
     ]);
@@ -497,41 +505,49 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
     }, []);
 
-    const sendChatMessage = async (e?: React.FormEvent) => {
+    useEffect(() => {
+        chatBottom.current?.scrollIntoView({ block: 'nearest' });
+    }, [chatMessages, chatLoading, chatError, chatOpen]);
+
+    const sendChatMessage = async (e?: React.FormEvent, question = chatInput, retry = false) => {
         e?.preventDefault();
-        const message = chatInput.trim();
-        if (!message || chatLoading) return;
-        setChatMessages(prev => [...prev, { role: 'user', text: message }]);
+        const message = question.trim();
+        if (!message || chatRequest.current) return;
+        if (!retry) setChatMessages(prev => [...prev, { role: 'user', text: message }]);
         setChatInput('');
-        setChatLoading(true);
-
-        // O backend gratuito (Render) "dorme" com inatividade: a primeira mensagem depois
-        // disso pode demorar bastante para acordar o servidor. Damos um tempo generoso antes
-        // de desistir, para não travar o "Digitando..." pra sempre nem desistir cedo demais.
+        setChatError(null);
+        setLastChatQuestion(message);
+        const quickReply = getQuickChatReply(message, siteSettings);
+        if (quickReply) {
+            setChatMessages(prev => [...prev, { role: 'assistant', text: quickReply }]);
+            return;
+        }
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
-
+        chatRequest.current = controller;
+        setChatLoading(true);
+        setChatElapsed(0);
+        const startedAt = Date.now();
+        const intervalId = setInterval(() => setChatElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+        let timedOut = false;
+        const timeoutId = setTimeout(() => { timedOut = true; controller.abort(); }, CHAT_TIMEOUT_MS);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/chat/public`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message }),
-                signal: controller.signal
-            });
-            if (!response.ok) throw new Error('Erro no chatbot');
-            const data = await response.json();
-            setChatMessages(prev => [...prev, { role: 'assistant', text: data.reply || 'Não consegui responder agora.' }]);
-        } catch (err: any) {
-            const timedOut = err?.name === 'AbortError';
-            setChatMessages(prev => [...prev, {
-                role: 'assistant',
-                text: timedOut
-                    ? 'O assistente está demorando para responder (o servidor pode estar iniciando). Tente novamente em alguns segundos.'
-                    : 'Desculpe, não consegui me conectar agora. Tente novamente em alguns instantes.'
-            }]);
+            const reply = await requestChatReply(API_BASE_URL, message, controller.signal);
+            if (!controller.signal.aborted) setChatMessages(prev => [...prev, { role: 'assistant', text: reply }]);
+        } catch {
+            if (!controller.signal.aborted || timedOut) {
+                setChatError(timedOut
+                    ? 'O assistente demorou mais que o esperado. Você pode tentar novamente ou falar com a Maria pelo WhatsApp.'
+                    : 'O assistente está indisponível no momento. As informações rápidas abaixo continuam disponíveis. Para outras dúvidas, fale com a Maria pelo WhatsApp.');
+            } else {
+                setChatError('Espera cancelada. Você pode tentar novamente ou falar com a Maria pelo WhatsApp.');
+            }
         } finally {
             clearTimeout(timeoutId);
-            setChatLoading(false);
+            clearInterval(intervalId);
+            if (chatRequest.current === controller) {
+                chatRequest.current = null;
+                setChatLoading(false);
+            }
         }
     };
 
@@ -959,10 +975,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
             {/* Agendamento manual pelo WhatsApp */}
             <section id="agendamento" aria-labelledby="booking-title" style={{ ...styles.bookingSection, scrollMarginTop: topOffset + 100 }}>
-                <div aria-hidden="true" style={styles.bookingGlow} />
                 <div className="myl-booking-grid" style={styles.bookingGrid}>
                     <div className="myl-booking-photo" style={styles.bookingPhotoWrap}>
-                        <div aria-hidden="true" style={styles.bookingPhotoOutline} />
                         <img
                             src="/foto12.jpeg"
                             alt="Cuidado facial com máscara e faixa lilás na clínica Maria Yasmim Lopes Estética"
@@ -972,7 +986,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             height={1280}
                             style={styles.bookingPhoto}
                         />
-                        <div style={styles.bookingPhotoBadge}><span aria-hidden="true">✧</span> Cuidado em cada detalhe</div>
                     </div>
                     <div className="myl-booking-content" style={styles.bookingContent}>
                         <span style={styles.bookingEyebrow}>AGENDAMENTO <span aria-hidden="true" style={{ width: 36, height: 1, backgroundColor: '#B997CD' }} /></span>
@@ -1061,18 +1074,28 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
             <button onClick={() => setChatOpen(!chatOpen)} style={styles.chatButton} aria-label="Abrir chatbot">💬</button>
             {chatOpen && (
-                <div style={styles.chatPanel}>
+                <div role="dialog" aria-label="Assistente virtual da clínica" style={styles.chatPanel}>
                     <div style={styles.chatHeader}>
                         <strong>Assistente virtual</strong>
-                        <button onClick={() => setChatOpen(false)} style={styles.chatClose}>×</button>
+                        <button onClick={() => setChatOpen(false)} aria-label="Fechar assistente" style={styles.chatClose}>×</button>
                     </div>
-                    <div style={styles.chatMessages}>
+                    <div role="log" aria-label="Conversa" aria-live="polite" style={styles.chatMessages}>
                         {chatMessages.map((m, i) => <div key={i} style={m.role === 'user' ? styles.chatUserMessage : styles.chatBotMessage}>{m.text}</div>)}
-                        {chatLoading && <div style={styles.chatBotMessage}>Digitando...</div>}
+                        {chatLoading && <div style={styles.chatBotMessage}>
+                            <div role="status">{chatElapsed < 15 ? 'Buscando sua resposta…' : 'Ainda aguardando. No primeiro acesso, o serviço pode levar mais tempo para iniciar.'}</div>
+                            <div aria-live="off" style={{ fontSize: '12px', marginTop: '8px', color: '#6D5D75' }}>Tempo de espera: {chatElapsed}s · limite de {CHAT_TIMEOUT_MS / 1000}s</div>
+                            <button type="button" onClick={() => chatRequest.current?.abort()} style={styles.chatTextButton}>Cancelar espera</button>
+                        </div>}
+                        {chatError && <div role="alert" style={styles.chatBotMessage}>{chatError}<br /><button type="button" onClick={() => sendChatMessage(undefined, lastChatQuestion, true)} style={styles.chatTextButton}>Tentar novamente</button></div>}
+                        <div ref={chatBottom} />
                     </div>
+                    <div style={styles.chatQuickActions}>
+                        {['Como agendar?', 'Onde fica?', 'Horários'].map(question => <button key={question} type="button" disabled={chatLoading} onClick={() => sendChatMessage(undefined, question)} style={{ ...styles.chatQuickButton, opacity: chatLoading ? .5 : 1 }}>{question}</button>)}
+                    </div>
+                    <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" style={styles.chatWhatsapp}>Falar com a Maria pelo WhatsApp ↗</a>
                     <form onSubmit={sendChatMessage} style={styles.chatForm}>
-                        <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Digite sua mensagem..." style={styles.chatInput} />
-                        <button type="submit" disabled={chatLoading} style={styles.chatSend}>Enviar</button>
+                        <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} aria-label="Sua mensagem" maxLength={1500} placeholder="Digite sua mensagem..." style={styles.chatInput} />
+                        <button type="submit" disabled={chatLoading || !chatInput.trim()} style={{ ...styles.chatSend, opacity: chatLoading || !chatInput.trim() ? .5 : 1 }}>Enviar</button>
                     </form>
                 </div>
             )}
@@ -1107,14 +1130,18 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 const styles = {
     container: { fontFamily: "'Montserrat', sans-serif", backgroundColor: '#FAF9F6', color: '#2D1537', minHeight: '100vh', margin: 0, padding: 0 },
     chatButton: { position: 'fixed' as const, bottom: '30px', left: '30px', width: '58px', height: '58px', borderRadius: '50%', border: 'none', backgroundColor: '#A259C4', color: '#FFF', fontSize: '24px', cursor: 'pointer', zIndex: 9999, boxShadow: '0 6px 16px rgba(0,0,0,0.2)' },
-    chatPanel: { position: 'fixed' as const, bottom: '100px', left: '30px', width: '350px', maxWidth: 'calc(100vw - 30px)', height: '480px', backgroundColor: '#FFF', borderRadius: '18px', boxShadow: '0 10px 35px rgba(0,0,0,0.22)', zIndex: 10000, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', border: '1px solid #E8D7F1' },
+    chatPanel: { position: 'fixed' as const, bottom: '100px', left: '16px', width: '370px', maxWidth: 'calc(100vw - 32px)', height: '560px', maxHeight: 'calc(100dvh - 120px)', boxSizing: 'border-box' as const, backgroundColor: '#FFF', borderRadius: '18px', boxShadow: '0 10px 35px rgba(0,0,0,0.22)', zIndex: 10000, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', border: '1px solid #E8D7F1' },
     chatHeader: { backgroundColor: '#A259C4', color: '#FFF', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     chatClose: { background: 'transparent', border: 'none', color: '#FFF', fontSize: '26px', cursor: 'pointer' },
-    chatMessages: { flex: 1, overflowY: 'auto' as const, padding: '14px', display: 'flex', flexDirection: 'column' as const, gap: '10px', backgroundColor: '#FAF9F6' },
+    chatMessages: { flex: 1, minHeight: 0, overflowY: 'auto' as const, padding: '14px', display: 'flex', flexDirection: 'column' as const, gap: '10px', backgroundColor: '#FAF9F6' },
     chatUserMessage: { alignSelf: 'flex-end', backgroundColor: '#A259C4', color: '#FFF', padding: '10px 12px', borderRadius: '14px 14px 3px 14px', maxWidth: '80%', whiteSpace: 'pre-wrap' as const },
     chatBotMessage: { alignSelf: 'flex-start', backgroundColor: '#EEE8F1', color: '#2D1537', padding: '10px 12px', borderRadius: '14px 14px 14px 3px', maxWidth: '80%', whiteSpace: 'pre-wrap' as const },
+    chatTextButton: { border: 'none', background: 'transparent', color: '#71358F', textDecoration: 'underline', padding: '10px 0', fontFamily: 'inherit', cursor: 'pointer', minHeight: '44px' },
+    chatQuickActions: { display: 'flex', gap: '6px', flexWrap: 'wrap' as const, padding: '8px 10px 0' },
+    chatQuickButton: { border: '1px solid #E8D7F1', backgroundColor: '#FAF7FC', color: '#603574', borderRadius: '18px', padding: '8px 10px', fontSize: '12px', minHeight: '40px', cursor: 'pointer' },
+    chatWhatsapp: { color: '#71358F', fontSize: '12px', textAlign: 'center' as const, padding: '10px', textDecoration: 'none', lineHeight: 1.5 },
     chatForm: { display: 'flex', gap: '8px', padding: '10px', borderTop: '1px solid #E8D7F1' },
-    chatInput: { flex: 1, padding: '10px', border: '1px solid #D8C4E2', borderRadius: '20px', outline: 'none' },
+    chatInput: { flex: 1, minWidth: 0, padding: '10px', border: '1px solid #D8C4E2', borderRadius: '20px', outline: 'none' },
     chatSend: { border: 'none', backgroundColor: '#A259C4', color: '#FFF', borderRadius: '18px', padding: '0 14px', cursor: 'pointer' },
     floatingWhatsApp: { position: 'fixed' as const, bottom: '30px', right: '30px', backgroundColor: '#25D366', color: '#FFF', borderRadius: '50%', width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(37,211,102,0.4)', zIndex: 9999, transition: 'transform 0.3s', cursor: 'pointer' },
     header: { boxSizing: 'border-box' as const, position: 'fixed' as const, top: 0, left: 0, width: '100%', backgroundColor: 'transparent', borderBottom: '1px solid transparent', zIndex: 1000, padding: '16px 20px' },
@@ -1193,12 +1220,9 @@ const styles = {
     locationAddressText: { fontSize: '15px', color: '#5A4A60', lineHeight: 1.6, marginBottom: '20px' },
     locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
     bookingSection: { position: 'relative' as const, isolation: 'isolate' as const, padding: '90px 20px', maxWidth: '1200px', margin: '0 auto' },
-    bookingGlow: { position: 'absolute' as const, inset: '20px 0', zIndex: -1, borderRadius: '50%', background: 'radial-gradient(ellipse at 20% 45%, rgba(205,166,224,.36), transparent 62%), radial-gradient(ellipse at 90% 80%, rgba(229,207,185,.3), transparent 55%)', pointerEvents: 'none' as const },
-    bookingGrid: { position: 'relative' as const, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', gap: 'clamp(32px, 5vw, 76px)', padding: 'clamp(32px, 5vw, 64px)', borderRadius: '40px', background: 'linear-gradient(120deg, rgba(255,255,255,.64), rgba(242,229,249,.6))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.9)', boxShadow: '0 28px 70px -24px rgba(77,35,96,.23), inset 0 0 0 1px rgba(232,215,241,.35)' },
-    bookingPhotoWrap: { position: 'relative' as const, aspectRatio: '1 / 1.12', minWidth: 0 },
-    bookingPhotoOutline: { position: 'absolute' as const, inset: '9px -10px -9px 10px', border: '1px solid rgba(162,89,196,.35)', borderRadius: '46% 54% 42% 58% / 54% 40% 60% 46%', transform: 'rotate(-5deg)' },
-    bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block', borderRadius: '46% 54% 42% 58% / 54% 40% 60% 46%', boxShadow: '0 16px 38px rgba(58,28,70,.16)' },
-    bookingPhotoBadge: { position: 'absolute' as const, bottom: '5%', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' as const, padding: '13px 18px', borderRadius: '24px', backgroundColor: 'rgba(255,255,255,.88)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.95)', color: '#583466', fontSize: '11px', letterSpacing: '.5px', boxShadow: '0 6px 22px rgba(45,21,55,.1)' },
+    bookingGrid: { position: 'relative' as const, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', gap: 'clamp(28px, 4vw, 56px)', padding: 'clamp(28px, 4vw, 48px)', borderRadius: '40px', background: 'linear-gradient(120deg, rgba(255,255,255,.64), rgba(242,229,249,.6))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.9)', boxShadow: '0 16px 44px -20px rgba(77,35,96,.18), inset 0 0 0 1px rgba(232,215,241,.35)' },
+    bookingPhotoWrap: { position: 'relative' as const, aspectRatio: '9 / 10', minWidth: 0, width: '100%', maxWidth: '440px', margin: '0 auto' },
+    bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block', borderRadius: '24px', boxShadow: '0 16px 38px rgba(58,28,70,.16)' },
     bookingContent: { display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'flex-start', minWidth: 0 },
     bookingEyebrow: { display: 'flex', alignItems: 'center', gap: '14px', color: '#805197', fontSize: '11px', fontWeight: '600', letterSpacing: '3px', marginBottom: '22px' },
     bookingTitle: { fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px, 3.6vw, 48px)', fontWeight: '500', lineHeight: 1.15, letterSpacing: '-.8px', color: '#2D1537', margin: '0 0 22px' },
