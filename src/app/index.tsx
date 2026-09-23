@@ -49,9 +49,6 @@ function parseJsonArray<T>(json: string | null | undefined, fallback: T[]): T[] 
     }
 }
 
-function normalizeAssetUrl(url: string): string {
-    return url.replace(/\.jpg\.jpeg(?=($|\?))/i, '.webp');
-}
 
 const defaultFaqItems: FaqItem[] = [
     { question: 'A limpeza de pele profunda dói?', answer: 'Utilizamos técnicas modernas, emoliência adequada e muita delicadeza para garantir que a remoção de cravos e impurezas seja o mais confortável possível para você.' },
@@ -86,7 +83,7 @@ const defaultSiteSettings: SiteSettings = {
     openingHoursText:
         'Domingos e Segundas com hora marcada para garantir sua exclusividade.',
     instagramUrl: 'https://www.instagram.com/yasmimlopes_estetica/',
-    logoUrl: '/logo.webp',
+    logoUrl: '/logo.jpg.jpeg',
     heroEyebrow: 'Realce sua beleza natural',
     heroTitle: 'Sua melhor versão começa aqui',
     heroSubtitle:
@@ -109,7 +106,7 @@ const defaultSiteSettings: SiteSettings = {
         { icon: '💆‍♀️', title: 'Hidratação e Viço (Glow)', text: 'Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.' },
     ],
     aboutBadgeText: 'Sua Esteticista',
-    aboutPhotoUrl: '/fotosobre.webp',
+    aboutPhotoUrl: '/fotosobre.jpg.jpeg',
     treatmentsEyebrow: 'Nossos tratamentos',
     treatmentsSectionTitle: 'Cuidados para realçar sua beleza',
     treatmentsSectionSubtitle: 'Procedimentos faciais personalizados para suas necessidades',
@@ -414,16 +411,16 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const resetAboutTilt = () => setAboutTilt({ x: 0, y: 0 });
 
     const defaultPhotos = [
-        { id: '1', title: 'Cuidado e Confiança', url: '/foto1.webp' },
-        { id: '2', title: 'Beleza Natural', url: '/foto2.webp' },
-        { id: '3', title: 'Limpeza de Pele Profunda', url: '/foto3.webp' },
-        { id: '4', title: 'Rejuvenescimento Facial', url: '/foto4.webp' },
-        { id: '5', title: 'Hidratação e Glow', url: '/foto5.webp' },
-        { id: '6', title: 'Tratamento Especializado', url: '/foto6.webp' },
-        { id: '7', title: 'Cuidado Personalizado', url: '/foto7.webp' },
-        { id: '8', title: 'Resultados Reais', url: '/foto8.webp' },
-        { id: '9', title: 'Técnica Refinada', url: '/foto9.webp' },
-        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.webp' }
+        { id: '1', title: 'Cuidado e Confiança', url: '/foto1.jpg.jpeg' },
+        { id: '2', title: 'Beleza Natural', url: '/foto2.jpg.jpeg' },
+        { id: '3', title: 'Limpeza de Pele Profunda', url: '/foto3.jpg.jpeg' },
+        { id: '4', title: 'Rejuvenescimento Facial', url: '/foto4.jpg.jpeg' },
+        { id: '5', title: 'Hidratação e Glow', url: '/foto5.jpg.jpeg' },
+        { id: '6', title: 'Tratamento Especializado', url: '/foto6.jpg.jpeg' },
+        { id: '7', title: 'Cuidado Personalizado', url: '/foto7.jpg.jpeg' },
+        { id: '8', title: 'Resultados Reais', url: '/foto8.jpg.jpeg' },
+        { id: '9', title: 'Técnica Refinada', url: '/foto9.jpg.jpeg' },
+        { id: '10', title: 'Transformação e Autoestima', url: '/foto10.jpg.jpeg' }
     ];
 
     const [photos, setPhotos] = useState(defaultPhotos);
@@ -461,7 +458,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         data.map((p: any) => ({
                             id: p.id,
                             title: p.title || '',
-                            url: normalizeAssetUrl(p.url),
+                            url: p.url,
                         }))
                     );
                 }
@@ -481,7 +478,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         whatsapp: str(data.whatsapp, prev.whatsapp),
                         openingHoursText: str(data.openingHoursText, prev.openingHoursText),
                         instagramUrl: str(data.instagramUrl, prev.instagramUrl),
-                        logoUrl: normalizeAssetUrl(str(data.logoUrl, prev.logoUrl)),
+                        logoUrl: str(data.logoUrl, prev.logoUrl),
                         heroEyebrow: str(data.heroEyebrow, prev.heroEyebrow),
                         heroTitle: str(data.heroTitle, prev.heroTitle),
                         heroSubtitle: str(data.heroSubtitle, prev.heroSubtitle),
@@ -490,7 +487,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         indicationsSectionTitle: str(data.indicationsSectionTitle, prev.indicationsSectionTitle),
                         indicationsItems: parseJsonArray<IndicationItem>(data.indicationsItemsJson, prev.indicationsItems),
                         aboutBadgeText: str(data.aboutBadgeText, prev.aboutBadgeText),
-                        aboutPhotoUrl: normalizeAssetUrl(str(data.aboutPhotoUrl, prev.aboutPhotoUrl)),
+                        aboutPhotoUrl: str(data.aboutPhotoUrl, prev.aboutPhotoUrl),
                         treatmentsEyebrow: str(data.treatmentsEyebrow, prev.treatmentsEyebrow),
                         treatmentsSectionTitle: str(data.treatmentsSectionTitle, prev.treatmentsSectionTitle),
                         treatmentsSectionSubtitle: str(data.treatmentsSectionSubtitle, prev.treatmentsSectionSubtitle),
@@ -1268,12 +1265,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 </div>
                 <div style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
                     {[
-                        { src: '/foto3.webp', alt: 'Atendimento de estética facial' },
-                        { src: '/foto4.webp', alt: 'Cuidados estéticos faciais' },
-                        { src: '/antes-depois-1-antes.webp', alt: 'Registro antes do procedimento' },
-                        { src: '/antes-depois-1-depois.webp', alt: 'Registro depois do procedimento' },
-                        { src: '/foto7.webp', alt: 'Cuidado personalizado' },
-                        { src: '/foto8.webp', alt: 'Tratamento facial' },
+                        { src: '/foto3.jpg.jpeg', alt: 'Atendimento de estética facial' },
+                        { src: '/foto4.jpg.jpeg', alt: 'Cuidados estéticos faciais' },
+                        { src: '/antes-depois-1-antes.jpg', alt: 'Registro antes do procedimento' },
+                        { src: '/antes-depois-1-depois.jpg', alt: 'Registro depois do procedimento' },
+                        { src: '/foto7.jpg.jpeg', alt: 'Cuidado personalizado' },
+                        { src: '/foto8.jpg.jpeg', alt: 'Tratamento facial' },
                     ].map((image, index) => (
                         <img
                             key={image.src}
