@@ -569,10 +569,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         }
     };
 
-    const scrollToBooking = () => {
-        document.getElementById('agendamento')?.scrollIntoView({ behavior: 'smooth' });
-    };
-
     const toggleFaq = (index: number) => {
         setOpenFaq(openFaq === index ? null : index);
     };
@@ -930,9 +926,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                                 <b style={{ color: '#2D1537', fontWeight: 700 }}>{item.durationMinutes} min</b>
                                             </span>
                                         </div>
-                                        <button onClick={scrollToBooking} className="myl-btn-primary" style={styles.primaryActionButton}>
-                                            Agendar este tratamento
-                                        </button>
                                     </div>
                                 </div>
                             )}
