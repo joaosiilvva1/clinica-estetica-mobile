@@ -1,7 +1,7 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
-const siteUrl = 'https://clinica-estetica-mobile-joaosiilvva1s-projects.vercel.app/';
+const siteUrl = 'https://mariayasmimestetica.vercel.app/';
 const shareImage = `${siteUrl}capa-compartilhamento-maria-yasmim-estetica.jpg`;
 const pageTitle = 'Maria Yasmim Lopes Estética | Taboão da Serra';
 const pageDescription =
