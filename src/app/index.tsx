@@ -185,79 +185,99 @@ function RevealPanel({ children, minHeight }: { children: (inView: boolean) => R
 
 function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
     const [beforePhoto, setBeforePhoto] = useState<string | null>(null);
+    const [sourceFile, setSourceFile] = useState<File | null>(null);
     const [afterPhoto, setAfterPhoto] = useState<string | null>(null);
     const [split, setSplit] = useState(50);
     const [error, setError] = useState('');
-    const beforeGallery = React.useRef<HTMLInputElement>(null);
-    const beforeCamera = React.useRef<HTMLInputElement>(null);
-    const afterGallery = React.useRef<HTMLInputElement>(null);
-    const afterCamera = React.useRef<HTMLInputElement>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [consent, setConsent] = useState(false);
+    const galleryInput = React.useRef<HTMLInputElement>(null);
+    const cameraInput = React.useRef<HTMLInputElement>(null);
 
-    useEffect(() => () => {
-        if (beforePhoto) URL.revokeObjectURL(beforePhoto);
-        if (afterPhoto) URL.revokeObjectURL(afterPhoto);
-    }, [beforePhoto, afterPhoto]);
+    useEffect(() => () => { if (beforePhoto) URL.revokeObjectURL(beforePhoto); }, [beforePhoto]);
 
-    const choosePhoto = (side: 'before' | 'after', file?: File) => {
+    const choosePhoto = (file?: File) => {
         setError('');
         if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            setError('Escolha um arquivo de imagem.');
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            setError('Escolha uma foto JPEG ou PNG.');
             return;
         }
-        if (file.size > 12 * 1024 * 1024) {
-            setError('A foto deve ter até 12 MB.');
+        if (file.size > 8 * 1024 * 1024) {
+            setError('A foto deve ter até 8 MB.');
             return;
         }
-        const url = URL.createObjectURL(file);
-        if (side === 'before') setBeforePhoto(url);
-        else setAfterPhoto(url);
+        setAfterPhoto(null);
+        setSourceFile(file);
+        setBeforePhoto(URL.createObjectURL(file));
     };
 
-    const photoCard = (side: 'before' | 'after', title: string, gallery: React.RefObject<HTMLInputElement | null>, camera: React.RefObject<HTMLInputElement | null>, photo: string | null) => (
-        <div style={{ background: '#fff', border: '1px solid #E8E1E8', borderRadius: '18px', padding: isMobile ? '16px' : '20px', flex: '1 1 250px', minWidth: 0 }}>
-            <h3 style={{ margin: '0 0 14px', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '22px' }}>{title}</h3>
-            {photo ? <img src={photo} alt={`Foto ${title.toLowerCase()} escolhida`} style={{ width: '100%', height: '210px', objectFit: 'cover', borderRadius: '12px', marginBottom: '14px' }} /> : (
-                <div style={{ height: '210px', borderRadius: '12px', marginBottom: '14px', background: '#F8F5F8', color: '#76677B', display: 'grid', placeItems: 'center', textAlign: 'center', padding: '16px', fontSize: '14px' }}>Sua foto aparece aqui</div>
-            )}
-            <input ref={gallery} type="file" accept="image/*" aria-label={`Escolher foto ${title.toLowerCase()} da galeria`} onChange={(event) => { choosePhoto(side, event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
-            <input ref={camera} type="file" accept="image/*" capture="user" aria-label={`Tirar foto ${title.toLowerCase()}`} onChange={(event) => { choosePhoto(side, event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                <button type="button" onClick={() => camera.current?.click()} style={photoActionStyle}>{photo ? 'Tirar outra foto' : 'Tirar foto'}</button>
-                <button type="button" onClick={() => gallery.current?.click()} style={photoActionStyle}>{photo ? 'Trocar da galeria' : 'Escolher da galeria'}</button>
-            </div>
-        </div>
-    );
+    const generatePreview = async () => {
+        if (!sourceFile || !consent || isGenerating) return;
+        setIsGenerating(true);
+        setError('');
+        try {
+            const form = new FormData();
+            form.append('photo', sourceFile);
+            const apiBase = process.env.EXPO_PUBLIC_API_URL || 'https://clinica-estetica-backend.onrender.com';
+            const response = await fetch(`${apiBase}/api/skin-preview/public`, { method: 'POST', body: form });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Não foi possível gerar a simulação agora. Tente novamente em instantes.');
+            if (!result.imageBase64 || !result.mimeType) throw new Error('A IA não retornou uma imagem. Tente novamente.');
+            setAfterPhoto(`data:${result.mimeType};base64,${result.imageBase64}`);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Não foi possível gerar a simulação agora.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     return (
         <section id="comparar-pele" style={{ background: '#F7F3F7', padding: isMobile ? '64px 20px' : '88px 24px' }}>
             <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 32px' }}>
-                    <span style={{ color: '#8B6B91', fontWeight: 700, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Um jeito simples de acompanhar</span>
-                    <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Compare sua pele</h2>
-                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>Adicione uma foto de antes e outra de depois da limpeza de pele. Para comparar melhor, tente manter a iluminação e o enquadramento parecidos.</p>
+                    <span style={{ color: '#8B6B91', fontWeight: 700, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Experimente uma prévia</span>
+                    <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Veja uma simulação da sua pele</h2>
+                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>Envie uma única foto do seu rosto e a inteligência artificial cria uma prévia ilustrativa de como sua pele poderia aparentar após a limpeza.</p>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px' }}>
-                    {photoCard('before', 'Antes', beforeGallery, beforeCamera, beforePhoto)}
-                    {photoCard('after', 'Depois', afterGallery, afterCamera, afterPhoto)}
+                <div style={{ maxWidth: '720px', margin: '0 auto', background: '#fff', border: '1px solid #E8E1E8', borderRadius: '18px', padding: isMobile ? '16px' : '24px' }}>
+                    <h3 style={{ margin: '0 0 14px', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '22px' }}>Sua foto de antes</h3>
+                    {beforePhoto ? <img src={beforePhoto} alt="Sua foto antes do procedimento" style={{ display: 'block', width: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: '12px', background: '#F8F5F8', marginBottom: '14px' }} /> : (
+                        <div style={{ height: '260px', borderRadius: '12px', marginBottom: '14px', background: '#F8F5F8', color: '#76677B', display: 'grid', placeItems: 'center', textAlign: 'center', padding: '16px', fontSize: '14px' }}>Escolha uma foto frontal, com boa luz e sem filtro</div>
+                    )}
+                    <input ref={galleryInput} type="file" accept="image/jpeg,image/png" aria-label="Escolher foto da galeria" disabled={isGenerating} onChange={(event) => { choosePhoto(event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
+                    <input ref={cameraInput} type="file" accept="image/jpeg,image/png" capture="user" aria-label="Tirar foto" disabled={isGenerating} onChange={(event) => { choosePhoto(event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
+                        <button type="button" disabled={isGenerating} onClick={() => cameraInput.current?.click()} style={photoActionStyle}>{beforePhoto ? 'Tirar outra foto' : 'Tirar foto'}</button>
+                        <button type="button" disabled={isGenerating} onClick={() => galleryInput.current?.click()} style={photoActionStyle}>{beforePhoto ? 'Trocar foto' : 'Escolher da galeria'}</button>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#4C3A52', fontSize: '13px', lineHeight: 1.6, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={consent} disabled={isGenerating} onChange={(event) => setConsent(event.target.checked)} style={{ marginTop: '3px', accentColor: '#7C5A83' }} />
+                        <span>Confirmo que tenho 18 anos ou mais e autorizo o envio temporário da foto ao servidor da clínica e ao Google Gemini para gerar uma simulação. Consulte os <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer" style={{ color: '#6A4B73', textDecoration: 'underline' }}>termos de uso do Gemini</a>.</span>
+                    </label>
+                    <button type="button" onClick={generatePreview} disabled={!sourceFile || !consent || isGenerating} style={{ ...photoGenerateStyle, opacity: !sourceFile || !consent || isGenerating ? 0.55 : 1, cursor: !sourceFile || !consent || isGenerating ? 'not-allowed' : 'pointer' }}>
+                        {isGenerating ? 'Criando sua simulação…' : 'Gerar simulação com IA'}
+                    </button>
                 </div>
-                {error && <p role="alert" style={{ color: '#9D283B', margin: '14px 0 0' }}>{error}</p>}
+                {error && <p role="alert" style={{ color: '#9D283B', margin: '14px auto 0', maxWidth: '720px' }}>{error}</p>}
                 {beforePhoto && afterPhoto && (
                     <div style={{ margin: '24px auto 0', maxWidth: '760px' }}>
+                        <h3 style={{ textAlign: 'center', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '24px' }}>Prévia ilustrativa gerada por IA</h3>
                         <div style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', background: '#EAE4EA' }}>
-                            <img src={afterPhoto} alt="Depois da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={afterPhoto} alt="Simulação ilustrativa da pele após a limpeza" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                             <img src={beforePhoto} alt="Antes da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', clipPath: `inset(0 ${100 - split}% 0 0)` }} />
                             <span style={{ position: 'absolute', left: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Antes</span>
-                            <span style={{ position: 'absolute', right: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Depois</span>
+                            <span style={{ position: 'absolute', right: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Simulação</span>
                             <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: `${split}%`, width: '3px', background: '#fff', boxShadow: '0 0 8px #0005', pointerEvents: 'none' }} />
                         </div>
                         <label style={{ display: 'block', marginTop: '14px', color: '#4C3A52', fontSize: '14px', fontWeight: 600 }}>
                             Arraste para comparar
                             <input type="range" min="0" max="100" value={split} onChange={(event) => setSplit(Number(event.target.value))} aria-label="Deslize para comparar as fotos de antes e depois" style={{ display: 'block', width: '100%', marginTop: '8px', accentColor: '#7C5A83' }} />
                         </label>
+                        <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Imagem criada por inteligência artificial: é apenas uma simulação visual e não prevê nem garante o resultado de um procedimento.</p>
                     </div>
                 )}
-                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua privacidade importa: as fotos ficam neste aparelho enquanto você usa a página. Elas não são enviadas nem salvas pela clínica.</p>
+                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Para criar a simulação, sua foto é enviada ao servidor da clínica e ao Google Gemini. O site não armazena uma cópia permanente; o Google processa a imagem conforme os termos do serviço e o plano da clínica.</p>
             </div>
         </section>
     );
@@ -266,6 +286,11 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
 const photoActionStyle: React.CSSProperties = {
     appearance: 'none', border: '1px solid #7C5A83', background: '#fff', color: '#5A3C62',
     padding: '10px 13px', borderRadius: '22px', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+};
+
+const photoGenerateStyle: React.CSSProperties = {
+    display: 'block', width: '100%', marginTop: '18px', border: 'none', borderRadius: '28px',
+    background: '#76537F', color: '#fff', padding: '14px 20px', fontSize: '15px', fontWeight: 700,
 };
 
 // Estilo "Apple" de rolagem: em vez de disparar uma animação uma única vez
