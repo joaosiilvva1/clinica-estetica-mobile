@@ -253,7 +253,7 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                     </div>
                     <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#4C3A52', fontSize: '13px', lineHeight: 1.6, cursor: 'pointer' }}>
                         <input type="checkbox" checked={consent} disabled={isGenerating} onChange={(event) => setConsent(event.target.checked)} style={{ marginTop: '3px', accentColor: '#7C5A83' }} />
-                        <span>Confirmo que tenho 18 anos ou mais e autorizo o envio temporário da foto ao servidor da clínica e ao Google Gemini para gerar uma simulação. Consulte os <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer" style={{ color: '#6A4B73', textDecoration: 'underline' }}>termos de uso do Gemini</a>.</span>
+                        <span>Tenho 18 anos ou mais e autorizo o uso da minha foto para gerar a simulação.</span>
                     </label>
                     <button type="button" onClick={generatePreview} disabled={!sourceFile || !consent || isGenerating} style={{ ...photoGenerateStyle, opacity: !sourceFile || !consent || isGenerating ? 0.55 : 1, cursor: !sourceFile || !consent || isGenerating ? 'not-allowed' : 'pointer' }}>
                         {isGenerating ? 'Criando sua simulação…' : 'Gerar simulação com IA'}
@@ -277,7 +277,7 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                         <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Imagem criada por inteligência artificial: é apenas uma simulação visual e não prevê nem garante o resultado de um procedimento.</p>
                     </div>
                 )}
-                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Para criar a simulação, sua foto é enviada ao servidor da clínica e ao Google Gemini. O site não armazena uma cópia permanente; o Google processa a imagem conforme os termos do serviço e o plano da clínica.</p>
+                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é enviada ao Google Gemini somente para criar a simulação e não fica salva no site.</p>
             </div>
         </section>
     );
