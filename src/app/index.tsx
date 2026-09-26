@@ -235,9 +235,9 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
             softened.height = height;
             const softenedContext = softened.getContext('2d');
             if (!softenedContext) throw new Error('Não foi possível criar a prévia neste aparelho.');
-            softenedContext.filter = 'blur(1.5px)';
+            softenedContext.filter = 'blur(2px)';
             softenedContext.drawImage(canvas, 0, 0, width, height);
-            context.globalAlpha = 0.22;
+            context.globalAlpha = 0.28;
             context.drawImage(softened, 0, 0, width, height);
             context.globalAlpha = 1;
             setAfterPhoto(canvas.toDataURL('image/jpeg', 0.9));
@@ -276,17 +276,17 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                     <div style={{ margin: '24px auto 0', maxWidth: '760px' }}>
                         <h3 style={{ textAlign: 'center', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '24px' }}>Prévia visual gratuita</h3>
                         <div style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', background: '#EAE4EA' }}>
-                            <img src={afterPhoto} alt="Simulação ilustrativa da pele após a limpeza" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={afterPhoto} alt="Foto com um efeito leve de suavização; não é um resultado real" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                             <img src={beforePhoto} alt="Antes da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', clipPath: `inset(0 ${100 - split}% 0 0)` }} />
                             <span style={{ position: 'absolute', left: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Antes</span>
-                            <span style={{ position: 'absolute', right: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Simulação</span>
+                            <span style={{ position: 'absolute', right: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Depois</span>
                             <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: `${split}%`, width: '3px', background: '#fff', boxShadow: '0 0 8px #0005', pointerEvents: 'none' }} />
                         </div>
                         <label style={{ display: 'block', marginTop: '14px', color: '#4C3A52', fontSize: '14px', fontWeight: 600 }}>
                             Arraste para comparar
                             <input type="range" min="0" max="100" value={split} onChange={(event) => setSplit(Number(event.target.value))} aria-label="Deslize para comparar as fotos de antes e depois" style={{ display: 'block', width: '100%', marginTop: '8px', accentColor: '#7C5A83' }} />
                         </label>
-                        <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Este efeito suaviza levemente a imagem inteira; não é criado por IA, não representa um procedimento real e não prevê resultados.</p>
+                        <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>“Depois” é apenas um efeito de suavização na foto inteira; não é criado por IA nem prevê o resultado do procedimento.</p>
                     </div>
                 )}
                 <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é processada no próprio aparelho e não é enviada para a internet.</p>
