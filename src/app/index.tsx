@@ -190,7 +190,6 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
     const [split, setSplit] = useState(50);
     const [error, setError] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
-    const [consent, setConsent] = useState(false);
     const galleryInput = React.useRef<HTMLInputElement>(null);
     const cameraInput = React.useRef<HTMLInputElement>(null);
 
@@ -213,20 +212,37 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
     };
 
     const generatePreview = async () => {
-        if (!sourceFile || !consent || isGenerating) return;
+        if (!sourceFile || !beforePhoto || isGenerating) return;
         setIsGenerating(true);
         setError('');
         try {
-            const form = new FormData();
-            form.append('photo', sourceFile);
-            const apiBase = process.env.EXPO_PUBLIC_API_URL || 'https://clinica-estetica-backend.onrender.com';
-            const response = await fetch(`${apiBase}/api/skin-preview/public`, { method: 'POST', body: form });
-            const result = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(result.message || 'Não foi possível gerar a simulação agora. Tente novamente em instantes.');
-            if (!result.imageBase64 || !result.mimeType) throw new Error('A IA não retornou uma imagem. Tente novamente.');
-            setAfterPhoto(`data:${result.mimeType};base64,${result.imageBase64}`);
+            const image = new Image();
+            image.src = beforePhoto;
+            await image.decode();
+
+            const scale = Math.min(1, 1280 / Math.max(image.naturalWidth, image.naturalHeight));
+            const width = Math.max(1, Math.round(image.naturalWidth * scale));
+            const height = Math.max(1, Math.round(image.naturalHeight * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error('Não foi possível criar a prévia neste aparelho.');
+
+            context.drawImage(image, 0, 0, width, height);
+            const softened = document.createElement('canvas');
+            softened.width = width;
+            softened.height = height;
+            const softenedContext = softened.getContext('2d');
+            if (!softenedContext) throw new Error('Não foi possível criar a prévia neste aparelho.');
+            softenedContext.filter = 'blur(1.5px)';
+            softenedContext.drawImage(canvas, 0, 0, width, height);
+            context.globalAlpha = 0.22;
+            context.drawImage(softened, 0, 0, width, height);
+            context.globalAlpha = 1;
+            setAfterPhoto(canvas.toDataURL('image/jpeg', 0.9));
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Não foi possível gerar a simulação agora.');
+            setError(err instanceof Error ? err.message : 'Não foi possível criar a prévia neste aparelho.');
         } finally {
             setIsGenerating(false);
         }
@@ -238,7 +254,7 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                 <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 32px' }}>
                     <span style={{ color: '#8B6B91', fontWeight: 700, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Experimente uma prévia</span>
                     <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Veja uma simulação da sua pele</h2>
-                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>Envie uma única foto do seu rosto e a inteligência artificial cria uma prévia ilustrativa de como sua pele poderia aparentar após a limpeza.</p>
+                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>Veja gratuitamente um efeito leve de suavização na sua foto, processado diretamente no seu aparelho.</p>
                 </div>
                 <div style={{ maxWidth: '720px', margin: '0 auto', background: '#fff', border: '1px solid #E8E1E8', borderRadius: '18px', padding: isMobile ? '16px' : '24px' }}>
                     <h3 style={{ margin: '0 0 14px', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '22px' }}>Sua foto de antes</h3>
@@ -251,18 +267,14 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                         <button type="button" disabled={isGenerating} onClick={() => cameraInput.current?.click()} style={photoActionStyle}>{beforePhoto ? 'Tirar outra foto' : 'Tirar foto'}</button>
                         <button type="button" disabled={isGenerating} onClick={() => galleryInput.current?.click()} style={photoActionStyle}>{beforePhoto ? 'Trocar foto' : 'Escolher da galeria'}</button>
                     </div>
-                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#4C3A52', fontSize: '13px', lineHeight: 1.6, cursor: 'pointer' }}>
-                        <input type="checkbox" checked={consent} disabled={isGenerating} onChange={(event) => setConsent(event.target.checked)} style={{ marginTop: '3px', accentColor: '#7C5A83' }} />
-                        <span>Tenho 18 anos ou mais e autorizo o uso da minha foto para gerar a simulação.</span>
-                    </label>
-                    <button type="button" onClick={generatePreview} disabled={!sourceFile || !consent || isGenerating} style={{ ...photoGenerateStyle, opacity: !sourceFile || !consent || isGenerating ? 0.55 : 1, cursor: !sourceFile || !consent || isGenerating ? 'not-allowed' : 'pointer' }}>
-                        {isGenerating ? 'Criando sua simulação…' : 'Gerar simulação com IA'}
+                    <button type="button" onClick={generatePreview} disabled={!sourceFile || isGenerating} style={{ ...photoGenerateStyle, opacity: !sourceFile || isGenerating ? 0.55 : 1, cursor: !sourceFile || isGenerating ? 'not-allowed' : 'pointer' }}>
+                        {isGenerating ? 'Criando sua prévia…' : 'Ver prévia gratuita'}
                     </button>
                 </div>
                 {error && <p role="alert" style={{ color: '#9D283B', margin: '14px auto 0', maxWidth: '720px' }}>{error}</p>}
                 {beforePhoto && afterPhoto && (
                     <div style={{ margin: '24px auto 0', maxWidth: '760px' }}>
-                        <h3 style={{ textAlign: 'center', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '24px' }}>Prévia ilustrativa gerada por IA</h3>
+                        <h3 style={{ textAlign: 'center', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '24px' }}>Prévia visual gratuita</h3>
                         <div style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', background: '#EAE4EA' }}>
                             <img src={afterPhoto} alt="Simulação ilustrativa da pele após a limpeza" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                             <img src={beforePhoto} alt="Antes da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', clipPath: `inset(0 ${100 - split}% 0 0)` }} />
@@ -274,10 +286,10 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                             Arraste para comparar
                             <input type="range" min="0" max="100" value={split} onChange={(event) => setSplit(Number(event.target.value))} aria-label="Deslize para comparar as fotos de antes e depois" style={{ display: 'block', width: '100%', marginTop: '8px', accentColor: '#7C5A83' }} />
                         </label>
-                        <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Imagem criada por inteligência artificial: é apenas uma simulação visual e não prevê nem garante o resultado de um procedimento.</p>
+                        <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Este efeito suaviza levemente a imagem inteira; não é criado por IA, não representa um procedimento real e não prevê resultados.</p>
                     </div>
                 )}
-                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é enviada ao Google Gemini somente para criar a simulação e não fica salva no site.</p>
+                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é processada no próprio aparelho e não é enviada para a internet.</p>
             </div>
         </section>
     );
