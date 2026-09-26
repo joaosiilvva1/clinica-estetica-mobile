@@ -183,7 +183,7 @@ function RevealPanel({ children, minHeight }: { children: (inView: boolean) => R
     );
 }
 
-function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
+function SkinPhotoCompare({ isMobile, whatsappHref }: { isMobile: boolean; whatsappHref: string }) {
     const [beforePhoto, setBeforePhoto] = useState<string | null>(null);
     const [sourceFile, setSourceFile] = useState<File | null>(null);
     const [afterPhoto, setAfterPhoto] = useState<string | null>(null);
@@ -253,8 +253,8 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
             <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 32px' }}>
                     <span style={{ color: '#8B6B91', fontWeight: 700, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Experimente uma prévia</span>
-                    <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Veja uma simulação da sua pele</h2>
-                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>Veja gratuitamente um efeito leve de suavização na sua foto, processado diretamente no seu aparelho.</p>
+                    <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Compare sua foto com um efeito de suavização</h2>
+                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>A prévia aplica um efeito leve à foto inteira. Ela não usa inteligência artificial nem prevê o resultado da limpeza de pele.</p>
                 </div>
                 <div style={{ maxWidth: '720px', margin: '0 auto', background: '#fff', border: '1px solid #E8E1E8', borderRadius: '18px', padding: isMobile ? '16px' : '24px' }}>
                     <h3 style={{ margin: '0 0 14px', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '22px' }}>Sua foto de antes</h3>
@@ -263,9 +263,9 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                     )}
                     <input ref={galleryInput} type="file" accept="image/jpeg,image/png" aria-label="Escolher foto da galeria" disabled={isGenerating} onChange={(event) => { choosePhoto(event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
                     <input ref={cameraInput} type="file" accept="image/jpeg,image/png" capture="user" aria-label="Tirar foto" disabled={isGenerating} onChange={(event) => { choosePhoto(event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
-                        <button type="button" disabled={isGenerating} onClick={() => cameraInput.current?.click()} style={photoActionStyle}>{beforePhoto ? 'Tirar outra foto' : 'Tirar foto'}</button>
-                        <button type="button" disabled={isGenerating} onClick={() => galleryInput.current?.click()} style={photoActionStyle}>{beforePhoto ? 'Trocar foto' : 'Escolher da galeria'}</button>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
+                        <button type="button" disabled={isGenerating} onClick={() => cameraInput.current?.click()} style={{ ...photoActionStyle, width: isMobile ? '100%' : 'auto', minHeight: '44px' }}>{beforePhoto ? 'Tirar outra foto' : 'Tirar foto'}</button>
+                        <button type="button" disabled={isGenerating} onClick={() => galleryInput.current?.click()} style={{ ...photoActionStyle, width: isMobile ? '100%' : 'auto', minHeight: '44px' }}>{beforePhoto ? 'Trocar foto' : 'Escolher da galeria'}</button>
                     </div>
                     <button type="button" onClick={generatePreview} disabled={!sourceFile || isGenerating} style={{ ...photoGenerateStyle, opacity: !sourceFile || isGenerating ? 0.55 : 1, cursor: !sourceFile || isGenerating ? 'not-allowed' : 'pointer' }}>
                         {isGenerating ? 'Criando sua prévia…' : 'Ver prévia gratuita'}
@@ -289,6 +289,10 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                     </div>
                 )}
                 <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é processada no próprio aparelho e não é enviada para a internet.</p>
+                <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                    <p style={{ margin: '0 0 12px', color: '#4C3A52', lineHeight: 1.6 }}>Quer saber se a limpeza de pele é indicada para você?</p>
+                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="myl-btn-primary" style={{ ...styles.primaryActionButton, display: 'inline-flex', minHeight: '48px', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>Fale com a Maria pelo WhatsApp</a>
+                </div>
             </div>
         </section>
     );
@@ -1057,7 +1061,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </section>
 
 
-            <SkinPhotoCompare isMobile={isMobile} />
+            <SkinPhotoCompare isMobile={isMobile} whatsappHref={buildWhatsAppLink('Olá Maria, vi a prévia de suavização no site e gostaria de tirar uma dúvida sobre a limpeza de pele.')} />
 
             {/* Localização Atualizada */}
             <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
