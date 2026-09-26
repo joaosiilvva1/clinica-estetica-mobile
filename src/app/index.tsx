@@ -183,6 +183,91 @@ function RevealPanel({ children, minHeight }: { children: (inView: boolean) => R
     );
 }
 
+function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
+    const [beforePhoto, setBeforePhoto] = useState<string | null>(null);
+    const [afterPhoto, setAfterPhoto] = useState<string | null>(null);
+    const [split, setSplit] = useState(50);
+    const [error, setError] = useState('');
+    const beforeGallery = React.useRef<HTMLInputElement>(null);
+    const beforeCamera = React.useRef<HTMLInputElement>(null);
+    const afterGallery = React.useRef<HTMLInputElement>(null);
+    const afterCamera = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => () => {
+        if (beforePhoto) URL.revokeObjectURL(beforePhoto);
+        if (afterPhoto) URL.revokeObjectURL(afterPhoto);
+    }, [beforePhoto, afterPhoto]);
+
+    const choosePhoto = (side: 'before' | 'after', file?: File) => {
+        setError('');
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            setError('Escolha um arquivo de imagem.');
+            return;
+        }
+        if (file.size > 12 * 1024 * 1024) {
+            setError('A foto deve ter até 12 MB.');
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        if (side === 'before') setBeforePhoto(url);
+        else setAfterPhoto(url);
+    };
+
+    const photoCard = (side: 'before' | 'after', title: string, gallery: React.RefObject<HTMLInputElement | null>, camera: React.RefObject<HTMLInputElement | null>, photo: string | null) => (
+        <div style={{ background: '#fff', border: '1px solid #E8E1E8', borderRadius: '18px', padding: isMobile ? '16px' : '20px', flex: '1 1 250px', minWidth: 0 }}>
+            <h3 style={{ margin: '0 0 14px', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '22px' }}>{title}</h3>
+            {photo ? <img src={photo} alt={`Foto ${title.toLowerCase()} escolhida`} style={{ width: '100%', height: '210px', objectFit: 'cover', borderRadius: '12px', marginBottom: '14px' }} /> : (
+                <div style={{ height: '210px', borderRadius: '12px', marginBottom: '14px', background: '#F8F5F8', color: '#76677B', display: 'grid', placeItems: 'center', textAlign: 'center', padding: '16px', fontSize: '14px' }}>Sua foto aparece aqui</div>
+            )}
+            <input ref={gallery} type="file" accept="image/*" aria-label={`Escolher foto ${title.toLowerCase()} da galeria`} onChange={(event) => { choosePhoto(side, event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
+            <input ref={camera} type="file" accept="image/*" capture="user" aria-label={`Tirar foto ${title.toLowerCase()}`} onChange={(event) => { choosePhoto(side, event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <button type="button" onClick={() => camera.current?.click()} style={photoActionStyle}>{photo ? 'Tirar outra foto' : 'Tirar foto'}</button>
+                <button type="button" onClick={() => gallery.current?.click()} style={photoActionStyle}>{photo ? 'Trocar da galeria' : 'Escolher da galeria'}</button>
+            </div>
+        </div>
+    );
+
+    return (
+        <section id="comparar-pele" style={{ background: '#F7F3F7', padding: isMobile ? '64px 20px' : '88px 24px' }}>
+            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 32px' }}>
+                    <span style={{ color: '#8B6B91', fontWeight: 700, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Um jeito simples de acompanhar</span>
+                    <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Compare sua pele</h2>
+                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>Adicione uma foto de antes e outra de depois da limpeza de pele. Para comparar melhor, tente manter a iluminação e o enquadramento parecidos.</p>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px' }}>
+                    {photoCard('before', 'Antes', beforeGallery, beforeCamera, beforePhoto)}
+                    {photoCard('after', 'Depois', afterGallery, afterCamera, afterPhoto)}
+                </div>
+                {error && <p role="alert" style={{ color: '#9D283B', margin: '14px 0 0' }}>{error}</p>}
+                {beforePhoto && afterPhoto && (
+                    <div style={{ margin: '24px auto 0', maxWidth: '760px' }}>
+                        <div style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', background: '#EAE4EA' }}>
+                            <img src={afterPhoto} alt="Depois da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={beforePhoto} alt="Antes da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', clipPath: `inset(0 ${100 - split}% 0 0)` }} />
+                            <span style={{ position: 'absolute', left: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Antes</span>
+                            <span style={{ position: 'absolute', right: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Depois</span>
+                            <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: `${split}%`, width: '3px', background: '#fff', boxShadow: '0 0 8px #0005', pointerEvents: 'none' }} />
+                        </div>
+                        <label style={{ display: 'block', marginTop: '14px', color: '#4C3A52', fontSize: '14px', fontWeight: 600 }}>
+                            Arraste para comparar
+                            <input type="range" min="0" max="100" value={split} onChange={(event) => setSplit(Number(event.target.value))} aria-label="Deslize para comparar as fotos de antes e depois" style={{ display: 'block', width: '100%', marginTop: '8px', accentColor: '#7C5A83' }} />
+                        </label>
+                    </div>
+                )}
+                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua privacidade importa: as fotos ficam neste aparelho enquanto você usa a página. Elas não são enviadas nem salvas pela clínica.</p>
+            </div>
+        </section>
+    );
+}
+
+const photoActionStyle: React.CSSProperties = {
+    appearance: 'none', border: '1px solid #7C5A83', background: '#fff', color: '#5A3C62',
+    padding: '10px 13px', borderRadius: '22px', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+};
+
 // Estilo "Apple" de rolagem: em vez de disparar uma animação uma única vez
 // (como o useInView acima), este hook devolve um progresso contínuo de 0 a 1
 // enquanto o elemento atravessa a tela. Isso permite amarrar escala/opacidade
@@ -934,6 +1019,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 })}
             </section>
 
+
+            <SkinPhotoCompare isMobile={isMobile} />
 
             {/* Localização Atualizada */}
             <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
