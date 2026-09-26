@@ -476,6 +476,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-instagram-arrow { margin-left: 5px; color: #87569F; font-size: 19px; }
       .myl-instagram-link:hover { transform: translateY(-2px); border-color: #D9BBDD; box-shadow: 0 12px 28px rgba(45,21,55,.12); }
       @media (max-width: 720px) { .myl-gallery-grid { gap: 11px !important; } .myl-gallery-card { border-radius: 15px; } .myl-gallery-card figcaption { inset: auto 8px 8px; } .myl-gallery-card figcaption span { padding: 6px 9px; font-size: 10px; } }
+      .myl-faq-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 15px; }
+      @media (max-width: 760px) { .myl-faq-grid { grid-template-columns: minmax(0, 1fr); } }
       @media (prefers-reduced-motion: reduce) { .myl-gallery-card img, .myl-instagram-link { transition: none !important; } }
 
       .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
@@ -1204,7 +1206,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                     <h2 style={styles.sectionTitle}>{siteSettings.faqSectionTitle}</h2>
                     <p style={styles.sectionSubtitle}>{siteSettings.faqSectionSubtitle}</p>
                 </div>
-                <div style={styles.faqContainer}>
+                <div className="myl-faq-grid" style={styles.faqContainer}>
                     {siteSettings.faqItems.map((faq, index) => (
                         <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
                             <div style={styles.faqQuestionHeader}>
@@ -1403,7 +1405,7 @@ const styles = {
     galleryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginTop: '30px' },
     galleryImage: { width: '100%', height: '250px', objectFit: 'cover' as const, borderRadius: '18px', boxShadow: '0 8px 20px rgba(45,21,55,0.08)', backgroundColor: '#F3E6F8' },
     galleryCta: { display: 'flex', justifyContent: 'center', marginTop: '28px' },
-    faqSection: { padding: '80px 20px', maxWidth: '800px', margin: '0 auto' },
+    faqSection: { padding: '80px 20px', maxWidth: '1100px', margin: '0 auto' },
     faqContainer: { display: 'flex', flexDirection: 'column' as const, gap: '15px' },
     faqItem: { backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #E8D7F1', padding: '20px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
     faqQuestionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
