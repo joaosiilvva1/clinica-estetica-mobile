@@ -79,7 +79,7 @@ const defaultSiteSettings: SiteSettings = {
         'Trabalho focada na saúde da sua pele, utilizando protocolos modernos, dermocosméticos de alta tecnologia e seguindo as mais rigorosas normas de biossegurança.\n' +
         'Meu objetivo é proporcionar a melhor experiência em estética na região do Taboão da Serra, unindo eficácia técnica a um ambiente acolhedor de relaxamento profundo 💜',
     address:
-        'R. Izaura da Silva Camargo, 27\nJardim Sao Paulo, Taboão da Serra - SP\nCEP: 06767-310',
+        'R. Izaura da Silva Camargo, 27\nJardim São Paulo, Taboão da Serra - SP\nCEP: 06767-310',
     whatsapp: '5511916224612',
     openingHoursText:
         'Atendimento com hora marcada aos domingos e segundas, em uma agenda planejada para oferecer atenção individualizada, conforto e cuidado em cada sessão.',
@@ -90,21 +90,21 @@ const defaultSiteSettings: SiteSettings = {
     heroSubtitle:
         'Tratamentos faciais personalizados em Taboão da Serra, com atendimento acolhedor, protocolos cuidadosos e foco nas necessidades da sua pele.',
     heroTrustItems: [
-        { icon: '🛡️', text: 'Procedimentos seguros' },
+        { icon: '🛡️', text: 'Cuidados com biossegurança' },
         { icon: '🤝', text: 'Atendimento personalizado' },
         { icon: '✨', text: 'Protocolos personalizados' },
     ],
     benefitsItems: [
         { icon: '⭐', text: 'Atendimento Exclusivo e Personalizado' },
         { icon: '🛡️', text: 'Dermocosméticos de Alta Qualidade' },
-        { icon: '💬', text: 'Agendamento online e confirmação via WhatsApp' },
+        { icon: '💬', text: 'Agendamento diretamente com a Maria pelo WhatsApp' },
     ],
     indicationsSectionTitle: 'Nossos tratamentos são ideais para quem busca:',
     indicationsItems: [
-        { icon: '✨', title: 'Remoção de Cravos e Acne', text: 'Extração segura e profunda para desobstruir os poros e prevenir inflamações.' },
-        { icon: '💧', title: 'Controle de Oleosidade', text: 'Equilíbrio perfeito da derme, acabando com o excesso de brilho e pele engordurada.' },
-        { icon: '🌸', title: 'Renovação Celular', text: 'Remoção de células mortas, devolvendo a maciez e clareando levemente a pele.' },
-        { icon: '💆‍♀️', title: 'Hidratação e Viço (Glow)', text: 'Tratamentos intensivos que combatem o ressecamento, deixando a pele iluminada.' },
+        { icon: '✨', title: 'Remoção de Cravos e Acne', text: 'Cuidados para ajudar a desobstruir os poros e reduzir o acúmulo de impurezas.' },
+        { icon: '💧', title: 'Controle de Oleosidade', text: 'Cuidados personalizados para ajudar a equilibrar a oleosidade da pele.' },
+        { icon: '🌸', title: 'Renovação Celular', text: 'Esfoliação e cuidados para renovar a superfície da pele e deixá-la mais macia.' },
+        { icon: '💆‍♀️', title: 'Hidratação e Viço (Glow)', text: 'Hidratação facial para ajudar a manter a pele macia e com aparência iluminada.' },
     ],
     aboutBadgeText: 'Sua Esteticista',
     aboutPhotoUrl: '/maria-yasmim-esteticista-taboao-da-serra.jpg',
@@ -294,7 +294,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     ]);
 
     const defaultTreatments = [
-        { id: '1', name: 'Limpeza de Pele Profunda + Massagem Facial Relaxante + Hidratação Facial Glow', description: 'Remoção de impurezas, cravos e células mortas, devolvendo o viço e a saúde da pele.', price: 130, durationMinutes: 120 }
+        { id: '1', name: 'Limpeza de Pele Profunda + Massagem Facial Relaxante + Hidratação Facial Glow', description: 'Remoção de impurezas, cravos e células mortas, com massagem facial e hidratação para cuidar da pele.', price: 130, durationMinutes: 120 }
     ];
 
     const [treatments, setTreatments] = useState<
@@ -920,10 +920,10 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                         )}
                                         <div style={{ display: 'flex', gap: '22px', marginBottom: '28px' }}>
                                             <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
-                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>R$ {item.price}</b>
+                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>Preço: {item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</b>
                                             </span>
                                             <span style={{ fontSize: '13px', fontWeight: 600, color: '#6D5D75' }}>
-                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>{item.durationMinutes} min</b>
+                                                <b style={{ color: '#2D1537', fontWeight: 700 }}>Duração: {item.durationMinutes} min</b>
                                             </span>
                                         </div>
                                     </div>
@@ -968,16 +968,17 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </div>
                     </div>
                     <div style={styles.locationMapWrapper}>
-                        <iframe
-                            title="Mapa de Localização"
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.7029671607525!2d-46.77740262451388!3d-23.57500587879109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce55a90d96a60d%3A0x6a05e26716c526d1!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20S%C3%A3o%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1723427300000"
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0 }}
-                            allowFullScreen={false}
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                        ></iframe>
+                        <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="Abrir localização e rota da clínica no Google Maps"
+                            style={{ display: 'flex', width: '100%', minHeight: '300px', boxSizing: 'border-box', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '32px', borderRadius: '18px', background: 'linear-gradient(145deg, #F3E6F8, #FAF9F6)', color: '#2D1537', textAlign: 'center', textDecoration: 'none' }}
+                        >
+                            <span aria-hidden="true" style={{ fontSize: '38px' }}>📍</span>
+                            <strong style={{ fontSize: '18px' }}>Veja a localização da clínica</strong>
+                            <span style={{ color: '#6D5D75' }}>Abrir rota no Google Maps ↗</span>
+                        </a>
                     </div>
                 </div>
             </section>
