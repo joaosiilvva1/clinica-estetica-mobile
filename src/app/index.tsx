@@ -183,7 +183,7 @@ function RevealPanel({ children, minHeight }: { children: (inView: boolean) => R
     );
 }
 
-function SkinPhotoCompare({ isMobile, whatsappHref }: { isMobile: boolean; whatsappHref: string }) {
+function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
     const [beforePhoto, setBeforePhoto] = useState<string | null>(null);
     const [sourceFile, setSourceFile] = useState<File | null>(null);
     const [afterPhoto, setAfterPhoto] = useState<string | null>(null);
@@ -289,10 +289,6 @@ function SkinPhotoCompare({ isMobile, whatsappHref }: { isMobile: boolean; whats
                     </div>
                 )}
                 <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é processada no próprio aparelho e não é enviada para a internet.</p>
-                <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                    <p style={{ margin: '0 0 12px', color: '#4C3A52', lineHeight: 1.6 }}>Quer saber se a limpeza de pele é indicada para você?</p>
-                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="myl-btn-primary" style={{ ...styles.primaryActionButton, display: 'inline-flex', minHeight: '48px', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>Fale com a Maria pelo WhatsApp</a>
-                </div>
             </div>
         </section>
     );
@@ -465,6 +461,22 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
       .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
       .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
+
+      .myl-gallery-card { position: relative; isolation: isolate; aspect-ratio: 1 / 1; overflow: hidden; margin: 0; border-radius: 22px; background: #F1E9F2; box-shadow: 0 12px 28px rgba(45,21,55,.09); }
+      .myl-gallery-card::after { content: ''; position: absolute; inset: 35% 0 0; z-index: 0; background: linear-gradient(180deg, transparent, rgba(28,13,34,.62)); pointer-events: none; }
+      .myl-gallery-card img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.8,.2,1); }
+      .myl-gallery-card:hover img { transform: scale(1.055); }
+      .myl-gallery-card figcaption { position: absolute; inset: auto 15px 15px; z-index: 1; display: flex; justify-content: flex-start; }
+      .myl-gallery-card figcaption span { padding: 8px 12px; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; color: #fff; background: rgba(45,21,55,.3); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); font-size: 12px; font-weight: 600; letter-spacing: .2px; }
+      .myl-instagram-link { display: inline-flex; align-items: center; gap: 13px; min-height: 64px; padding: 10px 17px; border: 1px solid #E8D9EA; border-radius: 20px; color: #4A3151; background: rgba(255,255,255,.84); box-shadow: 0 8px 24px rgba(45,21,55,.07); text-decoration: none; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+      .myl-instagram-link > svg { flex: 0 0 auto; color: #A34A9D; }
+      .myl-instagram-link > span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+      .myl-instagram-link small { color: #826E88; font-size: 11px; }
+      .myl-instagram-link strong { color: #38223F; font-size: 14px; font-weight: 700; }
+      .myl-instagram-arrow { margin-left: 5px; color: #87569F; font-size: 19px; }
+      .myl-instagram-link:hover { transform: translateY(-2px); border-color: #D9BBDD; box-shadow: 0 12px 28px rgba(45,21,55,.12); }
+      @media (max-width: 720px) { .myl-gallery-grid { gap: 11px !important; } .myl-gallery-card { border-radius: 15px; } .myl-gallery-card figcaption { inset: auto 8px 8px; } .myl-gallery-card figcaption span { padding: 6px 9px; font-size: 10px; } }
+      @media (prefers-reduced-motion: reduce) { .myl-gallery-card img, .myl-instagram-link { transition: none !important; } }
 
       .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
       @media (prefers-reduced-motion: reduce) { .myl-booking-button { transition: none !important; transform: none !important; } }
@@ -1061,7 +1073,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </section>
 
 
-            <SkinPhotoCompare isMobile={isMobile} whatsappHref={buildWhatsAppLink('Olá Maria, vi a prévia de suavização no site e gostaria de tirar uma dúvida sobre a limpeza de pele.')} />
+            <SkinPhotoCompare isMobile={isMobile} />
 
             {/* Localização Atualizada */}
             <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
@@ -1087,9 +1099,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             {siteSettings.openingHoursText}
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '10px', marginTop: '15px' }}>
-                            <a href={buildWhatsAppLink('Olá Maria, encontrei a clínica pelo site e gostaria de tirar uma dúvida.')} target="_blank" rel="noreferrer" style={{...styles.primaryActionButton, padding: '12px 25px', fontSize: '14px'}}>
-                                Falar pelo WhatsApp
-                            </a>
                             <a href={mapsUrl} target="_blank" rel="noreferrer" style={{...styles.secondaryActionButton, padding: '12px 20px', fontSize: '14px'}}>
                                 Como chegar no Google Maps
                             </a>
@@ -1146,31 +1155,32 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             <section id="instagram" style={styles.gallerySection}>
                 <div style={styles.sectionHeader}>
                     <span style={styles.eyebrowCentered}>Conheça nosso trabalho</span>
-                    <h2 style={styles.sectionTitle}>Estética, cuidado e resultados em cada detalhe</h2>
-                    <p style={styles.sectionSubtitle}>Veja registros de atendimentos e cuidados faciais da clínica. No Instagram, acompanhe novas publicações e novidades.</p>
+                    <h2 style={styles.sectionTitle}>Um pouco dos nossos cuidados</h2>
+                    <p style={styles.sectionSubtitle}>Momentos reais de cuidado e atendimento na clínica.</p>
                 </div>
-                <div style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
+                <div className="myl-gallery-grid" style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
                     {[
-                        { src: '/detalhe-cuidado-facial-taboao-da-serra.jpg', alt: 'Detalhe de cuidado facial durante atendimento' },
-                        { src: '/cuidado-facial-em-clinica-taboao-da-serra.jpg', alt: 'Cliente recebendo atendimento estético facial' },
-                        { src: '/procedimento-facial-personalizado-taboao-da-serra.jpg', alt: 'Cuidado facial personalizado na clínica' },
-                        { src: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg', alt: 'Máscara facial preparada para atendimento estético' },
-                        { src: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg', alt: 'Aplicação de cuidados faciais durante atendimento' },
-                        { src: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg', alt: 'Detalhe de tratamento facial personalizado' },
+                        { src: '/detalhe-cuidado-facial-taboao-da-serra.jpg', alt: 'Detalhe de cuidado facial durante atendimento', label: 'Cuidado facial' },
+                        { src: '/cuidado-facial-em-clinica-taboao-da-serra.jpg', alt: 'Cliente recebendo atendimento estético facial', label: 'Atendimento' },
+                        { src: '/procedimento-facial-personalizado-taboao-da-serra.jpg', alt: 'Cuidado facial personalizado na clínica', label: 'Personalizado' },
+                        { src: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg', alt: 'Máscara facial preparada para atendimento estético', label: 'Máscara facial' },
+                        { src: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg', alt: 'Aplicação de cuidados faciais durante atendimento', label: 'Momento de cuidado' },
+                        { src: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg', alt: 'Detalhe de tratamento facial personalizado', label: 'Pele bem cuidada' },
                     ].map((image, index) => (
-                        <img
-                            key={image.src}
-                            src={image.src}
-                            alt={image.alt}
-                            loading="lazy"
-                            decoding="async"
-                            onError={(event) => {
-                                const imageElement = event.currentTarget;
-                                imageElement.onerror = null;
-                                imageElement.src = '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg';
-                            }}
-                            style={{ ...styles.galleryImage, height: isMobile ? '180px' : '250px', animationDelay: `${index * 0.05}s` }}
-                        />
+                        <figure className="myl-gallery-card" key={image.src} style={{ animationDelay: `${index * 0.05}s` }}>
+                            <img
+                                src={image.src}
+                                alt={image.alt}
+                                loading="lazy"
+                                decoding="async"
+                                onError={(event) => {
+                                    const imageElement = event.currentTarget;
+                                    imageElement.onerror = null;
+                                    imageElement.src = '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg';
+                                }}
+                            />
+                            <figcaption><span>{image.label}</span></figcaption>
+                        </figure>
                     ))}
                 </div>
                 <div style={styles.galleryCta}>
@@ -1178,10 +1188,11 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         href={siteSettings.instagramUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="myl-btn-primary"
-                        style={styles.primaryActionButton}
+                        className="myl-instagram-link"
                     >
-                        Abrir perfil no Instagram {instagramHandle}
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>
+                        <span><small>Acompanhe no Instagram</small><strong>{instagramHandle}</strong></span>
+                        <span aria-hidden="true" className="myl-instagram-arrow">↗</span>
                     </a>
                 </div>
             </section>
@@ -1388,7 +1399,7 @@ const styles = {
     bookingIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', flexShrink: 0, borderRadius: '50%', color: '#87569F', backgroundColor: 'rgba(255,255,255,.6)', border: '1px solid rgba(183,148,200,.24)' },
     bookingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxSizing: 'border-box' as const, width: '100%', minHeight: '60px', padding: '16px 18px', borderRadius: '32px', background: 'linear-gradient(110deg, #9144B8, #7733A0)', color: '#FFF', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: 1.5, textAlign: 'center' as const, boxShadow: '0 8px 24px rgba(137,62,181,.25), inset 0 1px 0 rgba(255,255,255,.2)', transition: 'transform .25s ease, box-shadow .25s ease' },
     bookingNote: { fontSize: '11px', lineHeight: 1.8, color: '#73627C', margin: '16px 0 0', textAlign: 'center' as const, width: '100%' },
-    gallerySection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
+    gallerySection: { padding: '80px 28px', maxWidth: '1200px', margin: '0 auto', borderRadius: '32px', background: 'linear-gradient(180deg, #FBF9F7 0%, #F8F3F8 100%)' },
     galleryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginTop: '30px' },
     galleryImage: { width: '100%', height: '250px', objectFit: 'cover' as const, borderRadius: '18px', boxShadow: '0 8px 20px rgba(45,21,55,0.08)', backgroundColor: '#F3E6F8' },
     galleryCta: { display: 'flex', justifyContent: 'center', marginTop: '28px' },
