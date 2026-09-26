@@ -274,7 +274,6 @@ function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
                 {error && <p role="alert" style={{ color: '#9D283B', margin: '14px auto 0', maxWidth: '720px' }}>{error}</p>}
                 {beforePhoto && afterPhoto && (
                     <div style={{ margin: '24px auto 0', maxWidth: '760px' }}>
-                        <h3 style={{ textAlign: 'center', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '24px' }}>Prévia visual gratuita</h3>
                         <div style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', background: '#EAE4EA' }}>
                             <img src={afterPhoto} alt="Foto com um efeito leve de suavização; não é um resultado real" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                             <img src={beforePhoto} alt="Antes da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', clipPath: `inset(0 ${100 - split}% 0 0)` }} />
@@ -695,6 +694,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         setOpenFaq(openFaq === index ? null : index);
     };
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}`;
+    const mapsEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}&output=embed`;
     const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
     const addressLines = siteSettings.address.split('\n').filter((l) => l.trim());
     const instagramHandle = (() => {
@@ -1092,17 +1092,15 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </div>
                     </div>
                     <div style={styles.locationMapWrapper}>
-                        <a
-                            href={mapsUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label="Abrir localização e rota da clínica no Google Maps"
-                            style={{ display: 'flex', width: '100%', minHeight: '300px', boxSizing: 'border-box', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '32px', borderRadius: '18px', background: 'linear-gradient(145deg, #F3E6F8, #FAF9F6)', color: '#2D1537', textAlign: 'center', textDecoration: 'none' }}
-                        >
-                            <span aria-hidden="true" style={{ fontSize: '38px' }}>📍</span>
-                            <strong style={{ fontSize: '18px' }}>Veja a localização da clínica</strong>
-                            <span style={{ color: '#6D5D75' }}>Abrir rota no Google Maps ↗</span>
-                        </a>
+                        <iframe
+                            src={mapsEmbedUrl}
+                            title="Mapa da localização da clínica"
+                            aria-label="Mapa da localização e arredores da clínica"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            allowFullScreen
+                            style={{ display: 'block', width: '100%', height: '100%', minHeight: '300px', border: 0, borderRadius: '18px' }}
+                        />
                     </div>
                 </div>
             </section>
