@@ -10,8 +10,40 @@ function SiteImage({ src, ...props }: React.ImgHTMLAttributes<HTMLImageElement>)
         width={props.width ?? dimensions?.width} height={props.height ?? dimensions?.height} />;
 }
 
+function GalleryPhoto({ src, alt, children }: { src: string; alt: string; children: React.ReactNode }) {
+    const dialog = React.useRef<HTMLDialogElement>(null);
+    const [open, setOpen] = useState(false);
+    useEffect(() => {
+        if (!open) return;
+        const previous = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        dialog.current?.showModal();
+        return () => { document.body.style.overflow = previous; };
+    }, [open]);
+    return <>
+        <button type="button" className="myl-photo-open" aria-label={`Ampliar foto: ${alt}`} onClick={() => setOpen(true)}>{children}</button>
+        {open && <dialog ref={dialog} className="myl-photo-dialog" aria-label={alt} onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
+            <button type="button" className="myl-photo-close" autoFocus onClick={() => dialog.current?.close()}>Fechar ×</button>
+            <img src={src} alt={alt} />
+            <p>{alt}</p>
+        </dialog>}
+    </>;
+}
+
 const landingStyles = `
       html { scroll-behavior: smooth; }
+      .myl-photo-open { display:block; width:100%; height:100%; border:0; padding:0; background:transparent; cursor:zoom-in; }
+      .myl-photo-open:focus-visible { outline:3px solid #87569F; outline-offset:-4px; }
+      .myl-gallery-card figcaption { pointer-events:none; }
+      .myl-photo-dialog { position:fixed; inset:0; width:min(92vw,960px); max-width:92vw; max-height:92dvh; box-sizing:border-box; padding:56px 16px 16px; border:0; border-radius:20px; background:#FAF9F6; color:#2D1537; }
+      .myl-photo-dialog::backdrop { background:rgba(22,12,28,.85); }
+      .myl-gallery-card .myl-photo-dialog img { width:100%; height:70dvh; object-fit:contain; }
+      .myl-photo-dialog p { margin:12px 0 0; text-align:center; font-size:14px; }
+      .myl-photo-close { position:absolute; right:14px; top:10px; min-height:40px; padding:8px 16px; border:1px solid #DCC8E6; border-radius:22px; background:#fff; color:#4A155E; font:600 14px/1.4 sans-serif; cursor:pointer; }
+      a[href*="wa.me"]:not([title]) { background:#A259C4 !important; border-radius:28px !important; }
+      .myl-care-guide-result a[href*="wa.me"] { background:transparent !important; box-shadow:none !important; color:#754386; }
+      @media(max-width:720px) { .myl-hero { padding:100px 18px 40px !important; } .myl-hero h1 { font-size:36px !important; } .myl-hero-grid { gap:28px !important; } }
+
 
       @keyframes mylFadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
       @keyframes mylFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -85,7 +117,7 @@ const landingStyles = `
       .myl-featured-meta span { display:flex; flex-direction:column; gap:5px; }
       .myl-featured-meta small { color:#806F85; font-size:11px; }
       .myl-featured-meta strong { color:#2D1537; font-size:18px; }
-      .myl-care-guide { padding:76px 20px; background:linear-gradient(145deg,#F9F5FA,#FBF9F7); }
+      .myl-care-guide { padding:56px 20px; background:linear-gradient(145deg,#F9F5FA,#FBF9F7); }
       .myl-care-guide-inner { max-width:980px; margin:0 auto; text-align:center; }
       .myl-care-guide h2 { margin:12px 0; }
       .myl-care-guide-intro { margin:0 auto 26px; max-width:620px; color:#6D5D75; line-height:1.7; }
@@ -498,27 +530,15 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         { id: '1', title: 'Limpeza de pele para acne', url: '/limpeza-de-pele-acne-taboao-da-serra.jpg' },
         { id: '2', title: 'Atendimento estético facial', url: '/atendimento-estetico-facial-taboao-da-serra.jpg' },
         { id: '3', title: 'Cuidado facial personalizado', url: '/cuidado-facial-personalizado-taboao-da-serra.jpg' },
-        { id: '4', title: 'Tratamento facial na clínica', url: '/tratamento-facial-na-clinica-taboao-da-serra.jpg' },
-        { id: '5', title: 'Cuidado com a pele', url: '/cuidado-com-a-pele-atendimento-estetico.jpg' },
         { id: '6', title: 'Máscara facial em atendimento estético', url: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg' },
         { id: '7', title: 'Aplicação de máscara facial', url: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg' },
-        { id: '8', title: 'Cuidado facial personalizado', url: '/cuidado-facial-em-clinica-taboao-da-serra.jpg' },
-        { id: '9', title: 'Detalhe de tratamento facial', url: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg' },
-        { id: '10', title: 'Cuidado com a pele em atendimento facial', url: '/pele-durante-atendimento-facial-taboao-da-serra.jpg' },
-        { id: '11', title: 'Detalhe de cuidado facial', url: '/detalhe-cuidado-facial-taboao-da-serra.jpg' },
         { id: '12', title: 'Atendimento estético personalizado', url: '/atendimento-estetico-com-hora-marcada-taboao-da-serra.jpg' },
-        { id: '13', title: 'Cuidado facial personalizado', url: '/procedimento-facial-personalizado-taboao-da-serra.jpg' },
     ];
+
 
     const [photos, setPhotos] = useState(defaultPhotos);
 
-    useEffect(() => {
-        if (window.matchMedia('(max-width: 720px), (prefers-reduced-motion: reduce)').matches) return;
-        const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % photos.length);
-        }, 4000);
-        return () => clearInterval(timer);
-    }, [photos.length, isMobile]);
+    const swipeStart = React.useRef<{ x: number; y: number } | null>(null);
 
     const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
     const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
@@ -561,7 +581,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         return all.findIndex((item) => item.url === photo.url) === index;
                     });
 
-                    setPhotos(mergedPhotos);
+                    setPhotos([...defaultPhotos, ...mergedPhotos].filter((photo, index, all) => all.findIndex(item => item.url === photo.url) === index).slice(0, 6));
+                    setCurrentSlide(0);
                 }
             })
             .catch(() => {});
@@ -734,7 +755,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
             {/* Hero Section */}
             <section
-                style={{ ...styles.hero, position: 'relative' as const, overflow: 'hidden' }}
+                className="myl-hero" style={{ ...styles.hero, position: 'relative' as const, overflow: 'hidden' }}
                 onMouseMove={handleHeroMouseMove}
                 onMouseLeave={resetHeroParallax}
             >
@@ -744,7 +765,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 <div className="myl-float" style={{ position: 'absolute', top: '8%', left: '-6%', width: '260px', height: '260px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,120,0.25), transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' as const }} />
                 <div className="myl-float" style={{ position: 'absolute', bottom: '4%', right: '-4%', width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(162,89,196,0.18), transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' as const, animationDelay: '2.5s' }} />
 
-                <div style={styles.heroGrid}>
+                <div className="myl-hero-grid" style={styles.heroGrid}>
                     <div className="myl-fade-up" style={styles.heroTextCol}>
                         <span style={styles.eyebrow}>{siteSettings.heroEyebrow}</span>
                         <h1 style={styles.heroTitle}>{siteSettings.heroTitle}</h1>
@@ -791,7 +812,10 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             }}
                         >
                             <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
-                            <div style={styles.carouselSlide}>
+                            <div style={{ ...styles.carouselSlide, touchAction: 'pan-y' }}
+                                onTouchStart={event => { const touch = event.touches[0]; swipeStart.current = { x: touch.clientX, y: touch.clientY }; }}
+                                onTouchEnd={event => { const start = swipeStart.current; swipeStart.current = null; if (!start) return; const touch = event.changedTouches[0]; const dx = touch.clientX - start.x; const dy = touch.clientY - start.y; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? nextSlide() : prevSlide(); } }}
+                                onTouchCancel={() => { swipeStart.current = null; }}>
                                 <SiteImage
                                     src={photos[currentSlide].url}
                                     alt={photos[currentSlide].title}
@@ -809,10 +833,10 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <button onClick={nextSlide} style={styles.carouselBtnRight} aria-label="Próxima foto">&#10095;</button>
                             <div style={styles.dotsContainer}>
                                 {photos.map((_, index) => (
-                                    <span
+                                    <button type="button" aria-label={`Ver foto ${index + 1}`} aria-pressed={currentSlide === index}
                                         key={index}
                                         style={{
-                                            ...styles.dot,
+                                            ...styles.dot, border: 0, padding: 0,
                                             backgroundColor: currentSlide === index ? '#A259C4' : '#D4A5E0'
                                         }}
                                         onClick={() => setCurrentSlide(index)}
@@ -1123,6 +1147,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         { src: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg', alt: 'Detalhe de tratamento facial personalizado', label: 'Pele bem cuidada' },
                     ].map((image, index) => (
                         <figure className="myl-gallery-card" key={image.src} style={{ animationDelay: `${index * 0.05}s` }}>
+                            <GalleryPhoto src={image.src} alt={image.alt}>
                             <SiteImage
                                 src={image.src}
                                 alt={image.alt}
@@ -1134,12 +1159,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                     imageElement.src = '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg';
                                 }}
                             />
-                            <figcaption><span>{image.label}</span></figcaption>
+                            </GalleryPhoto>
+                            <figcaption><span>{image.label} ↗</span></figcaption>
                         </figure>
                     ))}
                 </div>
                 <div className="myl-gallery-controls">
-                    <span>Deslize para ver mais fotos</span>
+                    <span>Deslize para ver mais · Toque para ampliar</span>
                     <div>
                         <button type="button" onClick={() => scrollGallery(-1)} aria-label="Ver fotos anteriores">‹</button>
                         <button type="button" onClick={() => scrollGallery(1)} aria-label="Ver próximas fotos">›</button>
@@ -1366,7 +1392,7 @@ const styles = {
     navLink: { textDecoration: 'none', color: '#2D1537', fontWeight: '500', fontSize: '15px' },
     primaryButton: { backgroundColor: '#A259C4', color: '#FFF', padding: '8px 16px', borderRadius: '25px', textDecoration: 'none', fontWeight: '600', fontSize: '13px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' as const },
     hero: { padding: '130px 20px 70px 20px', background: 'linear-gradient(to bottom, #F3E6F8, #FAF9F6)' },
-    heroGrid: { maxWidth: '1500px', margin: '0 auto', display: 'flex', flexWrap: 'wrap-reverse' as const, gap: '50px', alignItems: 'center' },
+    heroGrid: { maxWidth: '1500px', margin: '0 auto', display: 'flex', flexWrap: 'wrap' as const, gap: '36px', alignItems: 'center' },
     heroTextCol: { flex: '1 1 420px', maxWidth: '520px', textAlign: 'left' as const },
     heroPhotoCol: { flex: '1.3 1 480px', maxWidth: '1000px', display: 'flex' },
     eyebrow: { color: '#A259C4', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '2px', display: 'inline-block', marginBottom: '16px' },
@@ -1400,7 +1426,7 @@ const styles = {
     indicationIcon: { fontSize: '32px', marginBottom: '15px' },
     indicationTitle: { fontSize: '18px', fontWeight: '700', color: '#2D1537', marginBottom: '10px', fontFamily: "'Playfair Display', serif" },
     indicationText: { fontSize: '14px', color: '#6D5D75', lineHeight: 1.5 },
-    aboutSection: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
+    aboutSection: { padding: '56px 20px', maxWidth: '1200px', margin: '0 auto' },
     aboutGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '60px', alignItems: 'center' },
     aboutPhotos: { flex: '1 1 400px', display: 'flex', flexDirection: 'column' as const, gap: '14px' },
     aboutPhotoMain: { width: '100%', height: '550px', objectFit: 'cover' as const, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,0.1)' },
@@ -1415,7 +1441,7 @@ const styles = {
     aboutText: { flex: '1 1 400px' },
     aboutTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '20px', fontFamily: "'Playfair Display', serif" },
     aboutParagraph: { fontSize: '16px', color: '#5A4A60', lineHeight: 1.8, marginBottom: '16px' },
-    section: { padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' },
+    section: { padding: '56px 20px', maxWidth: '1200px', margin: '0 auto' },
     sectionHeader: { textAlign: 'center' as const, marginBottom: '50px' },
     sectionTitle: { fontSize: '36px', fontWeight: '700', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
     sectionSubtitle: { fontSize: '16px', color: '#6D5D75' },
@@ -1425,12 +1451,12 @@ const styles = {
     cardTitle: { fontSize: '22px', fontWeight: 'bold', color: '#2D1537', marginBottom: '12px', fontFamily: "'Playfair Display', serif" },
     cardText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, marginBottom: '20px' },
     cardSelectButton: { backgroundColor: '#F3E6F8', color: '#4A155E', border: 'none', padding: '10px 18px', borderRadius: '20px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', alignSelf: 'flex-start', transition: 'background-color 0.2s' },
-    locationSection: { padding: '80px 20px', maxWidth: '1000px', margin: '0 auto' },
+    locationSection: { padding: '56px 20px', maxWidth: '1000px', margin: '0 auto' },
     locationGrid: { display: 'flex', flexWrap: 'wrap' as const, gap: '30px', backgroundColor: '#FFF', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.05)', border: '1px solid #F0E4F5' },
     locationInfo: { flex: '1 1 300px', padding: '40px' },
     locationAddressText: { fontSize: '15px', color: '#5A4A60', lineHeight: 1.6, marginBottom: '20px' },
     locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
-    bookingSection: { position: 'relative' as const, isolation: 'isolate' as const, padding: '90px 20px', maxWidth: '1200px', margin: '0 auto' },
+    bookingSection: { position: 'relative' as const, isolation: 'isolate' as const, padding: '56px 20px', maxWidth: '1200px', margin: '0 auto' },
     bookingGrid: { position: 'relative' as const, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', gap: 'clamp(28px, 4vw, 56px)', padding: 'clamp(28px, 4vw, 48px)', borderRadius: '40px', background: 'linear-gradient(120deg, rgba(255,255,255,.64), rgba(242,229,249,.6))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.9)', boxShadow: '0 16px 44px -20px rgba(77,35,96,.18), inset 0 0 0 1px rgba(232,215,241,.35)' },
     bookingPhotoWrap: { position: 'relative' as const, aspectRatio: '3 / 4', minWidth: 0, width: '100%', maxWidth: '440px', margin: '0 auto' },
     bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block', borderRadius: '24px', boxShadow: '0 16px 38px rgba(58,28,70,.16)' },
@@ -1443,11 +1469,11 @@ const styles = {
     bookingIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', flexShrink: 0, borderRadius: '50%', color: '#87569F', backgroundColor: 'rgba(255,255,255,.6)', border: '1px solid rgba(183,148,200,.24)' },
     bookingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxSizing: 'border-box' as const, width: '100%', minHeight: '60px', padding: '16px 18px', borderRadius: '32px', background: 'linear-gradient(110deg, #9144B8, #7733A0)', color: '#FFF', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: 1.5, textAlign: 'center' as const, boxShadow: '0 8px 24px rgba(137,62,181,.25), inset 0 1px 0 rgba(255,255,255,.2)', transition: 'transform .25s ease, box-shadow .25s ease' },
     bookingNote: { fontSize: '11px', lineHeight: 1.8, color: '#73627C', margin: '16px 0 0', textAlign: 'center' as const, width: '100%' },
-    gallerySection: { padding: '80px 28px', maxWidth: '1200px', margin: '0 auto', borderRadius: '32px', background: 'linear-gradient(180deg, #FBF9F7 0%, #F8F3F8 100%)' },
+    gallerySection: { padding: '56px 28px', maxWidth: '1200px', margin: '0 auto', borderRadius: '32px', background: 'linear-gradient(180deg, #FBF9F7 0%, #F8F3F8 100%)' },
     galleryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginTop: '30px' },
     galleryImage: { width: '100%', height: '250px', objectFit: 'cover' as const, borderRadius: '18px', boxShadow: '0 8px 20px rgba(45,21,55,0.08)', backgroundColor: '#F3E6F8' },
     galleryCta: { display: 'flex', justifyContent: 'center', marginTop: '28px' },
-    faqSection: { padding: '80px 20px', maxWidth: '1100px', margin: '0 auto' },
+    faqSection: { padding: '56px 20px', maxWidth: '1100px', margin: '0 auto' },
     faqContainer: { display: 'flex', flexDirection: 'column' as const, gap: '15px' },
     faqItem: { backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #E8D7F1', padding: '20px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
     faqQuestionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
@@ -1455,10 +1481,11 @@ const styles = {
     faqIcon: { fontSize: '24px', color: '#A259C4', fontWeight: 'bold' },
     faqAnswerText: { fontSize: '15px', color: '#6D5D75', lineHeight: 1.6, margin: '15px 0 0 0', paddingTop: '15px', borderTop: '1px solid #F0E4F5' },
     footer: { backgroundColor: '#2D1537', color: '#FAF9F6', padding: '70px 20px 30px 20px', textAlign: 'left' as const },
-    footerContent: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '50px', borderBottom: '1px solid #4A155E', paddingBottom: '40px' },
+    footerContent: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '36px', borderBottom: '1px solid #4A155E', paddingBottom: '40px' },
     footerTitle: { fontSize: '24px', fontWeight: 'bold', color: '#E3C2F0', marginBottom: '15px', fontFamily: "'Playfair Display', serif" },
     footerTextDesc: { fontSize: '15px', color: '#D4A5E0', lineHeight: 1.6 },
     footerContact: { fontSize: '15px', color: '#D4A5E0', lineHeight: 1.7 },
     footerInstagramLink: { color: '#FFF', textDecoration: 'none', fontWeight: 'bold' },
     footerBottom: { maxWidth: '1200px', margin: '30px auto 0 auto', textAlign: 'center' as const, fontSize: '13px', color: '#A259C4' }
 };
+
