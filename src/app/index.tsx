@@ -689,7 +689,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         </details>
     );
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}`;
-    const mapsEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}&output=embed`;
+    const mapsEmbedUrl = siteSettings.address === defaultSiteSettings.address
+        ? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3655.582538606046!2d-46.7894929!3d-23.619300199999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce54f4e5ddcecb%3A0xf43ac75af56369ec!2sR.%20Izaura%20da%20Silva%20Camargo%2C%2027%20-%20Jardim%20Sao%20Paulo%2C%20Tabo%C3%A3o%20da%20Serra%20-%20SP%2C%2006767-310!5e0!3m2!1spt-BR!2sbr!4v1790507571952!5m2!1spt-BR!2sbr'
+        : `https://www.google.com/maps?q=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}&z=16&hl=pt-BR&output=embed`;
     const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
     const addressLines = siteSettings.address.split('\n').filter((l) => l.trim());
     const instagramHandle = (() => {
@@ -1197,8 +1199,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             src={mapsEmbedUrl}
                             title="Mapa da localização da clínica"
                             aria-label="Mapa da localização e arredores da clínica"
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
+                            loading="eager"
+                            referrerPolicy="strict-origin-when-cross-origin"
                             allowFullScreen
                             style={{ display: 'block', width: '100%', height: '100%', minHeight: '300px', border: 0, borderRadius: '18px' }}
                         />
