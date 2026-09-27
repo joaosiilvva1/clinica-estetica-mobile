@@ -490,21 +490,20 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-gallery-controls > div { display:flex; gap:9px; }
       .myl-gallery-controls button { width:44px; height:44px; border:1px solid #E4D4E8; border-radius:50%; color:#4A3151; background:#fff; font-size:26px; line-height:1; cursor:pointer; transition:background .2s ease,transform .2s ease; }
       .myl-gallery-controls button:hover { background:#F3E6F8; transform:translateY(-1px); }
-      .myl-featured-treatment { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); max-width:1120px; min-height:420px; margin:64px auto; overflow:hidden; border:1px solid #E8D7F1; border-radius:30px; background:linear-gradient(125deg,#fff 0%,#FBF7FC 100%); box-shadow:0 22px 55px rgba(45,21,55,.09); }
+      .myl-featured-treatment { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); width:calc(100% - 48px); max-width:1120px; min-height:420px; margin:0 auto 64px; overflow:hidden; border:1px solid #E8D7F1; border-radius:30px; background:linear-gradient(125deg,#fff 0%,#FBF7FC 100%); box-shadow:0 22px 55px rgba(45,21,55,.09); }
       .myl-featured-treatment-photo { position:relative; min-height:420px; overflow:hidden; background:#EFE6F1; }
       .myl-featured-treatment-photo::after { content:''; position:absolute; inset:45% 0 0; background:linear-gradient(180deg,transparent,rgba(36,17,44,.44)); }
       .myl-featured-treatment-photo img { display:block; width:100%; height:100%; min-height:420px; object-fit:cover; }
       .myl-featured-treatment-photo > span { position:absolute; z-index:1; left:24px; bottom:22px; padding:9px 13px; border:1px solid rgba(255,255,255,.45); border-radius:999px; color:#fff; background:rgba(45,21,55,.35); backdrop-filter:blur(8px); font-size:12px; font-weight:600; }
       .myl-featured-treatment-content { display:flex; flex-direction:column; justify-content:center; padding:clamp(28px,5vw,58px); }
       .myl-featured-eyebrow { color:#87569F; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
-      .myl-featured-treatment h2,.myl-care-guide h2 { margin:12px 0; color:#2D1537; font:600 clamp(30px,3vw,42px)/1.15 'Playfair Display',Georgia,serif; }
+      .myl-featured-treatment h2,.myl-featured-treatment h3,.myl-care-guide h2 { margin:12px 0; color:#2D1537; font:600 clamp(30px,3vw,42px)/1.15 'Playfair Display',Georgia,serif; }
       .myl-featured-treatment-content > p { margin:0; color:#6D5D75; font-size:15px; line-height:1.75; }
       .myl-featured-includes { margin-top:16px; padding:12px 14px; border-left:3px solid #B997CD; color:#4C3A52; background:#F5EDF7; font-size:13px; line-height:1.6; }
       .myl-featured-meta { display:flex; flex-wrap:wrap; gap:32px; margin:22px 0; }
       .myl-featured-meta span { display:flex; flex-direction:column; gap:5px; }
       .myl-featured-meta small { color:#806F85; font-size:11px; }
       .myl-featured-meta strong { color:#2D1537; font-size:18px; }
-      .myl-featured-button { display:inline-flex; align-items:center; justify-content:space-between; gap:24px; width:min(100%,280px); min-height:48px; padding:0 18px; border-radius:999px; color:#fff; background:#76537F; text-decoration:none; font-size:14px; font-weight:700; box-shadow:0 8px 20px rgba(118,83,127,.2); }
       .myl-care-guide { padding:76px 20px; background:linear-gradient(145deg,#F9F5FA,#FBF9F7); }
       .myl-care-guide-inner { max-width:980px; margin:0 auto; text-align:center; }
       .myl-care-guide h2 { margin:12px 0; }
@@ -518,8 +517,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-care-guide-result > p { margin:0; }
       .myl-care-guide-result > strong { color:#2D1537; }
       .myl-care-guide-result > a { display:inline-flex; margin-top:8px; color:#754386; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
-      @media (max-width:820px) { .myl-featured-treatment { margin:48px 20px; grid-template-columns:1fr; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { min-height:0; height:300px; } .myl-care-guide-options { grid-template-columns:1fr; } }
-      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { margin:40px 16px; border-radius:22px; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { height:250px; } .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
+      @media (max-width:820px) { .myl-featured-treatment { width:calc(100% - 40px); margin:0 auto 48px; grid-template-columns:1fr; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { min-height:0; height:300px; } .myl-care-guide-options { grid-template-columns:1fr; } }
+      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { width:calc(100% - 32px); margin:0 auto 40px; border-radius:22px; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { height:250px; } .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
       @media (prefers-reduced-motion:reduce) { .myl-gallery-controls button,.myl-care-guide-option { transition:none !important; } }
 
       .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
@@ -772,7 +771,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             return siteSettings.instagramUrl;
         }
     })();
-    const featuredTreatment = treatments.find((item) => item.name.toLowerCase().includes('limpeza de pele')) ?? treatments[0];
+    const featuredTreatment = treatments.find((item) => item.name.toLowerCase().includes('limpeza de pele'));
 
     return (
         <div id="inicio" style={styles.container}>
@@ -927,26 +926,6 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 ))}
             </section>
 
-            {featuredTreatment && (
-                <section aria-labelledby="featured-treatment-title" className="myl-featured-treatment">
-                    <div className="myl-featured-treatment-photo">
-                        <img src="/limpeza-de-pele-acne-taboao-da-serra.jpg" alt="Atendimento de limpeza de pele na clínica" loading="lazy" decoding="async" />
-                        <span>Tratamento em destaque</span>
-                    </div>
-                    <div className="myl-featured-treatment-content">
-                        <span className="myl-featured-eyebrow">Cuidado facial completo</span>
-                        <h2 id="featured-treatment-title">Limpeza de pele profunda</h2>
-                        <p>{featuredTreatment.description}</p>
-                        <div className="myl-featured-includes">Inclui massagem facial relaxante e hidratação facial Glow.</div>
-                        <div className="myl-featured-meta">
-                            <span><small>Investimento</small><strong>{featuredTreatment.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
-                            <span><small>Duração aproximada</small><strong>{featuredTreatment.durationMinutes} minutos</strong></span>
-                        </div>
-                        <a href="#agendamento" className="myl-featured-button">Conhecer e agendar <span aria-hidden="true">↗</span></a>
-                    </div>
-                </section>
-            )}
-
             {/* Indicações — cada benefício é um painel grande que revela (fade + leve
                 subida) conforme entra na tela, alternando foto de lado. Sem sticky/fixed:
                 fluxo normal do documento, então nunca sobrepõe a seção seguinte. */}
@@ -1085,7 +1064,25 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                     <h2 style={styles.sectionTitle}>{siteSettings.treatmentsSectionTitle}</h2>
                     <p style={styles.sectionSubtitle}>{siteSettings.treatmentsSectionSubtitle}</p>
                 </div>
-                {treatments.map((item, i) => {
+                {featuredTreatment && (
+                    <article aria-labelledby="featured-treatment-title" className="myl-featured-treatment">
+                        <div className="myl-featured-treatment-photo">
+                            <img src="/limpeza-de-pele-acne-taboao-da-serra.jpg" alt="Atendimento de limpeza de pele na clínica" loading="lazy" decoding="async" />
+                            <span>Protocolo completo</span>
+                        </div>
+                        <div className="myl-featured-treatment-content">
+                            <span className="myl-featured-eyebrow">Cuidado facial completo</span>
+                            <h3 id="featured-treatment-title">Limpeza de pele profunda</h3>
+                            <p>{featuredTreatment.description}</p>
+                            <div className="myl-featured-includes">Inclui massagem facial relaxante e hidratação facial Glow.</div>
+                            <div className="myl-featured-meta">
+                                <span><small>Valor do protocolo</small><strong>{featuredTreatment.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
+                                <span><small>Duração aproximada</small><strong>{featuredTreatment.durationMinutes} minutos</strong></span>
+                            </div>
+                        </div>
+                    </article>
+                )}
+                {treatments.filter((item) => item !== featuredTreatment).map((item, i) => {
                     const src = photos.length ? photos[i % photos.length].url : undefined;
                     const reverse = !isMobile && i % 2 === 1;
                     return (
