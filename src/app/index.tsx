@@ -5,6 +5,7 @@ type TrustItem = { icon: string; text: string };
 type BenefitItem = { icon: string; text: string };
 type IndicationItem = { icon: string; title: string; text: string };
 type FaqItem = { question: string; answer: string };
+type GuideChoice = { id: string; icon: string; label: string; response: string; whatsappMessage: string };
 
 type SiteSettings = {
     aboutText: string;
@@ -394,6 +395,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [isScrolled, setIsScrolled] = useState(false);
     const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
     const [openFaq, setOpenFaq] = useState<number | null>(null);
+    const [guideChoice, setGuideChoice] = useState<GuideChoice | null>(null);
+    const galleryTrackRef = React.useRef<HTMLDivElement | null>(null);
     const [chatOpen, setChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const [showChatSuggestions, setShowChatSuggestions] = useState(true);
@@ -479,6 +482,45 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
       .myl-faq-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 15px; }
       @media (max-width: 760px) { .myl-faq-grid { grid-template-columns: minmax(0, 1fr); } }
       @media (prefers-reduced-motion: reduce) { .myl-gallery-card img, .myl-instagram-link { transition: none !important; } }
+
+      .myl-gallery-track { display:flex; gap:16px; overflow-x:auto; overscroll-behavior-inline:contain; scroll-snap-type:x mandatory; scrollbar-width:none; margin-top:30px; padding:6px 2px 18px; }
+      .myl-gallery-track::-webkit-scrollbar { display:none; }
+      .myl-gallery-card { flex:0 0 calc((100% - 32px) / 3); aspect-ratio:4 / 5; scroll-snap-align:start; }
+      .myl-gallery-controls { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:2px; color:#826E88; font-size:13px; }
+      .myl-gallery-controls > div { display:flex; gap:9px; }
+      .myl-gallery-controls button { width:44px; height:44px; border:1px solid #E4D4E8; border-radius:50%; color:#4A3151; background:#fff; font-size:26px; line-height:1; cursor:pointer; transition:background .2s ease,transform .2s ease; }
+      .myl-gallery-controls button:hover { background:#F3E6F8; transform:translateY(-1px); }
+      .myl-featured-treatment { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); max-width:1120px; min-height:420px; margin:64px auto; overflow:hidden; border:1px solid #E8D7F1; border-radius:30px; background:linear-gradient(125deg,#fff 0%,#FBF7FC 100%); box-shadow:0 22px 55px rgba(45,21,55,.09); }
+      .myl-featured-treatment-photo { position:relative; min-height:420px; overflow:hidden; background:#EFE6F1; }
+      .myl-featured-treatment-photo::after { content:''; position:absolute; inset:45% 0 0; background:linear-gradient(180deg,transparent,rgba(36,17,44,.44)); }
+      .myl-featured-treatment-photo img { display:block; width:100%; height:100%; min-height:420px; object-fit:cover; }
+      .myl-featured-treatment-photo > span { position:absolute; z-index:1; left:24px; bottom:22px; padding:9px 13px; border:1px solid rgba(255,255,255,.45); border-radius:999px; color:#fff; background:rgba(45,21,55,.35); backdrop-filter:blur(8px); font-size:12px; font-weight:600; }
+      .myl-featured-treatment-content { display:flex; flex-direction:column; justify-content:center; padding:clamp(28px,5vw,58px); }
+      .myl-featured-eyebrow { color:#87569F; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+      .myl-featured-treatment h2,.myl-care-guide h2 { margin:12px 0; color:#2D1537; font:600 clamp(30px,3vw,42px)/1.15 'Playfair Display',Georgia,serif; }
+      .myl-featured-treatment-content > p { margin:0; color:#6D5D75; font-size:15px; line-height:1.75; }
+      .myl-featured-includes { margin-top:16px; padding:12px 14px; border-left:3px solid #B997CD; color:#4C3A52; background:#F5EDF7; font-size:13px; line-height:1.6; }
+      .myl-featured-meta { display:flex; flex-wrap:wrap; gap:32px; margin:22px 0; }
+      .myl-featured-meta span { display:flex; flex-direction:column; gap:5px; }
+      .myl-featured-meta small { color:#806F85; font-size:11px; }
+      .myl-featured-meta strong { color:#2D1537; font-size:18px; }
+      .myl-featured-button { display:inline-flex; align-items:center; justify-content:space-between; gap:24px; width:min(100%,280px); min-height:48px; padding:0 18px; border-radius:999px; color:#fff; background:#76537F; text-decoration:none; font-size:14px; font-weight:700; box-shadow:0 8px 20px rgba(118,83,127,.2); }
+      .myl-care-guide { padding:76px 20px; background:linear-gradient(145deg,#F9F5FA,#FBF9F7); }
+      .myl-care-guide-inner { max-width:980px; margin:0 auto; text-align:center; }
+      .myl-care-guide h2 { margin:12px 0; }
+      .myl-care-guide-intro { margin:0 auto 26px; max-width:620px; color:#6D5D75; line-height:1.7; }
+      .myl-care-guide-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+      .myl-care-guide-option { display:flex; align-items:center; gap:12px; min-height:62px; padding:12px 16px; border:1px solid #E8D7F1; border-radius:16px; color:#4C3A52; background:#fff; text-align:left; font-family:inherit; font-size:14px; font-weight:600; line-height:1.35; cursor:pointer; box-shadow:0 5px 18px rgba(45,21,55,.04); transition:border-color .2s ease,background .2s ease,transform .2s ease; }
+      .myl-care-guide-option > span:first-child { color:#A259C4; font-size:20px; }
+      .myl-care-guide-option:hover,.myl-care-guide-option.is-selected { border-color:#A259C4; background:#FBF5FC; transform:translateY(-1px); }
+      .myl-guide-chevron { margin-left:auto; color:#A259C4; font-size:21px; }
+      .myl-care-guide-result { min-height:60px; margin:18px auto 0; max-width:700px; padding:16px 20px; border-radius:18px; color:#6D5D75; background:rgba(255,255,255,.78); text-align:left; font-size:14px; line-height:1.65; }
+      .myl-care-guide-result > p { margin:0; }
+      .myl-care-guide-result > strong { color:#2D1537; }
+      .myl-care-guide-result > a { display:inline-flex; margin-top:8px; color:#754386; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+      @media (max-width:820px) { .myl-featured-treatment { margin:48px 20px; grid-template-columns:1fr; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { min-height:0; height:300px; } .myl-care-guide-options { grid-template-columns:1fr; } }
+      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { margin:40px 16px; border-radius:22px; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { height:250px; } .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
+      @media (prefers-reduced-motion:reduce) { .myl-gallery-controls button,.myl-care-guide-option { transition:none !important; } }
 
       .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
       @media (prefers-reduced-motion: reduce) { .myl-booking-button { transition: none !important; transform: none !important; } }
@@ -574,6 +616,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
     const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
     const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
+    const scrollGallery = (direction: -1 | 1) => {
+        const track = galleryTrackRef.current;
+        const card = track?.querySelector<HTMLElement>('.myl-gallery-card');
+        if (!track || !card) return;
+        const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
+        track.scrollBy({ left: direction * (card.getBoundingClientRect().width + gap), behavior: 'smooth' });
+    };
 
     const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://clinica-estetica-backend.onrender.com';
 
@@ -723,6 +772,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             return siteSettings.instagramUrl;
         }
     })();
+    const featuredTreatment = treatments.find((item) => item.name.toLowerCase().includes('limpeza de pele')) ?? treatments[0];
 
     return (
         <div id="inicio" style={styles.container}>
@@ -876,6 +926,26 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                     </React.Fragment>
                 ))}
             </section>
+
+            {featuredTreatment && (
+                <section aria-labelledby="featured-treatment-title" className="myl-featured-treatment">
+                    <div className="myl-featured-treatment-photo">
+                        <img src="/limpeza-de-pele-acne-taboao-da-serra.jpg" alt="Atendimento de limpeza de pele na clínica" loading="lazy" decoding="async" />
+                        <span>Tratamento em destaque</span>
+                    </div>
+                    <div className="myl-featured-treatment-content">
+                        <span className="myl-featured-eyebrow">Cuidado facial completo</span>
+                        <h2 id="featured-treatment-title">Limpeza de pele profunda</h2>
+                        <p>{featuredTreatment.description}</p>
+                        <div className="myl-featured-includes">Inclui massagem facial relaxante e hidratação facial Glow.</div>
+                        <div className="myl-featured-meta">
+                            <span><small>Investimento</small><strong>{featuredTreatment.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
+                            <span><small>Duração aproximada</small><strong>{featuredTreatment.durationMinutes} minutos</strong></span>
+                        </div>
+                        <a href="#agendamento" className="myl-featured-button">Conhecer e agendar <span aria-hidden="true">↗</span></a>
+                    </div>
+                </section>
+            )}
 
             {/* Indicações — cada benefício é um painel grande que revela (fade + leve
                 subida) conforme entra na tela, alternando foto de lado. Sem sticky/fixed:
@@ -1075,6 +1145,34 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             </section>
 
 
+            <section aria-labelledby="care-guide-title" className="myl-care-guide">
+                <div className="myl-care-guide-inner">
+                    <span className="myl-featured-eyebrow">Um primeiro passo</span>
+                    <h2 id="care-guide-title">O que você gostaria de priorizar?</h2>
+                    <p className="myl-care-guide-intro">Escolha o que mais combina com o que você procura e veja um assunto para conversar com a Maria.</p>
+                    <div className="myl-care-guide-options" role="group" aria-label="Escolha sua prioridade de cuidado facial">
+                        {([
+                            { id: 'impurezas', icon: '✦', label: 'Cravos e impurezas', response: 'Você pode conversar com a Maria sobre limpeza de pele profunda. O protocolo disponível inclui também massagem facial relaxante e hidratação Glow; ela avalia se é adequado para você.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre limpeza de pele profunda e saber se o protocolo é indicado para mim.' },
+                            { id: 'oleosidade', icon: '☼', label: 'Oleosidade', response: 'Conte à Maria como sua pele costuma ficar ao longo do dia e quais produtos você usa. Ela pode avaliar sua necessidade e explicar os cuidados disponíveis.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre cuidados para pele oleosa e entender o que pode ser adequado para mim.' },
+                            { id: 'hidratacao', icon: '❋', label: 'Hidratação e viço', response: 'O protocolo inclui hidratação facial Glow. Converse com a Maria para saber se essa etapa combina com as necessidades da sua pele.', whatsappMessage: 'Olá Maria, gostaria de saber mais sobre hidratação facial Glow e se é indicada para mim.' },
+                        ] as GuideChoice[]).map((choice) => (
+                            <button key={choice.id} type="button" aria-pressed={guideChoice?.id === choice.id} onClick={() => setGuideChoice(choice)} className={`myl-care-guide-option${guideChoice?.id === choice.id ? ' is-selected' : ''}`}>
+                                <span aria-hidden="true">{choice.icon}</span>{choice.label}<span aria-hidden="true" className="myl-guide-chevron">›</span>
+                            </button>
+                        ))}
+                    </div>
+                    <div className="myl-care-guide-result" aria-live="polite">
+                        {guideChoice ? (
+                            <>
+                                <strong>Uma ideia para sua conversa</strong>
+                                <p>{guideChoice.response}</p>
+                                <a href={buildWhatsAppLink(guideChoice.whatsappMessage)} target="_blank" rel="noopener noreferrer">Perguntar à Maria pelo WhatsApp ↗</a>
+                            </>
+                        ) : <p>Este guia é informativo; a indicação do cuidado depende de uma conversa sobre a sua pele.</p>}
+                    </div>
+                </div>
+            </section>
+
             <SkinPhotoCompare isMobile={isMobile} />
 
             {/* Localização Atualizada */}
@@ -1160,7 +1258,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                     <h2 style={styles.sectionTitle}>Um pouco dos nossos cuidados</h2>
                     <p style={styles.sectionSubtitle}>Momentos reais de cuidado e atendimento na clínica.</p>
                 </div>
-                <div className="myl-gallery-grid" style={{ ...styles.galleryGrid, gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))' }}>
+                <div className="myl-gallery-track" ref={galleryTrackRef} aria-label="Fotos de atendimentos e cuidados faciais" tabIndex={0}>
                     {[
                         { src: '/detalhe-cuidado-facial-taboao-da-serra.jpg', alt: 'Detalhe de cuidado facial durante atendimento', label: 'Cuidado facial' },
                         { src: '/cuidado-facial-em-clinica-taboao-da-serra.jpg', alt: 'Cliente recebendo atendimento estético facial', label: 'Atendimento' },
@@ -1184,6 +1282,13 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <figcaption><span>{image.label}</span></figcaption>
                         </figure>
                     ))}
+                </div>
+                <div className="myl-gallery-controls">
+                    <span>Deslize para ver mais fotos</span>
+                    <div>
+                        <button type="button" onClick={() => scrollGallery(-1)} aria-label="Ver fotos anteriores">‹</button>
+                        <button type="button" onClick={() => scrollGallery(1)} aria-label="Ver próximas fotos">›</button>
+                    </div>
                 </div>
                 <div style={styles.galleryCta}>
                     <a
