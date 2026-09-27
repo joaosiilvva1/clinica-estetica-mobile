@@ -1,20 +1,13 @@
-import { optimizedImages } from '../utils/optimizedImages';
+import { imageDimensions } from '../utils/imageDimensions';
 import React, { useState, useEffect } from 'react';
 import { requestChatReply, getQuickChatReply, CHAT_TIMEOUT_MS } from '../utils/clinicChat';
 
 
-function SiteImage({ src, sizes = '(max-width: 720px) 100vw, 640px', onError, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
-    const image = src ? optimizedImages[src] : undefined;
-    return <img loading="lazy" decoding="async" {...props} src={image?.src ?? src}
-        srcSet={image?.srcSet} sizes={image ? sizes : undefined}
-        width={props.width ?? image?.width} height={props.height ?? image?.height}
-        onError={(event) => {
-            const target = event.currentTarget;
-            if (image && target.getAttribute('src') !== src) {
-                target.removeAttribute('srcset');
-                target.src = src!;
-            } else { onError?.(event); }
-        }} />;
+function SiteImage({ src, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+    const dimensions = src ? imageDimensions[src] : undefined;
+    // Preserve original photo detail while deferring images below the fold.
+    return <img loading="lazy" decoding="async" {...props} src={src}
+        width={props.width ?? dimensions?.width} height={props.height ?? dimensions?.height} />;
 }
 
 const landingStyles = `
