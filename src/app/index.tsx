@@ -37,7 +37,7 @@ const landingStyles = `
       .myl-gallery-card { position: relative; isolation: isolate; aspect-ratio: 1 / 1; overflow: hidden; margin: 0; border-radius: 22px; background: #F1E9F2; box-shadow: 0 12px 28px rgba(45,21,55,.09); }
       .myl-gallery-card::after { content: ''; position: absolute; inset: 35% 0 0; z-index: 0; background: linear-gradient(180deg, transparent, rgba(28,13,34,.62)); pointer-events: none; }
       .myl-gallery-card img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.8,.2,1); }
-      .myl-gallery-card:hover img { transform: scale(1.055); }
+      .myl-gallery-card:hover img { transform: none; }
       .myl-gallery-card figcaption { position: absolute; inset: auto 15px 15px; z-index: 1; display: flex; justify-content: flex-start; }
       .myl-gallery-card figcaption span { padding: 8px 12px; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; color: #fff; background: rgba(45,21,55,.3); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); font-size: 12px; font-weight: 600; letter-spacing: .2px; }
       .myl-instagram-link { display: inline-flex; align-items: center; gap: 13px; min-height: 64px; padding: 10px 17px; border: 1px solid #E8D9EA; border-radius: 20px; color: #4A3151; background: rgba(255,255,255,.84); box-shadow: 0 8px 24px rgba(45,21,55,.07); text-decoration: none; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
@@ -66,7 +66,7 @@ const landingStyles = `
 
       .myl-gallery-track { display:flex; gap:16px; overflow-x:auto; overscroll-behavior-inline:contain; scroll-snap-type:x mandatory; scrollbar-width:none; margin-top:30px; padding:6px 2px 18px; }
       .myl-gallery-track::-webkit-scrollbar { display:none; }
-      .myl-gallery-card { flex:0 0 calc((100% - 32px) / 3); aspect-ratio:4 / 5; scroll-snap-align:start; }
+      .myl-gallery-card { flex:0 0 calc((100% - 32px) / 3); aspect-ratio:3 / 4; scroll-snap-align:start; }
       .myl-gallery-controls { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:2px; color:#826E88; font-size:13px; }
       .myl-gallery-controls > div { display:flex; gap:9px; }
       .myl-gallery-controls button { width:44px; height:44px; border:1px solid #E4D4E8; border-radius:50%; color:#4A3151; background:#fff; font-size:26px; line-height:1; cursor:pointer; transition:background .2s ease,transform .2s ease; }
@@ -74,7 +74,7 @@ const landingStyles = `
       .myl-featured-treatment { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); width:calc(100% - 48px); max-width:1120px; min-height:420px; margin:0 auto 64px; overflow:hidden; border:1px solid #E8D7F1; border-radius:30px; background:linear-gradient(125deg,#fff 0%,#FBF7FC 100%); box-shadow:0 22px 55px rgba(45,21,55,.09); }
       .myl-featured-treatment-photo { position:relative; min-height:420px; overflow:hidden; background:#EFE6F1; }
       .myl-featured-treatment-photo::after { content:''; position:absolute; inset:45% 0 0; background:linear-gradient(180deg,transparent,rgba(36,17,44,.44)); }
-      .myl-featured-treatment-photo img { display:block; width:100%; height:100%; min-height:420px; object-fit:cover; }
+      .myl-featured-treatment-photo img { display:block; width:100%; height:100%; min-height:420px; object-fit:contain; }
       .myl-featured-treatment-photo > span { position:absolute; z-index:1; left:24px; bottom:22px; padding:9px 13px; border:1px solid rgba(255,255,255,.45); border-radius:999px; color:#fff; background:rgba(45,21,55,.35); backdrop-filter:blur(8px); font-size:12px; font-weight:600; }
       .myl-featured-treatment-content { display:flex; flex-direction:column; justify-content:center; padding:clamp(28px,5vw,58px); }
       .myl-featured-eyebrow { color:#87569F; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
@@ -113,8 +113,8 @@ const landingStyles = `
       .myl-care-guide-result > p { margin:0; }
       .myl-care-guide-result > strong { color:#2D1537; }
       .myl-care-guide-result > a { display:inline-flex; margin-top:8px; color:#754386; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
-      @media (max-width:820px) { .myl-featured-treatment { width:calc(100% - 40px); margin:0 auto 48px; grid-template-columns:1fr; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { min-height:0; height:300px; } .myl-care-guide-options { grid-template-columns:1fr; } }
-      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { width:calc(100% - 32px); margin:0 auto 40px; border-radius:22px; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { height:250px; } .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
+      @media (max-width:820px) { .myl-featured-treatment { width:calc(100% - 40px); margin:0 auto 48px; grid-template-columns:1fr; } .myl-featured-treatment-photo { min-height:0; height:auto; aspect-ratio:3 / 4; max-height:520px; } .myl-featured-treatment-photo img { min-height:0; height:100%; } .myl-care-guide-options { grid-template-columns:1fr; } }
+      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { width:calc(100% - 32px); margin:0 auto 40px; border-radius:22px; }  .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
       @media (prefers-reduced-motion:reduce) { .myl-gallery-controls button,.myl-care-guide-option { transition:none !important; } }
 
 
@@ -233,7 +233,7 @@ function mergeFaqItems(items: FaqItem[]): FaqItem[] {
 
 const defaultSiteSettings: SiteSettings = {
     aboutText:
-        'Sou Maria Yasmim Lopes, esteticista em Taboão da Serra. Trabalho com limpeza de pele, massagem facial e hidratação Glow.\n' +
+        'Sou Maria Yasmim Lopes, esteticista em Taboão da Serra.\n' +
         'Antes de cada sessão, conversamos sobre suas necessidades, sensibilidade e rotina de produtos para orientar o atendimento.',
     address:
         'R. Izaura da Silva Camargo, 27\nJardim São Paulo, Taboão da Serra - SP\nCEP: 06767-310',
@@ -249,7 +249,7 @@ const defaultSiteSettings: SiteSettings = {
     heroTrustItems: [
         { icon: '🛡️', text: 'Cuidados com biossegurança' },
         { icon: '🤝', text: 'Atendimento personalizado' },
-        { icon: '✨', text: 'Limpeza, massagem e hidratação' },
+        { icon: '✨', text: 'Cuidado em cada etapa' },
     ],
     benefitsItems: [
         { icon: '⭐', text: 'Atendimento com hora marcada' },
@@ -273,7 +273,7 @@ const defaultSiteSettings: SiteSettings = {
     faqSectionTitle: 'Perguntas Frequentes',
     faqSectionSubtitle: 'Tire suas principais dúvidas sobre os nossos tratamentos.',
     faqItems: defaultFaqItems,
-    footerTagline: 'Estética facial em Taboão da Serra. Limpeza de pele, massagem e hidratação Glow.',
+    footerTagline: 'Estética facial em Taboão da Serra. Um momento de cuidado para você.',
     footerContactEmail: 'contato@mariayasmimestetica.com.br',
     footerCopyrightText: '© 2026 Maria Yasmim Lopes Estética. Todos os direitos reservados.',
 };
@@ -880,7 +880,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                     }}
                                 >
                                     {src && (
-                                        <div style={{ flex: isMobile ? undefined : '0 0 44%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 30px 60px -18px rgba(0,0,0,0.4)' }}>
+                                        <div style={{ flex: isMobile ? undefined : '0 0 44%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: '3/4', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 30px 60px -18px rgba(0,0,0,0.4)' }}>
                                             <SiteImage src={src} alt={item.title} style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
                                             <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.35))' }} />
                                         </div>
@@ -919,12 +919,14 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         alt="Maria Yasmim Lopes"
                         style={{
                             width: '100%',
-                            height: isMobile ? '420px' : '620px',
+                            height: 'auto',
+                            maxWidth: '465px',
+                            margin: '0 auto',
                             objectFit: 'cover' as const,
                             borderRadius: '28px',
                             boxShadow: '0 25px 55px rgba(45,21,55,0.22)',
                             display: 'block',
-                            transform: `scale(1.02) rotateX(${aboutTilt.y * -2}deg) rotateY(${aboutTilt.x * 2}deg)`,
+                            transform: `rotateX(${aboutTilt.y * -2}deg) rotateY(${aboutTilt.x * 2}deg)`,
                             transition: 'transform 0.2s ease-out',
                         }}
                     />
@@ -999,16 +1001,15 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         <div className="myl-featured-treatment-content">
                             <span className="myl-featured-eyebrow">Cuidado facial completo</span>
                             <h3 id="featured-treatment-title">Limpeza de pele profunda</h3>
-                            <p>{featuredTreatment.description}</p>
-                            <div className="myl-featured-includes">Uma sessão · limpeza + massagem facial + hidratação Glow</div>
+                            <p>As etapas são ajustadas à avaliação e à sensibilidade da sua pele.</p>
                             <div className="myl-featured-meta">
                                 <span><small>Protocolo completo</small><strong>{featuredTreatment.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
                                 <span><small>Reserve aproximadamente</small><strong>{featuredTreatment.durationMinutes} minutos</strong></span>
                             </div>
                             <ol className="myl-featured-steps" aria-label="O que está incluído na sessão">
-                                <li><span>01</span><div><strong>Limpeza de pele profunda</strong>Cuidado com cravos e impurezas, conforme a avaliação e a sensibilidade da pele.</div></li>
-                                <li><span>02</span><div><strong>Massagem facial relaxante</strong>Um momento de relaxamento durante a sessão.</div></li>
-                                <li><span>03</span><div><strong>Hidratação facial Glow</strong>Hidratação para completar o protocolo. Produtos e etapas são ajustados na avaliação.</div></li>
+                                <li><span>01</span><div><strong>Limpeza de pele profunda</strong>Remoção de cravos e impurezas.</div></li>
+                                <li><span>02</span><div><strong>Massagem facial relaxante</strong>Uma pausa para relaxar.</div></li>
+                                <li><span>03</span><div><strong>Hidratação facial Glow</strong>Para finalizar o cuidado com a pele.</div></li>
                             </ol>
                         </div>
                     </article>
@@ -1033,7 +1034,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                     }}
                                 >
                                     {src && (
-                                        <div style={{ flex: isMobile ? undefined : '0 0 48%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '26px', overflow: 'hidden', boxShadow: '0 40px 80px -20px rgba(45,21,55,0.28)' }}>
+                                        <div style={{ flex: isMobile ? undefined : '0 0 48%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: '3/4', borderRadius: '26px', overflow: 'hidden', boxShadow: '0 40px 80px -20px rgba(45,21,55,0.28)' }}>
                                             <SiteImage src={src} alt={item.name} loading="lazy" decoding="async" style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
                                             <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.3))' }} />
                                         </div>
@@ -1082,7 +1083,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         {([
                             { id: 'impurezas', icon: '✦', label: 'Cravos e impurezas', summary: 'Cravos se formam quando os poros ficam obstruídos por oleosidade e células mortas.', response: 'Cravos são poros obstruídos, e a cor escura não significa falta de higiene. A profissional avalia se a limpeza e as etapas do protocolo são adequadas para sua pele.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre limpeza de pele profunda e saber se o protocolo é indicado para mim.' },
                             { id: 'oleosidade', icon: '☼', label: 'Oleosidade', summary: 'A limpeza remove resíduos superficiais, mas não controla sozinha a oleosidade.', response: 'Pele oleosa também precisa de hidratação. Uma rotina suave e produtos adequados ajudam no cuidado diário; lavar ou esfregar em excesso pode irritar. A limpeza profissional é um complemento, e a frequência depende da avaliação da sua pele.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre cuidados para pele oleosa e entender o que pode ser adequado para mim.' },
-                            { id: 'hidratacao', icon: '❋', label: 'Hidratação e viço', summary: 'Hidratar ajuda a manter a pele macia e confortável, inclusive a pele oleosa.', response: 'A hidratação ajuda a reter água e a manter a barreira da pele. No protocolo, ela acompanha a limpeza e a massagem facial; os produtos são escolhidos conforme as necessidades e a sensibilidade da pele.', whatsappMessage: 'Olá Maria, gostaria de saber mais sobre hidratação facial Glow e se é indicada para mim.' },
+                            { id: 'hidratacao', icon: '❋', label: 'Hidratação e viço', summary: 'Hidratar ajuda a manter a pele macia e confortável, inclusive a pele oleosa.', response: 'A hidratação ajuda a reter água e a manter a barreira da pele. Os produtos são escolhidos conforme as necessidades e a sensibilidade da pele.', whatsappMessage: 'Olá Maria, gostaria de saber mais sobre hidratação facial Glow e se é indicada para mim.' },
                         ] as GuideChoice[]).map((choice) => (
                             <button key={choice.id} type="button" aria-pressed={guideChoice?.id === choice.id} onClick={() => setGuideChoice(choice)} className={`myl-care-guide-option${guideChoice?.id === choice.id ? ' is-selected' : ''}`}>
                                 <span className="myl-guide-icon" aria-hidden="true">{choice.icon}</span>
@@ -1379,8 +1380,8 @@ const styles = {
     trustRow: { display: 'flex', gap: '28px', flexWrap: 'wrap' as const },
     trustItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#4A3B50' },
     trustIcon: { fontSize: '16px' },
-    carouselContainer: { position: 'relative' as const, width: '100%', margin: '0 auto', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(45,21,55,0.2)', backgroundColor: '#2D1537' },
-    carouselSlide: { position: 'relative' as const, width: '100%', aspectRatio: '6 / 5', maxHeight: '560px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+    carouselContainer: { position: 'relative' as const, width: '100%', maxWidth: '420px', margin: '0 auto', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(45,21,55,0.2)', backgroundColor: '#2D1537' },
+    carouselSlide: { position: 'relative' as const, width: '100%', aspectRatio: '3 / 4', maxHeight: '560px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
     carouselImage: { position: 'relative' as const, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center' as const, zIndex: 2 },
     carouselCaption: { position: 'absolute' as const, bottom: 0, left: 0, width: '100%', backgroundColor: 'rgba(45, 21, 55, 0.85)', color: '#fff', padding: '12px', fontSize: '15px', fontWeight: 'bold', zIndex: 5 },
     carouselBtnLeft: { position: 'absolute' as const, top: '50%', left: '15px', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', zIndex: 10, fontSize: '16px' },
@@ -1431,7 +1432,7 @@ const styles = {
     locationMapWrapper: { flex: '1 1 400px', minHeight: '300px', width: '100%' },
     bookingSection: { position: 'relative' as const, isolation: 'isolate' as const, padding: '90px 20px', maxWidth: '1200px', margin: '0 auto' },
     bookingGrid: { position: 'relative' as const, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', gap: 'clamp(28px, 4vw, 56px)', padding: 'clamp(28px, 4vw, 48px)', borderRadius: '40px', background: 'linear-gradient(120deg, rgba(255,255,255,.64), rgba(242,229,249,.6))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.9)', boxShadow: '0 16px 44px -20px rgba(77,35,96,.18), inset 0 0 0 1px rgba(232,215,241,.35)' },
-    bookingPhotoWrap: { position: 'relative' as const, aspectRatio: '9 / 10', minWidth: 0, width: '100%', maxWidth: '440px', margin: '0 auto' },
+    bookingPhotoWrap: { position: 'relative' as const, aspectRatio: '3 / 4', minWidth: 0, width: '100%', maxWidth: '440px', margin: '0 auto' },
     bookingPhoto: { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center', display: 'block', borderRadius: '24px', boxShadow: '0 16px 38px rgba(58,28,70,.16)' },
     bookingContent: { display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'flex-start', minWidth: 0 },
     bookingEyebrow: { display: 'flex', alignItems: 'center', gap: '14px', color: '#805197', fontSize: '11px', fontWeight: '600', letterSpacing: '3px', marginBottom: '22px' },
