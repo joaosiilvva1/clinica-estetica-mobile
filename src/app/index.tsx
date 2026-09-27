@@ -1,11 +1,175 @@
+import { optimizedImages } from '../utils/optimizedImages';
 import React, { useState, useEffect } from 'react';
 import { requestChatReply, getQuickChatReply, CHAT_TIMEOUT_MS } from '../utils/clinicChat';
+
+
+function SiteImage({ src, sizes = '(max-width: 720px) 100vw, 640px', onError, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+    const image = src ? optimizedImages[src] : undefined;
+    return <img loading="lazy" decoding="async" {...props} src={image?.src ?? src}
+        srcSet={image?.srcSet} sizes={image ? sizes : undefined}
+        width={props.width ?? image?.width} height={props.height ?? image?.height}
+        onError={(event) => {
+            const target = event.currentTarget;
+            if (image && target.getAttribute('src') !== src) {
+                target.removeAttribute('srcset');
+                target.src = src!;
+            } else { onError?.(event); }
+        }} />;
+}
+
+const landingStyles = `
+      html { scroll-behavior: smooth; }
+
+      @keyframes mylFadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes mylFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes mylFloat { 0%, 100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-16px) translateX(6px); } }
+      @keyframes mylScrollCue { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(8px); opacity: 1; } }
+
+      .myl-fade-up { opacity: 0; animation: mylFadeUp 0.9s cubic-bezier(.16,.84,.44,1) forwards; }
+      .myl-fade-in { opacity: 0; animation: mylFadeIn 1.1s ease forwards; }
+      .myl-float { animation: mylFloat 9s ease-in-out infinite; }
+      .myl-scroll-cue { animation: mylScrollCue 2s ease-in-out infinite; }
+
+      .myl-navbar { transition: background-color .4s ease, box-shadow .4s ease, backdrop-filter .4s ease, border-color .4s ease; }
+      .myl-navbar.myl-scrolled { background-color: rgba(250,249,246,0.82) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 8px 30px rgba(45,21,55,0.1); border-bottom-color: rgba(232,215,241,0.6) !important; }
+
+      .myl-btn-primary { transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+      .myl-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 26px rgba(74,21,94,0.35); }
+      .myl-btn-secondary { transition: transform .35s cubic-bezier(.2,.8,.2,1), background-color .35s ease; }
+      .myl-btn-secondary:hover { transform: translateY(-2px); background-color: rgba(45,21,55,0.05); }
+
+      .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
+      .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
+
+      .myl-gallery-card { position: relative; isolation: isolate; aspect-ratio: 1 / 1; overflow: hidden; margin: 0; border-radius: 22px; background: #F1E9F2; box-shadow: 0 12px 28px rgba(45,21,55,.09); }
+      .myl-gallery-card::after { content: ''; position: absolute; inset: 35% 0 0; z-index: 0; background: linear-gradient(180deg, transparent, rgba(28,13,34,.62)); pointer-events: none; }
+      .myl-gallery-card img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.8,.2,1); }
+      .myl-gallery-card:hover img { transform: scale(1.055); }
+      .myl-gallery-card figcaption { position: absolute; inset: auto 15px 15px; z-index: 1; display: flex; justify-content: flex-start; }
+      .myl-gallery-card figcaption span { padding: 8px 12px; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; color: #fff; background: rgba(45,21,55,.3); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); font-size: 12px; font-weight: 600; letter-spacing: .2px; }
+      .myl-instagram-link { display: inline-flex; align-items: center; gap: 13px; min-height: 64px; padding: 10px 17px; border: 1px solid #E8D9EA; border-radius: 20px; color: #4A3151; background: rgba(255,255,255,.84); box-shadow: 0 8px 24px rgba(45,21,55,.07); text-decoration: none; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+      .myl-instagram-link > svg { flex: 0 0 auto; color: #A34A9D; }
+      .myl-instagram-link > span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+      .myl-instagram-link small { color: #826E88; font-size: 11px; }
+      .myl-instagram-link strong { color: #38223F; font-size: 14px; font-weight: 700; }
+      .myl-instagram-arrow { margin-left: 5px; color: #87569F; font-size: 19px; }
+      .myl-instagram-link:hover { transform: translateY(-2px); border-color: #D9BBDD; box-shadow: 0 12px 28px rgba(45,21,55,.12); }
+      @media (max-width: 720px) { .myl-gallery-grid { gap: 11px !important; } .myl-gallery-card { border-radius: 15px; } .myl-gallery-card figcaption { inset: auto 8px 8px; } .myl-gallery-card figcaption span { padding: 6px 9px; font-size: 10px; } }
+
+      .myl-faq-item summary { list-style:none; cursor:pointer; min-height:44px; gap:16px; }
+      .myl-faq-item summary::-webkit-details-marker { display:none; }
+      .myl-faq-symbol::before { content:'+'; }
+      .myl-faq-item[open] .myl-faq-symbol::before { content:'−'; }
+      .myl-faq-item summary:focus-visible,.myl-more-faqs:focus-visible { outline:3px solid #87569F; outline-offset:4px; }
+      .myl-more-faqs { display:block; margin:24px auto 0; padding:13px 22px; border:1px solid #DCC8E6; border-radius:24px; background:#fff; color:#754386; font:600 15px/1.5 'Montserrat',sans-serif; cursor:pointer; }
+      @media (max-width:720px), (prefers-reduced-motion:reduce) {
+        .myl-fade-up,.myl-float,.myl-gallery-card { animation:none !important; opacity:1 !important; transform:none !important; }
+        .myl-float { display:none; }
+        html { scroll-behavior:auto; }
+      }
+      .myl-faq-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 15px; }
+      @media (max-width: 760px) { .myl-faq-grid { grid-template-columns: minmax(0, 1fr); } }
+      @media (prefers-reduced-motion: reduce) { .myl-gallery-card img, .myl-instagram-link { transition: none !important; } }
+
+      .myl-gallery-track { display:flex; gap:16px; overflow-x:auto; overscroll-behavior-inline:contain; scroll-snap-type:x mandatory; scrollbar-width:none; margin-top:30px; padding:6px 2px 18px; }
+      .myl-gallery-track::-webkit-scrollbar { display:none; }
+      .myl-gallery-card { flex:0 0 calc((100% - 32px) / 3); aspect-ratio:4 / 5; scroll-snap-align:start; }
+      .myl-gallery-controls { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:2px; color:#826E88; font-size:13px; }
+      .myl-gallery-controls > div { display:flex; gap:9px; }
+      .myl-gallery-controls button { width:44px; height:44px; border:1px solid #E4D4E8; border-radius:50%; color:#4A3151; background:#fff; font-size:26px; line-height:1; cursor:pointer; transition:background .2s ease,transform .2s ease; }
+      .myl-gallery-controls button:hover { background:#F3E6F8; transform:translateY(-1px); }
+      .myl-featured-treatment { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); width:calc(100% - 48px); max-width:1120px; min-height:420px; margin:0 auto 64px; overflow:hidden; border:1px solid #E8D7F1; border-radius:30px; background:linear-gradient(125deg,#fff 0%,#FBF7FC 100%); box-shadow:0 22px 55px rgba(45,21,55,.09); }
+      .myl-featured-treatment-photo { position:relative; min-height:420px; overflow:hidden; background:#EFE6F1; }
+      .myl-featured-treatment-photo::after { content:''; position:absolute; inset:45% 0 0; background:linear-gradient(180deg,transparent,rgba(36,17,44,.44)); }
+      .myl-featured-treatment-photo img { display:block; width:100%; height:100%; min-height:420px; object-fit:cover; }
+      .myl-featured-treatment-photo > span { position:absolute; z-index:1; left:24px; bottom:22px; padding:9px 13px; border:1px solid rgba(255,255,255,.45); border-radius:999px; color:#fff; background:rgba(45,21,55,.35); backdrop-filter:blur(8px); font-size:12px; font-weight:600; }
+      .myl-featured-treatment-content { display:flex; flex-direction:column; justify-content:center; padding:clamp(28px,5vw,58px); }
+      .myl-featured-eyebrow { color:#87569F; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+      .myl-featured-treatment h2,.myl-featured-treatment h3,.myl-care-guide h2 { margin:12px 0; color:#2D1537; font:600 clamp(30px,3vw,42px)/1.15 'Playfair Display',Georgia,serif; }
+      .myl-featured-treatment-content > p { margin:0; color:#6D5D75; font-size:15px; line-height:1.75; }
+      .myl-featured-includes { margin-top:16px; padding:12px 14px; border-left:3px solid #B997CD; color:#4C3A52; background:#F5EDF7; font-size:13px; line-height:1.6; }
+      .myl-featured-meta { display:flex; flex-wrap:wrap; gap:32px; margin:22px 0; }
+      .myl-featured-meta span { display:flex; flex-direction:column; gap:5px; }
+      .myl-featured-meta small { color:#806F85; font-size:11px; }
+      .myl-featured-meta strong { color:#2D1537; font-size:18px; }
+      .myl-care-guide { padding:76px 20px; background:linear-gradient(145deg,#F9F5FA,#FBF9F7); }
+      .myl-care-guide-inner { max-width:980px; margin:0 auto; text-align:center; }
+      .myl-care-guide h2 { margin:12px 0; }
+      .myl-care-guide-intro { margin:0 auto 26px; max-width:620px; color:#6D5D75; line-height:1.7; }
+      .myl-care-guide-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+      .myl-care-guide-option { display:flex; align-items:center; gap:12px; min-height:62px; padding:12px 16px; border:1px solid #E8D7F1; border-radius:16px; color:#4C3A52; background:#fff; text-align:left; font-family:inherit; font-size:14px; font-weight:600; line-height:1.35; cursor:pointer; box-shadow:0 5px 18px rgba(45,21,55,.04); transition:border-color .2s ease,background .2s ease,transform .2s ease; }
+      .myl-care-guide-option > span:first-child { color:#A259C4; font-size:20px; }
+      .myl-care-guide-option:hover,.myl-care-guide-option.is-selected { border-color:#A259C4; background:#FBF5FC; transform:translateY(-1px); }
+      .myl-guide-chevron { margin-left:auto; color:#A259C4; font-size:21px; }
+      .myl-care-guide-option { align-items:flex-start; padding:24px 20px; border-radius:22px; }
+      .myl-guide-icon { flex-shrink:0; }
+      .myl-guide-copy { display:flex; flex-direction:column; gap:10px; }
+      .myl-guide-copy strong { font-size:16px; color:#392040; }
+      .myl-guide-copy small { font-size:15px; font-weight:400; line-height:1.65; color:#6D5D75; }
+      .myl-care-guide-option:focus-visible { outline:3px solid #87569F; outline-offset:4px; }
+      .myl-featured-steps { display:grid; gap:13px; margin:22px 0 0; padding:0; list-style:none; }
+      .myl-featured-steps li { display:flex; gap:12px; align-items:flex-start; color:#6D5D75; font-size:14px; line-height:1.6; }
+      .myl-featured-steps li > span { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:50%; background:#EDE0F3; color:#754386; font-weight:700; font-size:12px; }
+      .myl-featured-steps strong { display:block; color:#392040; font-size:15px; }
+      .myl-featured-treatment-content > p { font-size:16px; }
+      .myl-featured-includes { border-radius:0 12px 12px 0; font-size:14px; }
+      .myl-featured-meta { padding-top:20px; border-top:1px solid #E8D7F1; margin-bottom:0; }
+      .myl-featured-meta small { font-size:13px; }
+      .myl-care-guide-result { font-size:16px; border:1px solid #E8D7F1; }
+      .myl-care-guide-result { min-height:60px; margin:18px auto 0; max-width:700px; padding:16px 20px; border-radius:18px; color:#6D5D75; background:rgba(255,255,255,.78); text-align:left; font-size:14px; line-height:1.65; }
+      .myl-care-guide-result > p { margin:0; }
+      .myl-care-guide-result > strong { color:#2D1537; }
+      .myl-care-guide-result > a { display:inline-flex; margin-top:8px; color:#754386; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+      @media (max-width:820px) { .myl-featured-treatment { width:calc(100% - 40px); margin:0 auto 48px; grid-template-columns:1fr; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { min-height:0; height:300px; } .myl-care-guide-options { grid-template-columns:1fr; } }
+      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { width:calc(100% - 32px); margin:0 auto 40px; border-radius:22px; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { height:250px; } .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
+      @media (prefers-reduced-motion:reduce) { .myl-gallery-controls button,.myl-care-guide-option { transition:none !important; } }
+
+
+      .myl-featured-meta { background:#F0E3F5; border:1px solid #DFCAE8; border-radius:18px; padding:20px; gap:24px; }
+      .myl-featured-meta strong { font-size:clamp(22px,2.4vw,30px); }
+      .myl-mobile-contact { display:none; }
+      @media (max-width:720px) {
+        .myl-page { padding-bottom:calc(82px + env(safe-area-inset-bottom)) !important; }
+        .myl-floating-whatsapp,.myl-chat-launcher,.myl-header-booking { display:none !important; }
+        .myl-mobile-contact { display:flex; position:fixed; bottom:0; left:0; right:0; z-index:9999; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); gap:10px; background:#fff; border-top:1px solid #E8D7F1; box-shadow:0 -4px 20px rgba(45,21,55,.06); }
+        .myl-mobile-contact button,.myl-mobile-contact a { display:flex; justify-content:center; align-items:center; min-height:46px; padding:0 14px; border-radius:14px; font:600 14px/1.4 'Montserrat',sans-serif; text-decoration:none; }
+        .myl-mobile-contact button { border:1px solid #DCC8E6; background:#fff; color:#754386; cursor:pointer; }
+        .myl-mobile-contact a { flex:1; background:#754386; color:#fff; }
+        .myl-chat-panel { bottom:calc(84px + env(safe-area-inset-bottom)) !important; max-height:calc(100dvh - 170px - env(safe-area-inset-bottom)) !important; }
+      }
+      .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
+      @media (prefers-reduced-motion: reduce) { .myl-booking-button { transition: none !important; transform: none !important; } }
+      .myl-booking-button:focus-visible { outline: 3px solid #4A155E; outline-offset: 4px; }
+      .myl-floating-whatsapp:focus-visible { outline: 3px solid #2D1537; outline-offset: 4px; }
+      @media (max-width: 800px) {
+        .myl-booking-grid { grid-template-columns: minmax(0, 1fr) !important; }
+        .myl-booking-grid { padding: 28px 20px !important; gap: 32px !important; border-radius: 30px !important; }
+        .myl-booking-photo { width: 100%; max-width: 400px; margin: 0 auto; }
+        .myl-booking-content { padding: 0 4px 8px !important; }
+      }
+
+      @media (max-width: 720px) {
+        .myl-mobile-action { width: 100%; justify-content: center; }
+        .myl-floating-whatsapp { width: 58px !important; height: 58px !important; right: 16px !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; }
+      }
+
+      @media (max-width: 760px) {
+        .myl-navbar nav { gap: 14px !important; }
+      }
+
+      @media (max-width: 700px) {
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .myl-fade-up, .myl-fade-in, .myl-float, .myl-scroll-cue { animation: none !important; opacity: 1 !important; transform: none !important; }
+      }
+    `;
 
 type TrustItem = { icon: string; text: string };
 type BenefitItem = { icon: string; text: string };
 type IndicationItem = { icon: string; title: string; text: string };
 type FaqItem = { question: string; answer: string };
-type GuideChoice = { id: string; icon: string; label: string; response: string; whatsappMessage: string };
+type GuideChoice = { id: string; icon: string; label: string; summary: string; response: string; whatsappMessage: string };
 
 type SiteSettings = {
     aboutText: string;
@@ -76,27 +240,26 @@ function mergeFaqItems(items: FaqItem[]): FaqItem[] {
 
 const defaultSiteSettings: SiteSettings = {
     aboutText:
-        'Esteticista formada e apaixonada por elevar a autoestima de cada cliente através de cuidados personalizados e resultados reais.\n' +
-        'Trabalho focada na saúde da sua pele, utilizando protocolos modernos, dermocosméticos de alta tecnologia e seguindo as mais rigorosas normas de biossegurança.\n' +
-        'Meu objetivo é proporcionar a melhor experiência em estética na região do Taboão da Serra, unindo eficácia técnica a um ambiente acolhedor de relaxamento profundo 💜',
+        'Sou Maria Yasmim Lopes, esteticista em Taboão da Serra. Trabalho com limpeza de pele, massagem facial e hidratação Glow.\n' +
+        'Antes de cada sessão, conversamos sobre suas necessidades, sensibilidade e rotina de produtos para orientar o atendimento.',
     address:
         'R. Izaura da Silva Camargo, 27\nJardim São Paulo, Taboão da Serra - SP\nCEP: 06767-310',
     whatsapp: '5511916224612',
     openingHoursText:
-        'Atendimento com hora marcada aos domingos e segundas, em uma agenda planejada para oferecer atenção individualizada, conforto e cuidado em cada sessão.',
+        'Domingos e segundas-feiras, com hora marcada.',
     instagramUrl: 'https://www.instagram.com/yasmimlopes_estetica/',
     logoUrl: '/logo-maria-yasmim-estetica-taboao-da-serra.jpg',
     heroEyebrow: 'Realce sua beleza natural',
     heroTitle: 'Sua melhor versão começa aqui',
     heroSubtitle:
-        'Tratamentos faciais personalizados em Taboão da Serra, com atendimento acolhedor, protocolos cuidadosos e foco nas necessidades da sua pele.',
+        'Limpeza de pele, massagem facial e hidratação Glow em Taboão da Serra. Atendimento com hora marcada.',
     heroTrustItems: [
         { icon: '🛡️', text: 'Cuidados com biossegurança' },
         { icon: '🤝', text: 'Atendimento personalizado' },
-        { icon: '✨', text: 'Protocolos personalizados' },
+        { icon: '✨', text: 'Limpeza, massagem e hidratação' },
     ],
     benefitsItems: [
-        { icon: '⭐', text: 'Atendimento Exclusivo e Personalizado' },
+        { icon: '⭐', text: 'Atendimento com hora marcada' },
         { icon: '🛡️', text: 'Dermocosméticos de Alta Qualidade' },
         { icon: '💬', text: 'Agendamento diretamente com a Maria pelo WhatsApp' },
     ],
@@ -111,13 +274,13 @@ const defaultSiteSettings: SiteSettings = {
     aboutPhotoUrl: '/maria-yasmim-esteticista-taboao-da-serra.jpg',
     treatmentsEyebrow: 'Nossos tratamentos',
     treatmentsSectionTitle: 'Cuidados para realçar sua beleza',
-    treatmentsSectionSubtitle: 'Procedimentos faciais personalizados para suas necessidades',
+    treatmentsSectionSubtitle: 'Conheça o que está incluído na sua sessão',
     locationSectionTitle: 'Onde Estamos',
     locationSectionSubtitle: 'Sua clínica de estética bem pertinho de você em Taboão da Serra.',
     faqSectionTitle: 'Perguntas Frequentes',
     faqSectionSubtitle: 'Tire suas principais dúvidas sobre os nossos tratamentos.',
     faqItems: defaultFaqItems,
-    footerTagline: 'Excelência, tecnologia e amor em cada detalhe do cuidado estético na região de Taboão da Serra.',
+    footerTagline: 'Estética facial em Taboão da Serra. Limpeza de pele, massagem e hidratação Glow.',
     footerContactEmail: 'contato@mariayasmimestetica.com.br',
     footerCopyrightText: '© 2026 Maria Yasmim Lopes Estética. Todos os direitos reservados.',
 };
@@ -145,29 +308,10 @@ type LandingPageProps = {
 
 // Revela um bloco suavemente quando ele entra na viewport (usado nas seções
 // abaixo da dobra: faixa de confiança, benefícios, etc). Dispara uma vez só.
-function useInView<T extends HTMLElement>(threshold = 0.15) {
+function useInView<T extends HTMLElement>(_threshold = 0.15) {
     const ref = React.useRef<T | null>(null);
-    const [inView, setInView] = useState(false);
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        if (typeof IntersectionObserver === 'undefined') {
-            setInView(true);
-            return;
-        }
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setInView(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
-    return [ref, inView] as const;
+    // Conteúdo visível desde o primeiro render, sem aguardar a rolagem.
+    return [ref, true] as const;
 }
 
 // Painel que revela seu conteúdo (fade + leve subida) assim que entra na tela,
@@ -184,127 +328,6 @@ function RevealPanel({ children, minHeight }: { children: (inView: boolean) => R
     );
 }
 
-function SkinPhotoCompare({ isMobile }: { isMobile: boolean }) {
-    const [beforePhoto, setBeforePhoto] = useState<string | null>(null);
-    const [sourceFile, setSourceFile] = useState<File | null>(null);
-    const [afterPhoto, setAfterPhoto] = useState<string | null>(null);
-    const [split, setSplit] = useState(50);
-    const [error, setError] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const galleryInput = React.useRef<HTMLInputElement>(null);
-    const cameraInput = React.useRef<HTMLInputElement>(null);
-
-    useEffect(() => () => { if (beforePhoto) URL.revokeObjectURL(beforePhoto); }, [beforePhoto]);
-
-    const choosePhoto = (file?: File) => {
-        setError('');
-        if (!file) return;
-        if (!['image/jpeg', 'image/png'].includes(file.type)) {
-            setError('Escolha uma foto JPEG ou PNG.');
-            return;
-        }
-        if (file.size > 8 * 1024 * 1024) {
-            setError('A foto deve ter até 8 MB.');
-            return;
-        }
-        setAfterPhoto(null);
-        setSourceFile(file);
-        setBeforePhoto(URL.createObjectURL(file));
-    };
-
-    const generatePreview = async () => {
-        if (!sourceFile || !beforePhoto || isGenerating) return;
-        setIsGenerating(true);
-        setError('');
-        try {
-            const image = new Image();
-            image.src = beforePhoto;
-            await image.decode();
-
-            const scale = Math.min(1, 1280 / Math.max(image.naturalWidth, image.naturalHeight));
-            const width = Math.max(1, Math.round(image.naturalWidth * scale));
-            const height = Math.max(1, Math.round(image.naturalHeight * scale));
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const context = canvas.getContext('2d');
-            if (!context) throw new Error('Não foi possível criar a prévia neste aparelho.');
-
-            context.drawImage(image, 0, 0, width, height);
-            const softened = document.createElement('canvas');
-            softened.width = width;
-            softened.height = height;
-            const softenedContext = softened.getContext('2d');
-            if (!softenedContext) throw new Error('Não foi possível criar a prévia neste aparelho.');
-            softenedContext.filter = 'blur(2px)';
-            softenedContext.drawImage(canvas, 0, 0, width, height);
-            context.globalAlpha = 0.28;
-            context.drawImage(softened, 0, 0, width, height);
-            context.globalAlpha = 1;
-            setAfterPhoto(canvas.toDataURL('image/jpeg', 0.9));
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Não foi possível criar a prévia neste aparelho.');
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
-    return (
-        <section id="comparar-pele" style={{ background: '#F7F3F7', padding: isMobile ? '64px 20px' : '88px 24px' }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 32px' }}>
-                    <span style={{ color: '#8B6B91', fontWeight: 700, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Experimente uma prévia</span>
-                    <h2 style={{ margin: '10px 0', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: isMobile ? '32px' : '40px' }}>Compare sua foto com um efeito de suavização</h2>
-                    <p style={{ margin: 0, color: '#6D5D75', lineHeight: 1.7 }}>A prévia aplica um efeito leve à foto inteira. Ela não usa inteligência artificial nem prevê o resultado da limpeza de pele.</p>
-                </div>
-                <div style={{ maxWidth: '720px', margin: '0 auto', background: '#fff', border: '1px solid #E8E1E8', borderRadius: '18px', padding: isMobile ? '16px' : '24px' }}>
-                    <h3 style={{ margin: '0 0 14px', color: '#2D1537', fontFamily: 'Playfair Display, Georgia, serif', fontSize: '22px' }}>Sua foto de antes</h3>
-                    {beforePhoto ? <img src={beforePhoto} alt="Sua foto antes do procedimento" style={{ display: 'block', width: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: '12px', background: '#F8F5F8', marginBottom: '14px' }} /> : (
-                        <div style={{ height: '260px', borderRadius: '12px', marginBottom: '14px', background: '#F8F5F8', color: '#76677B', display: 'grid', placeItems: 'center', textAlign: 'center', padding: '16px', fontSize: '14px' }}>Escolha uma foto frontal, com boa luz e sem filtro</div>
-                    )}
-                    <input ref={galleryInput} type="file" accept="image/jpeg,image/png" aria-label="Escolher foto da galeria" disabled={isGenerating} onChange={(event) => { choosePhoto(event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
-                    <input ref={cameraInput} type="file" accept="image/jpeg,image/png" capture="user" aria-label="Tirar foto" disabled={isGenerating} onChange={(event) => { choosePhoto(event.target.files?.[0]); event.currentTarget.value = ''; }} style={{ display: 'none' }} />
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
-                        <button type="button" disabled={isGenerating} onClick={() => cameraInput.current?.click()} style={{ ...photoActionStyle, width: isMobile ? '100%' : 'auto', minHeight: '44px' }}>{beforePhoto ? 'Tirar outra foto' : 'Tirar foto'}</button>
-                        <button type="button" disabled={isGenerating} onClick={() => galleryInput.current?.click()} style={{ ...photoActionStyle, width: isMobile ? '100%' : 'auto', minHeight: '44px' }}>{beforePhoto ? 'Trocar foto' : 'Escolher da galeria'}</button>
-                    </div>
-                    <button type="button" onClick={generatePreview} disabled={!sourceFile || isGenerating} style={{ ...photoGenerateStyle, opacity: !sourceFile || isGenerating ? 0.55 : 1, cursor: !sourceFile || isGenerating ? 'not-allowed' : 'pointer' }}>
-                        {isGenerating ? 'Criando sua prévia…' : 'Ver prévia gratuita'}
-                    </button>
-                </div>
-                {error && <p role="alert" style={{ color: '#9D283B', margin: '14px auto 0', maxWidth: '720px' }}>{error}</p>}
-                {beforePhoto && afterPhoto && (
-                    <div style={{ margin: '24px auto 0', maxWidth: '760px' }}>
-                        <div style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', background: '#EAE4EA' }}>
-                            <img src={afterPhoto} alt="Foto com um efeito leve de suavização; não é um resultado real" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                            <img src={beforePhoto} alt="Antes da limpeza de pele" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', clipPath: `inset(0 ${100 - split}% 0 0)` }} />
-                            <span style={{ position: 'absolute', left: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Antes</span>
-                            <span style={{ position: 'absolute', right: '12px', top: '12px', background: '#fff', color: '#2D1537', padding: '7px 11px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Depois</span>
-                            <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: `${split}%`, width: '3px', background: '#fff', boxShadow: '0 0 8px #0005', pointerEvents: 'none' }} />
-                        </div>
-                        <label style={{ display: 'block', marginTop: '14px', color: '#4C3A52', fontSize: '14px', fontWeight: 600 }}>
-                            Arraste para comparar
-                            <input type="range" min="0" max="100" value={split} onChange={(event) => setSplit(Number(event.target.value))} aria-label="Deslize para comparar as fotos de antes e depois" style={{ display: 'block', width: '100%', marginTop: '8px', accentColor: '#7C5A83' }} />
-                        </label>
-                        <p style={{ color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>“Depois” é apenas um efeito de suavização na foto inteira; não é criado por IA nem prevê o resultado do procedimento.</p>
-                    </div>
-                )}
-                <p style={{ margin: '20px auto 0', maxWidth: '720px', color: '#76677B', fontSize: '13px', lineHeight: 1.6, textAlign: 'center' }}>Sua foto é processada no próprio aparelho e não é enviada para a internet.</p>
-            </div>
-        </section>
-    );
-}
-
-const photoActionStyle: React.CSSProperties = {
-    appearance: 'none', border: '1px solid #7C5A83', background: '#fff', color: '#5A3C62',
-    padding: '10px 13px', borderRadius: '22px', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
-};
-
-const photoGenerateStyle: React.CSSProperties = {
-    display: 'block', width: '100%', marginTop: '18px', border: 'none', borderRadius: '28px',
-    background: '#76537F', color: '#fff', padding: '14px 20px', fontSize: '15px', fontWeight: 700,
-};
-
 // Estilo "Apple" de rolagem: em vez de disparar uma animação uma única vez
 // (como o useInView acima), este hook devolve um progresso contínuo de 0 a 1
 // enquanto o elemento atravessa a tela. Isso permite amarrar escala/opacidade
@@ -315,6 +338,7 @@ function useScrollProgress<T extends HTMLElement>() {
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
+        if (window.matchMedia('(max-width: 720px), (prefers-reduced-motion: reduce)').matches) return;
         const el = ref.current;
         if (!el) return;
 
@@ -394,7 +418,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [isMobile, setIsMobile] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
-    const [openFaq, setOpenFaq] = useState<number | null>(null);
+    const [showMoreFaqs, setShowMoreFaqs] = useState(false);
     const [guideChoice, setGuideChoice] = useState<GuideChoice | null>(null);
     const galleryTrackRef = React.useRef<HTMLDivElement | null>(null);
     const [chatOpen, setChatOpen] = useState(false);
@@ -435,120 +459,9 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         }
         metaDesc.setAttribute('content', 'Limpeza de pele profunda, massagem facial e hidratação Glow em Taboão da Serra. Atendimento personalizado com hora marcada.');
 
-        const linkFont = document.createElement('link');
-        linkFont.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap';
-        linkFont.rel = 'stylesheet';
-        document.head.appendChild(linkFont);
 
-        const style = document.createElement('style');
-        style.innerHTML = `
-      html { scroll-behavior: smooth; }
 
-      @keyframes mylFadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
-      @keyframes mylFadeIn { from { opacity: 0; } to { opacity: 1; } }
-      @keyframes mylFloat { 0%, 100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-16px) translateX(6px); } }
-      @keyframes mylScrollCue { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(8px); opacity: 1; } }
 
-      .myl-fade-up { opacity: 0; animation: mylFadeUp 0.9s cubic-bezier(.16,.84,.44,1) forwards; }
-      .myl-fade-in { opacity: 0; animation: mylFadeIn 1.1s ease forwards; }
-      .myl-float { animation: mylFloat 9s ease-in-out infinite; }
-      .myl-scroll-cue { animation: mylScrollCue 2s ease-in-out infinite; }
-
-      .myl-navbar { transition: background-color .4s ease, box-shadow .4s ease, backdrop-filter .4s ease, border-color .4s ease; }
-      .myl-navbar.myl-scrolled { background-color: rgba(250,249,246,0.82) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 8px 30px rgba(45,21,55,0.1); border-bottom-color: rgba(232,215,241,0.6) !important; }
-
-      .myl-btn-primary { transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
-      .myl-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 26px rgba(74,21,94,0.35); }
-      .myl-btn-secondary { transition: transform .35s cubic-bezier(.2,.8,.2,1), background-color .35s ease; }
-      .myl-btn-secondary:hover { transform: translateY(-2px); background-color: rgba(45,21,55,0.05); }
-
-      .myl-card-hover { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
-      .myl-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(45,21,55,0.14); border-color: rgba(162,89,196,0.4); }
-
-      .myl-gallery-card { position: relative; isolation: isolate; aspect-ratio: 1 / 1; overflow: hidden; margin: 0; border-radius: 22px; background: #F1E9F2; box-shadow: 0 12px 28px rgba(45,21,55,.09); }
-      .myl-gallery-card::after { content: ''; position: absolute; inset: 35% 0 0; z-index: 0; background: linear-gradient(180deg, transparent, rgba(28,13,34,.62)); pointer-events: none; }
-      .myl-gallery-card img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.8,.2,1); }
-      .myl-gallery-card:hover img { transform: scale(1.055); }
-      .myl-gallery-card figcaption { position: absolute; inset: auto 15px 15px; z-index: 1; display: flex; justify-content: flex-start; }
-      .myl-gallery-card figcaption span { padding: 8px 12px; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; color: #fff; background: rgba(45,21,55,.3); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); font-size: 12px; font-weight: 600; letter-spacing: .2px; }
-      .myl-instagram-link { display: inline-flex; align-items: center; gap: 13px; min-height: 64px; padding: 10px 17px; border: 1px solid #E8D9EA; border-radius: 20px; color: #4A3151; background: rgba(255,255,255,.84); box-shadow: 0 8px 24px rgba(45,21,55,.07); text-decoration: none; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
-      .myl-instagram-link > svg { flex: 0 0 auto; color: #A34A9D; }
-      .myl-instagram-link > span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; text-align: left; }
-      .myl-instagram-link small { color: #826E88; font-size: 11px; }
-      .myl-instagram-link strong { color: #38223F; font-size: 14px; font-weight: 700; }
-      .myl-instagram-arrow { margin-left: 5px; color: #87569F; font-size: 19px; }
-      .myl-instagram-link:hover { transform: translateY(-2px); border-color: #D9BBDD; box-shadow: 0 12px 28px rgba(45,21,55,.12); }
-      @media (max-width: 720px) { .myl-gallery-grid { gap: 11px !important; } .myl-gallery-card { border-radius: 15px; } .myl-gallery-card figcaption { inset: auto 8px 8px; } .myl-gallery-card figcaption span { padding: 6px 9px; font-size: 10px; } }
-      .myl-faq-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 15px; }
-      @media (max-width: 760px) { .myl-faq-grid { grid-template-columns: minmax(0, 1fr); } }
-      @media (prefers-reduced-motion: reduce) { .myl-gallery-card img, .myl-instagram-link { transition: none !important; } }
-
-      .myl-gallery-track { display:flex; gap:16px; overflow-x:auto; overscroll-behavior-inline:contain; scroll-snap-type:x mandatory; scrollbar-width:none; margin-top:30px; padding:6px 2px 18px; }
-      .myl-gallery-track::-webkit-scrollbar { display:none; }
-      .myl-gallery-card { flex:0 0 calc((100% - 32px) / 3); aspect-ratio:4 / 5; scroll-snap-align:start; }
-      .myl-gallery-controls { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:2px; color:#826E88; font-size:13px; }
-      .myl-gallery-controls > div { display:flex; gap:9px; }
-      .myl-gallery-controls button { width:44px; height:44px; border:1px solid #E4D4E8; border-radius:50%; color:#4A3151; background:#fff; font-size:26px; line-height:1; cursor:pointer; transition:background .2s ease,transform .2s ease; }
-      .myl-gallery-controls button:hover { background:#F3E6F8; transform:translateY(-1px); }
-      .myl-featured-treatment { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); width:calc(100% - 48px); max-width:1120px; min-height:420px; margin:0 auto 64px; overflow:hidden; border:1px solid #E8D7F1; border-radius:30px; background:linear-gradient(125deg,#fff 0%,#FBF7FC 100%); box-shadow:0 22px 55px rgba(45,21,55,.09); }
-      .myl-featured-treatment-photo { position:relative; min-height:420px; overflow:hidden; background:#EFE6F1; }
-      .myl-featured-treatment-photo::after { content:''; position:absolute; inset:45% 0 0; background:linear-gradient(180deg,transparent,rgba(36,17,44,.44)); }
-      .myl-featured-treatment-photo img { display:block; width:100%; height:100%; min-height:420px; object-fit:cover; }
-      .myl-featured-treatment-photo > span { position:absolute; z-index:1; left:24px; bottom:22px; padding:9px 13px; border:1px solid rgba(255,255,255,.45); border-radius:999px; color:#fff; background:rgba(45,21,55,.35); backdrop-filter:blur(8px); font-size:12px; font-weight:600; }
-      .myl-featured-treatment-content { display:flex; flex-direction:column; justify-content:center; padding:clamp(28px,5vw,58px); }
-      .myl-featured-eyebrow { color:#87569F; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
-      .myl-featured-treatment h2,.myl-featured-treatment h3,.myl-care-guide h2 { margin:12px 0; color:#2D1537; font:600 clamp(30px,3vw,42px)/1.15 'Playfair Display',Georgia,serif; }
-      .myl-featured-treatment-content > p { margin:0; color:#6D5D75; font-size:15px; line-height:1.75; }
-      .myl-featured-includes { margin-top:16px; padding:12px 14px; border-left:3px solid #B997CD; color:#4C3A52; background:#F5EDF7; font-size:13px; line-height:1.6; }
-      .myl-featured-meta { display:flex; flex-wrap:wrap; gap:32px; margin:22px 0; }
-      .myl-featured-meta span { display:flex; flex-direction:column; gap:5px; }
-      .myl-featured-meta small { color:#806F85; font-size:11px; }
-      .myl-featured-meta strong { color:#2D1537; font-size:18px; }
-      .myl-care-guide { padding:76px 20px; background:linear-gradient(145deg,#F9F5FA,#FBF9F7); }
-      .myl-care-guide-inner { max-width:980px; margin:0 auto; text-align:center; }
-      .myl-care-guide h2 { margin:12px 0; }
-      .myl-care-guide-intro { margin:0 auto 26px; max-width:620px; color:#6D5D75; line-height:1.7; }
-      .myl-care-guide-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
-      .myl-care-guide-option { display:flex; align-items:center; gap:12px; min-height:62px; padding:12px 16px; border:1px solid #E8D7F1; border-radius:16px; color:#4C3A52; background:#fff; text-align:left; font-family:inherit; font-size:14px; font-weight:600; line-height:1.35; cursor:pointer; box-shadow:0 5px 18px rgba(45,21,55,.04); transition:border-color .2s ease,background .2s ease,transform .2s ease; }
-      .myl-care-guide-option > span:first-child { color:#A259C4; font-size:20px; }
-      .myl-care-guide-option:hover,.myl-care-guide-option.is-selected { border-color:#A259C4; background:#FBF5FC; transform:translateY(-1px); }
-      .myl-guide-chevron { margin-left:auto; color:#A259C4; font-size:21px; }
-      .myl-care-guide-result { min-height:60px; margin:18px auto 0; max-width:700px; padding:16px 20px; border-radius:18px; color:#6D5D75; background:rgba(255,255,255,.78); text-align:left; font-size:14px; line-height:1.65; }
-      .myl-care-guide-result > p { margin:0; }
-      .myl-care-guide-result > strong { color:#2D1537; }
-      .myl-care-guide-result > a { display:inline-flex; margin-top:8px; color:#754386; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
-      @media (max-width:820px) { .myl-featured-treatment { width:calc(100% - 40px); margin:0 auto 48px; grid-template-columns:1fr; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { min-height:0; height:300px; } .myl-care-guide-options { grid-template-columns:1fr; } }
-      @media (max-width:720px) { .myl-gallery-track { gap:11px; } .myl-gallery-card { flex-basis:82%; border-radius:15px; } .myl-featured-treatment { width:calc(100% - 32px); margin:0 auto 40px; border-radius:22px; } .myl-featured-treatment-photo,.myl-featured-treatment-photo img { height:250px; } .myl-featured-meta { gap:24px; } .myl-care-guide { padding:58px 18px; } }
-      @media (prefers-reduced-motion:reduce) { .myl-gallery-controls button,.myl-care-guide-option { transition:none !important; } }
-
-      .myl-booking-button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(137,62,181,.32) !important; }
-      @media (prefers-reduced-motion: reduce) { .myl-booking-button { transition: none !important; transform: none !important; } }
-      .myl-booking-button:focus-visible { outline: 3px solid #4A155E; outline-offset: 4px; }
-      .myl-floating-whatsapp:focus-visible { outline: 3px solid #2D1537; outline-offset: 4px; }
-      @media (max-width: 800px) {
-        .myl-booking-grid { grid-template-columns: minmax(0, 1fr) !important; }
-        .myl-booking-grid { padding: 28px 20px !important; gap: 32px !important; border-radius: 30px !important; }
-        .myl-booking-photo { width: 100%; max-width: 400px; margin: 0 auto; }
-        .myl-booking-content { padding: 0 4px 8px !important; }
-      }
-
-      @media (max-width: 720px) {
-        .myl-mobile-action { width: 100%; justify-content: center; }
-        .myl-floating-whatsapp { width: 58px !important; height: 58px !important; right: 16px !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; }
-      }
-
-      @media (max-width: 760px) {
-        .myl-navbar nav { gap: 14px !important; }
-      }
-
-      @media (max-width: 700px) {
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .myl-fade-up, .myl-fade-in, .myl-float, .myl-scroll-cue { animation: none !important; opacity: 1 !important; transform: none !important; }
-      }
-    `;
-        document.head.appendChild(style);
 
         const checkWidth = () => setIsMobile(window.innerWidth < 720);
         checkWidth();
@@ -607,11 +520,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const [photos, setPhotos] = useState(defaultPhotos);
 
     useEffect(() => {
+        if (window.matchMedia('(max-width: 720px), (prefers-reduced-motion: reduce)').matches) return;
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % photos.length);
         }, 4000);
         return () => clearInterval(timer);
-    }, [photos.length]);
+    }, [photos.length, isMobile]);
 
     const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % photos.length);
     const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
@@ -705,7 +619,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     }, [chatMessages, chatLoading, chatError, chatOpen, showChatSuggestions]);
 
     const whatsappDigits = (siteSettings.whatsapp || defaultSiteSettings.whatsapp).replace(/\D/g, '');
-    const buildWhatsAppLink = (message = 'Olá Maria, vi o site e gostaria de agendar uma avaliação.') =>
+    const buildWhatsAppLink = (message = 'Olá Maria, vi o site e gostaria de agendar um horário.') =>
         `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(message)}`;
     const bookingWhatsAppLink = buildWhatsAppLink('Olá Maria, vi o site e gostaria de agendar um horário.');
 
@@ -756,9 +670,24 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
         }
     };
 
-    const toggleFaq = (index: number) => {
-        setOpenFaq(openFaq === index ? null : index);
-    };
+    const priorityQuestions = [
+        'A limpeza de pele profunda dói?',
+        'De quanto em quanto tempo devo fazer a limpeza de pele?',
+        'O que devo fazer antes do procedimento?',
+        'Quanto tempo dura cada tratamento?',
+        'Quais formas de pagamento são aceitas?',
+    ];
+    const priorityFaqs = priorityQuestions.map(question => siteSettings.faqItems.find(item => item.question === question) ?? defaultFaqItems.find(item => item.question === question)!).filter(Boolean);
+    const extraFaqs = siteSettings.faqItems.filter(item => !priorityQuestions.includes(item.question));
+    const renderFaq = (faq: FaqItem) => (
+        <details key={faq.question} className="myl-faq-item" style={styles.faqItem}>
+            <summary style={styles.faqQuestionHeader}>
+                <span style={styles.faqQuestionText}>{faq.question}</span>
+                <span className="myl-faq-symbol" aria-hidden="true" style={styles.faqIcon} />
+            </summary>
+            <p style={styles.faqAnswerText}>{faq.answer}</p>
+        </details>
+    );
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}`;
     const mapsEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(siteSettings.address.replace(/\n/g, ', '))}&output=embed`;
     const aboutParagraphs = siteSettings.aboutText.split('\n').filter((p) => p.trim());
@@ -774,7 +703,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
     const featuredTreatment = treatments.find((item) => item.name.toLowerCase().includes('limpeza de pele'));
 
     return (
-        <div id="inicio" style={styles.container}>
+        <div id="inicio" className="myl-page" style={styles.container}>
+            <style>{landingStyles}</style>
 
             {/* Botão Flutuante do WhatsApp */}
             <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" aria-label="Falar com a Maria pelo WhatsApp" title="Agendar pelo WhatsApp" className="myl-floating-whatsapp" style={styles.floatingWhatsApp}>
@@ -785,7 +715,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             <header className={`myl-navbar${isScrolled ? ' myl-scrolled' : ''}`} style={{ ...styles.header, top: topOffset }}>
                 <div style={styles.headerContent}>
                     <a href="#inicio" style={styles.logoContainer}>
-                        <img src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" loading="eager" decoding="async" style={styles.logoCircle} />
+                        <SiteImage src={siteSettings.logoUrl} alt="Logo Maria Yasmim Lopes" sizes="50px" loading="eager" decoding="async" style={styles.logoCircle} />
                         <span style={styles.logoTextBlock}>
                 <span style={{ ...styles.logoText, fontSize: isMobile ? '13px' : '18px' }}>Maria Yasmim Lopes</span>
                 <span style={styles.logoSubtext}>Estética</span>
@@ -800,8 +730,8 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         </nav>
                     )}
                     {!editable && (
-                        <a href="#agendamento" className="myl-btn-primary" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
-                            {isMobile ? 'Agendar' : '📱 Agendar Avaliação'}
+                        <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer" className="myl-btn-primary myl-header-booking" style={{ ...styles.primaryButton, padding: isMobile ? '7px 12px' : '11px 22px', fontSize: isMobile ? '11px' : '14px' }}>
+                            Agendar pelo WhatsApp
                         </a>
                     )}
                 </div>
@@ -829,7 +759,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
                         <div style={styles.heroActions}>
                             <a href={buildWhatsAppLink()} target="_blank" rel="noreferrer" className="myl-btn-primary" style={styles.primaryActionButton}>
-                                Agendar via WhatsApp
+                                Agendar pelo WhatsApp
                             </a>
                             <a href="#tratamentos" className="myl-btn-secondary" style={styles.secondaryActionButton}>
                                 Ver Tratamentos
@@ -860,17 +790,18 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                 // Mecanismo estilo Apple: a foto entra ligeiramente maior e desfocada
                                 // de escala/opacidade, e se "assenta" suavemente conforme o scroll avança —
                                 // continuamente amarrado à posição da tela, não um gatilho único.
-                                transform: `translate(${heroParallax.x * 8}px, ${heroParallax.y * 8 + scrollLerp(heroScrollProgress, 26, 0)}px) scale(${scrollLerp(heroScrollProgress, 0.94, 1)})`,
-                                opacity: scrollLerp(heroScrollProgress, 0.55, 1),
+                                transform: isMobile ? 'none' : `translate(${heroParallax.x * 8}px, ${heroParallax.y * 8 + scrollLerp(heroScrollProgress, 26, 0)}px) scale(${scrollLerp(heroScrollProgress, 0.94, 1)})`,
+                                opacity: 1,
                                 transition: 'transform 0.25s ease-out',
                             }}
                         >
                             <button onClick={prevSlide} style={styles.carouselBtnLeft} aria-label="Foto anterior">&#10094;</button>
                             <div style={styles.carouselSlide}>
-                                <img
+                                <SiteImage
                                     src={photos[currentSlide].url}
                                     alt={photos[currentSlide].title}
-                                    loading={currentSlide === 0 ? 'eager' : 'lazy'}
+                                    loading="eager"
+                                    fetchPriority={currentSlide === 0 ? 'high' : 'auto'}
                                     decoding="async"
                                     onError={(event) => {
                                         const image = event.currentTarget;
@@ -955,7 +886,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                 >
                                     {src && (
                                         <div style={{ flex: isMobile ? undefined : '0 0 44%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 30px 60px -18px rgba(0,0,0,0.4)' }}>
-                                            <img src={src} alt={item.title} style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
+                                            <SiteImage src={src} alt={item.title} style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
                                             <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.35))' }} />
                                         </div>
                                     )}
@@ -981,14 +912,14 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             {/* About Section — composição de foto grande + cartão de texto sobrepondo por
                 cima (sem sticky: aqui isso já causou bugs de sobreposição neste projeto,
                 então a foto fica no fluxo normal e só o cartão sobrepõe com margem negativa). */}
-            <section id="sobre" ref={aboutRef} style={{ position: 'relative' as const, maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '140px 20px 20px' : '150px 20px 20px' }}>
+            <section id="sobre" ref={aboutRef} style={{ position: 'relative' as const, maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '56px 20px 20px' : '150px 20px 20px' }}>
                 {editable && <EditPencil label="Sobre" onClick={() => editSection('about')} />}
 
                 <div
                     onMouseMove={handleAboutMouseMove}
                     onMouseLeave={resetAboutTilt}
                 >
-                    <img
+                    <SiteImage
                         src={siteSettings.aboutPhotoUrl}
                         alt="Maria Yasmim Lopes"
                         style={{
@@ -1030,7 +961,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                     ))}
                     <div style={styles.aboutChipsRow}>
                         <span style={styles.aboutChip}>{siteSettings.aboutBadgeText}</span>
-                        <span style={styles.aboutChip}>Atendimento personalizado</span>
+                        <span style={styles.aboutChip}>Estética facial</span>
                         <span style={styles.aboutChip}>Taboão da Serra • SP</span>
                     </div>
 
@@ -1067,18 +998,23 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                 {featuredTreatment && (
                     <article aria-labelledby="featured-treatment-title" className="myl-featured-treatment">
                         <div className="myl-featured-treatment-photo">
-                            <img src="/limpeza-de-pele-acne-taboao-da-serra.jpg" alt="Atendimento de limpeza de pele na clínica" loading="lazy" decoding="async" />
+                            <SiteImage src="/limpeza-de-pele-acne-taboao-da-serra.jpg" alt="Atendimento de limpeza de pele na clínica" loading="lazy" decoding="async" />
                             <span>Protocolo completo</span>
                         </div>
                         <div className="myl-featured-treatment-content">
                             <span className="myl-featured-eyebrow">Cuidado facial completo</span>
                             <h3 id="featured-treatment-title">Limpeza de pele profunda</h3>
                             <p>{featuredTreatment.description}</p>
-                            <div className="myl-featured-includes">Inclui massagem facial relaxante e hidratação facial Glow.</div>
+                            <div className="myl-featured-includes">Uma sessão · limpeza + massagem facial + hidratação Glow</div>
                             <div className="myl-featured-meta">
-                                <span><small>Valor do protocolo</small><strong>{featuredTreatment.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
-                                <span><small>Duração aproximada</small><strong>{featuredTreatment.durationMinutes} minutos</strong></span>
+                                <span><small>Protocolo completo</small><strong>{featuredTreatment.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
+                                <span><small>Reserve aproximadamente</small><strong>{featuredTreatment.durationMinutes} minutos</strong></span>
                             </div>
+                            <ol className="myl-featured-steps" aria-label="O que está incluído na sessão">
+                                <li><span>01</span><div><strong>Limpeza de pele profunda</strong>Cuidado com cravos e impurezas, conforme a avaliação e a sensibilidade da pele.</div></li>
+                                <li><span>02</span><div><strong>Massagem facial relaxante</strong>Um momento de relaxamento durante a sessão.</div></li>
+                                <li><span>03</span><div><strong>Hidratação facial Glow</strong>Hidratação para completar o protocolo. Produtos e etapas são ajustados na avaliação.</div></li>
+                            </ol>
                         </div>
                     </article>
                 )}
@@ -1103,7 +1039,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                                 >
                                     {src && (
                                         <div style={{ flex: isMobile ? undefined : '0 0 48%', width: isMobile ? '100%' : undefined, position: 'relative' as const, aspectRatio: isMobile ? '16/11' : '4/5', borderRadius: '26px', overflow: 'hidden', boxShadow: '0 40px 80px -20px rgba(45,21,55,0.28)' }}>
-                                            <img src={src} alt={item.name} loading="lazy" decoding="async" style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
+                                            <SiteImage src={src} alt={item.name} loading="lazy" decoding="async" style={{ position: 'absolute' as const, inset: 0, width: '100%', height: '100%', objectFit: 'cover' as const }} />
                                             <div style={{ position: 'absolute' as const, inset: 0, background: 'linear-gradient(200deg, rgba(45,21,55,0) 55%, rgba(45,21,55,0.3))' }} />
                                         </div>
                                     )}
@@ -1144,33 +1080,88 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
 
             <section aria-labelledby="care-guide-title" className="myl-care-guide">
                 <div className="myl-care-guide-inner">
-                    <span className="myl-featured-eyebrow">Um primeiro passo</span>
-                    <h2 id="care-guide-title">O que você gostaria de priorizar?</h2>
-                    <p className="myl-care-guide-intro">Escolha o que mais combina com o que você procura e veja um assunto para conversar com a Maria.</p>
+                    <span className="myl-featured-eyebrow">Guia de cuidados</span>
+                    <h2 id="care-guide-title">Saiba mais sobre limpeza de pele</h2>
+                    <p className="myl-care-guide-intro">Leia as explicações por aqui. Se ainda ficar com dúvidas, você pode perguntar à Maria pelo WhatsApp.</p>
                     <div className="myl-care-guide-options" role="group" aria-label="Escolha sua prioridade de cuidado facial">
                         {([
-                            { id: 'impurezas', icon: '✦', label: 'Cravos e impurezas', response: 'Você pode conversar com a Maria sobre limpeza de pele profunda. O protocolo disponível inclui também massagem facial relaxante e hidratação Glow; ela avalia se é adequado para você.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre limpeza de pele profunda e saber se o protocolo é indicado para mim.' },
-                            { id: 'oleosidade', icon: '☼', label: 'Oleosidade', response: 'Conte à Maria como sua pele costuma ficar ao longo do dia e quais produtos você usa. Ela pode avaliar sua necessidade e explicar os cuidados disponíveis.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre cuidados para pele oleosa e entender o que pode ser adequado para mim.' },
-                            { id: 'hidratacao', icon: '❋', label: 'Hidratação e viço', response: 'O protocolo inclui hidratação facial Glow. Converse com a Maria para saber se essa etapa combina com as necessidades da sua pele.', whatsappMessage: 'Olá Maria, gostaria de saber mais sobre hidratação facial Glow e se é indicada para mim.' },
+                            { id: 'impurezas', icon: '✦', label: 'Cravos e impurezas', summary: 'Cravos se formam quando os poros ficam obstruídos por oleosidade e células mortas.', response: 'Cravos são poros obstruídos, e a cor escura não significa falta de higiene. A profissional avalia se a limpeza e as etapas do protocolo são adequadas para sua pele.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre limpeza de pele profunda e saber se o protocolo é indicado para mim.' },
+                            { id: 'oleosidade', icon: '☼', label: 'Oleosidade', summary: 'A limpeza remove resíduos superficiais, mas não controla sozinha a oleosidade.', response: 'Pele oleosa também precisa de hidratação. Uma rotina suave e produtos adequados ajudam no cuidado diário; lavar ou esfregar em excesso pode irritar. A limpeza profissional é um complemento, e a frequência depende da avaliação da sua pele.', whatsappMessage: 'Olá Maria, gostaria de conversar sobre cuidados para pele oleosa e entender o que pode ser adequado para mim.' },
+                            { id: 'hidratacao', icon: '❋', label: 'Hidratação e viço', summary: 'Hidratar ajuda a manter a pele macia e confortável, inclusive a pele oleosa.', response: 'A hidratação ajuda a reter água e a manter a barreira da pele. No protocolo, ela acompanha a limpeza e a massagem facial; os produtos são escolhidos conforme as necessidades e a sensibilidade da pele.', whatsappMessage: 'Olá Maria, gostaria de saber mais sobre hidratação facial Glow e se é indicada para mim.' },
                         ] as GuideChoice[]).map((choice) => (
                             <button key={choice.id} type="button" aria-pressed={guideChoice?.id === choice.id} onClick={() => setGuideChoice(choice)} className={`myl-care-guide-option${guideChoice?.id === choice.id ? ' is-selected' : ''}`}>
-                                <span aria-hidden="true">{choice.icon}</span>{choice.label}<span aria-hidden="true" className="myl-guide-chevron">›</span>
+                                <span className="myl-guide-icon" aria-hidden="true">{choice.icon}</span>
+                                <span className="myl-guide-copy"><strong>{choice.label}</strong><small>{choice.summary}</small></span>
+                                <span aria-hidden="true" className="myl-guide-chevron">{guideChoice?.id === choice.id ? '−' : '+'}</span>
                             </button>
                         ))}
                     </div>
                     <div className="myl-care-guide-result" aria-live="polite">
                         {guideChoice ? (
                             <>
-                                <strong>Uma ideia para sua conversa</strong>
+                                <strong>Sobre {guideChoice.label.toLowerCase()}</strong>
                                 <p>{guideChoice.response}</p>
-                                <a href={buildWhatsAppLink(guideChoice.whatsappMessage)} target="_blank" rel="noopener noreferrer">Perguntar à Maria pelo WhatsApp ↗</a>
+                                <a href={buildWhatsAppLink(guideChoice.whatsappMessage)} target="_blank" rel="noopener noreferrer">Se quiser, pergunte à Maria pelo WhatsApp ↗</a>
                             </>
-                        ) : <p>Este guia é informativo; a indicação do cuidado depende de uma conversa sobre a sua pele.</p>}
+                        ) : <><strong>Cada pele tem seu tempo e suas necessidades</strong><p>Selecione um tema para ler mais. A indicação e a frequência da limpeza são avaliadas individualmente.</p><a href={buildWhatsAppLink("Olá Maria, gostaria de tirar uma dúvida sobre limpeza de pele.")} target="_blank" rel="noopener noreferrer">Perguntar à Maria pelo WhatsApp ↗</a></>}
                     </div>
                 </div>
             </section>
 
-            <SkinPhotoCompare isMobile={isMobile} />
+
+
+            {/* Galeria / Instagram */}
+            <section id="instagram" style={styles.gallerySection}>
+                <div style={styles.sectionHeader}>
+                    <span style={styles.eyebrowCentered}>Conheça nosso trabalho</span>
+                    <h2 style={styles.sectionTitle}>Conheça os atendimentos</h2>
+                    <p style={styles.sectionSubtitle}>Momentos reais de cuidado e atendimento na clínica.</p>
+                </div>
+                <div className="myl-gallery-track" ref={galleryTrackRef} aria-label="Fotos de atendimentos e cuidados faciais" tabIndex={0}>
+                    {[
+                        { src: '/detalhe-cuidado-facial-taboao-da-serra.jpg', alt: 'Detalhe de cuidado facial durante atendimento', label: 'Cuidado facial' },
+                        { src: '/cuidado-facial-em-clinica-taboao-da-serra.jpg', alt: 'Cliente recebendo atendimento estético facial', label: 'Atendimento' },
+                        { src: '/procedimento-facial-personalizado-taboao-da-serra.jpg', alt: 'Detalhe da pele durante o atendimento facial', label: 'Cuidado em detalhe' },
+                        { src: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg', alt: 'Máscara facial preparada para atendimento estético', label: 'Máscara facial' },
+                        { src: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg', alt: 'Aplicação de cuidados faciais durante atendimento', label: 'Momento de cuidado' },
+                        { src: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg', alt: 'Detalhe de tratamento facial personalizado', label: 'Pele bem cuidada' },
+                    ].map((image, index) => (
+                        <figure className="myl-gallery-card" key={image.src} style={{ animationDelay: `${index * 0.05}s` }}>
+                            <SiteImage
+                                src={image.src}
+                                alt={image.alt}
+                                loading="lazy"
+                                decoding="async"
+                                onError={(event) => {
+                                    const imageElement = event.currentTarget;
+                                    imageElement.onerror = null;
+                                    imageElement.src = '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg';
+                                }}
+                            />
+                            <figcaption><span>{image.label}</span></figcaption>
+                        </figure>
+                    ))}
+                </div>
+                <div className="myl-gallery-controls">
+                    <span>Deslize para ver mais fotos</span>
+                    <div>
+                        <button type="button" onClick={() => scrollGallery(-1)} aria-label="Ver fotos anteriores">‹</button>
+                        <button type="button" onClick={() => scrollGallery(1)} aria-label="Ver próximas fotos">›</button>
+                    </div>
+                </div>
+                <div style={styles.galleryCta}>
+                    <a
+                        href={siteSettings.instagramUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="myl-instagram-link"
+                    >
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>
+                        <span><small>Acompanhe no Instagram</small><strong>{instagramHandle}</strong></span>
+                        <span aria-hidden="true" className="myl-instagram-arrow">↗</span>
+                    </a>
+                </div>
+            </section>
 
             {/* Localização Atualizada */}
             <section id="localizacao" style={{ ...styles.locationSection, position: 'relative' as const }}>
@@ -1219,7 +1210,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
             <section id="agendamento" aria-labelledby="booking-title" style={{ ...styles.bookingSection, scrollMarginTop: topOffset + 100 }}>
                 <div className="myl-booking-grid" style={styles.bookingGrid}>
                     <div className="myl-booking-photo" style={styles.bookingPhotoWrap}>
-                        <img
+                        <SiteImage
                             src="/atendimento-estetico-com-hora-marcada-taboao-da-serra.jpg"
                             alt="Cuidado facial com máscara e faixa lilás na clínica Maria Yasmim Lopes Estética"
                             loading="lazy"
@@ -1233,7 +1224,7 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                         <span style={styles.bookingEyebrow}>AGENDAMENTO <span aria-hidden="true" style={{ width: 36, height: 1, backgroundColor: '#B997CD' }} /></span>
                         <h2 id="booking-title" style={styles.bookingTitle}>Seu momento de cuidado começa aqui.</h2>
                         <p style={styles.bookingDescription}>
-                            Tratamentos faciais pensados para cuidar da sua pele com atenção, conforto e atendimento personalizado.
+                            Consulte os horários disponíveis e combine sua sessão diretamente com a Maria.
                         </p>
                         <ul style={styles.bookingDetails}>
                             <li style={styles.bookingDetail}><span style={styles.bookingIcon}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg></span> Taboão da Serra</li>
@@ -1243,61 +1234,12 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                             <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M21 11.5a9 9 0 0 1-13.3 7.9L3 21l1.5-4.6A9 9 0 1 1 21 11.5Z" /><path d="M8 7.5c-.8 1.5.2 3.8 2 5.6s4.1 2.8 5.6 2l1-1.5-2.5-1.4-1 1c-1.4-.5-2.5-1.6-3-3l1-1L9.5 6.8Z" /></svg>
                             Agendar pelo WhatsApp
                         </a>
-                        <p style={styles.bookingNote}>Combine seu horário diretamente com a Maria pelo WhatsApp.</p>
+                        <p style={styles.bookingNote}>Atendimento aos domingos e às segundas-feiras.</p>
+                        <aside style={{ marginTop: '22px', padding: '16px 18px', borderLeft: '3px solid #B997CD', borderRadius: '0 12px 12px 0', backgroundColor: '#F5EDF7', color: '#5A4A60', fontSize: '14px', lineHeight: 1.7 }}>
+                            <strong style={{ display: 'block', color: '#392040', marginBottom: '4px' }}>Antes do atendimento</strong>
+                            Avise a Maria sobre alergias, sensibilidade, irritações e produtos ou medicamentos que esteja usando. Essas informações ajudam a planejar os cuidados da sessão.
+                        </aside>
                     </div>
-                </div>
-            </section>
-
-            {/* Galeria / Instagram */}
-            <section id="instagram" style={styles.gallerySection}>
-                <div style={styles.sectionHeader}>
-                    <span style={styles.eyebrowCentered}>Conheça nosso trabalho</span>
-                    <h2 style={styles.sectionTitle}>Um pouco dos nossos cuidados</h2>
-                    <p style={styles.sectionSubtitle}>Momentos reais de cuidado e atendimento na clínica.</p>
-                </div>
-                <div className="myl-gallery-track" ref={galleryTrackRef} aria-label="Fotos de atendimentos e cuidados faciais" tabIndex={0}>
-                    {[
-                        { src: '/detalhe-cuidado-facial-taboao-da-serra.jpg', alt: 'Detalhe de cuidado facial durante atendimento', label: 'Cuidado facial' },
-                        { src: '/cuidado-facial-em-clinica-taboao-da-serra.jpg', alt: 'Cliente recebendo atendimento estético facial', label: 'Atendimento' },
-                        { src: '/procedimento-facial-personalizado-taboao-da-serra.jpg', alt: 'Cuidado facial personalizado na clínica', label: 'Personalizado' },
-                        { src: '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg', alt: 'Máscara facial preparada para atendimento estético', label: 'Máscara facial' },
-                        { src: '/aplicacao-de-mascara-facial-taboao-da-serra.jpg', alt: 'Aplicação de cuidados faciais durante atendimento', label: 'Momento de cuidado' },
-                        { src: '/detalhe-de-tratamento-facial-taboao-da-serra.jpg', alt: 'Detalhe de tratamento facial personalizado', label: 'Pele bem cuidada' },
-                    ].map((image, index) => (
-                        <figure className="myl-gallery-card" key={image.src} style={{ animationDelay: `${index * 0.05}s` }}>
-                            <img
-                                src={image.src}
-                                alt={image.alt}
-                                loading="lazy"
-                                decoding="async"
-                                onError={(event) => {
-                                    const imageElement = event.currentTarget;
-                                    imageElement.onerror = null;
-                                    imageElement.src = '/mascara-facial-tratamento-estetico-taboao-da-serra.jpg';
-                                }}
-                            />
-                            <figcaption><span>{image.label}</span></figcaption>
-                        </figure>
-                    ))}
-                </div>
-                <div className="myl-gallery-controls">
-                    <span>Deslize para ver mais fotos</span>
-                    <div>
-                        <button type="button" onClick={() => scrollGallery(-1)} aria-label="Ver fotos anteriores">‹</button>
-                        <button type="button" onClick={() => scrollGallery(1)} aria-label="Ver próximas fotos">›</button>
-                    </div>
-                </div>
-                <div style={styles.galleryCta}>
-                    <a
-                        href={siteSettings.instagramUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="myl-instagram-link"
-                    >
-                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>
-                        <span><small>Acompanhe no Instagram</small><strong>{instagramHandle}</strong></span>
-                        <span aria-hidden="true" className="myl-instagram-arrow">↗</span>
-                    </a>
                 </div>
             </section>
 
@@ -1309,23 +1251,25 @@ export default function LandingPage({ editable = false, onEditSection, topOffset
                     <p style={styles.sectionSubtitle}>{siteSettings.faqSectionSubtitle}</p>
                 </div>
                 <div className="myl-faq-grid" style={styles.faqContainer}>
-                    {siteSettings.faqItems.map((faq, index) => (
-                        <div key={index} style={styles.faqItem} onClick={() => toggleFaq(index)}>
-                            <div style={styles.faqQuestionHeader}>
-                                <h4 style={styles.faqQuestionText}>{faq.question}</h4>
-                                <span style={styles.faqIcon}>{openFaq === index ? '−' : '+'}</span>
-                            </div>
-                            {openFaq === index && (
-                                <p style={styles.faqAnswerText}>{faq.answer}</p>
-                            )}
-                        </div>
-                    ))}
+                    {priorityFaqs.map(renderFaq)}
                 </div>
+                {extraFaqs.length > 0 && <>
+                    <div id="more-faqs" hidden={!showMoreFaqs}>
+                        {showMoreFaqs && <div className="myl-faq-grid" style={{ ...styles.faqContainer, marginTop: '15px' }}>{extraFaqs.map(renderFaq)}</div>}
+                    </div>
+                    <button type="button" className="myl-more-faqs" aria-expanded={showMoreFaqs} aria-controls="more-faqs" onClick={() => setShowMoreFaqs(!showMoreFaqs)}>
+                        {showMoreFaqs ? 'Ver menos dúvidas' : 'Ver mais dúvidas'}
+                    </button>
+                </>}
             </section>
 
-            <button onClick={() => setChatOpen(!chatOpen)} style={styles.chatButton} aria-label="Abrir chatbot">💬</button>
+            <div className="myl-mobile-contact" aria-label="Contato e dúvidas">
+                <button type="button" onClick={() => setChatOpen(!chatOpen)} aria-expanded={chatOpen} aria-controls="clinic-assistant">Dúvidas?</button>
+                <a href={bookingWhatsAppLink} target="_blank" rel="noopener noreferrer">Agendar pelo WhatsApp</a>
+            </div>
+            <button className="myl-chat-launcher" onClick={() => setChatOpen(!chatOpen)} style={styles.chatButton} aria-label={chatOpen ? 'Fechar assistente' : 'Abrir assistente'} aria-expanded={chatOpen}>💬</button>
             {chatOpen && (
-                <div role="dialog" aria-label="Assistente virtual da clínica" style={styles.chatPanel}>
+                <div id="clinic-assistant" className="myl-chat-panel" role="dialog" aria-label="Assistente virtual da clínica" style={styles.chatPanel}>
                     <div style={styles.chatHeader}>
                         <strong>Assistente virtual</strong>
                         <button onClick={() => setChatOpen(false)} aria-label="Fechar assistente" style={styles.chatClose}>×</button>
